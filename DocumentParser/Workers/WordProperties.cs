@@ -1,18 +1,18 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Services.Documents.Core;
-using Services.Documents.Core.DocumentElements;
+using DocumentParser.DocumentElements;
 using Services.Documents.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Borders = Services.Documents.Core.DocumentElements.Borders;
-using ParagraphProperties = Services.Documents.Core.DocumentElements.ParagraphProperties;
-using RunProperties = Services.Documents.Core.DocumentElements.RunProperties;
-using TableAlignment = Services.Documents.Core.DocumentElements.TableAlignment;
-using TablePosition = Services.Documents.Core.DocumentElements.TablePosition;
+using Borders = DocumentParser.DocumentElements.Borders;
+using ParagraphProperties = DocumentParser.DocumentElements.ParagraphProperties;
+using RunProperties = DocumentParser.DocumentElements.RunProperties;
+using TableAlignment = DocumentParser.DocumentElements.TableAlignment;
+using TablePosition = DocumentParser.DocumentElements.TablePosition;
 
-namespace Services.Documents.Parser.Workers
+namespace DocumentParser.Workers
 {
     public struct RunPropertiesStruct
     {

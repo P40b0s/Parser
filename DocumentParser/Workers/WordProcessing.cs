@@ -1,13 +1,9 @@
-﻿using Core;
-using DocumentFormat.OpenXml;
+﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Services.Documents.Core;
-using Services.Documents.Core.DocumentElements;
-using Services.Documents.Core.DocumentElements.MetaInformation;
-using Services.Documents.Lexer;
-using Services.Documents.Parser.Regexes;
-using Services.Documents.Settings;
+using DocumentParser.DocumentElements;
+using DocumentParser.DocumentElements.MetaInformation;
+using Lexer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 
-namespace Services.Documents.Parser.Workers
+namespace DocumentParser.Workers
 {
 
     
@@ -42,10 +38,10 @@ namespace Services.Documents.Parser.Workers
         Body Body {get;set;}
         public string FullText {get;set;}
         private string _docxPath {get; set;}
-        ISettings settings {get;}
+        public ISettings Settings {get;}
         public WordProcessing(ISettings _settings)
         {
-            settings = _settings;
+            Settings = _settings;
         }
         public WordProcessing()
         {
@@ -74,8 +70,8 @@ namespace Services.Documents.Parser.Workers
                 //FullText =  Document.MainDocumentPart.Document.Body.GetFullText();
                 StylePart = Document.MainDocumentPart.StyleDefinitionsPart.Styles;
                 Body = Document.MainDocumentPart.Document.Body;
-                DataExtractor = new DataExtractor(Document.MainDocumentPart, settings);
-                Properties = new WordProperties(StylePart, settings);
+                DataExtractor = new DataExtractor(Document.MainDocumentPart, Settings);
+                Properties = new WordProperties(StylePart, Settings);
                 SearchComments();
                 await ProcessDocument(Document);
 
@@ -95,7 +91,7 @@ namespace Services.Documents.Parser.Workers
                 var com = Document.MainDocumentPart.WordprocessingCommentsPart.Comments.Elements<DocumentFormat.OpenXml.Wordprocessing.Comment>();
                 foreach(var c in com)
                 {
-                    comments.Add(new CommentWrapper(c, settings, DataExtractor, Properties));
+                    comments.Add(new CommentWrapper(c, Settings, DataExtractor, Properties));
                 }
             }
         }
@@ -179,7 +175,7 @@ namespace Services.Documents.Parser.Workers
                     int arrayIndex = 0;
                     foreach(var par in elements)
                     {
-                        var p = new ParagraphWrapper(par, settings, DataExtractor, Properties, DocumentImages);
+                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, DocumentImages);
                         if(p.IsParagraph)
                         {
                             if(!p.IsEmpty)
@@ -213,7 +209,7 @@ namespace Services.Documents.Parser.Workers
                             var parsInTable = p.Element.Descendants<Paragraph>();
                             foreach(var tpar in parsInTable)
                             {
-                                var twrap = new ParagraphWrapper(tpar, settings, DataExtractor, Properties, DocumentImages);
+                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, DocumentImages);
                                 if(!p.IsEmpty)
                                 {
                                     ElementsList.Add(new ElementStructure(ElementsList, arrayIndex) 
@@ -499,7 +495,7 @@ namespace Services.Documents.Parser.Workers
                         if(el.GetType() == typeof(Text))
                             txt += DataConverter.ConvertText((el as Text).Text, runProperties).Item1;
                         if(el.GetType() == typeof(Break))
-                            txt += Templates.BRChar;
+                            txt += Regexes.Templates.BRChar;
                    }
                  }
                 return txt;

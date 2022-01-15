@@ -1,11 +1,9 @@
-﻿using Services.Documents.Lexer;
-using Services.Documents.Lexer.Tokens;
-using Services.Logger;
+﻿using Lexer;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Services.Documents.Parser.Parsers
+namespace DocumentParser.Parsers
 {
     public abstract class ParserBase<T> : ParserBase
     {
@@ -22,7 +20,6 @@ namespace Services.Documents.Parser.Parsers
         public StatusUpdate UpdateCallback { get; set; }
         public ErrorUpdate ErrorCallback { get; set; }
         public List<ParserException> exceptions { get; set; } = new List<ParserException>();
-        protected ILoggerService logger {get;} = new LoggerService();
         protected void Status(string status, bool debug = false)
         {
             if(debug)

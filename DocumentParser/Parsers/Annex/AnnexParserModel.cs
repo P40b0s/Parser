@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Services.Documents.Core.Interfaces;
-using Services.Documents.Parser.Parsers.Headers;
-using Services.Documents.Parser.Workers;
+using DocumentParser.Interfaces;
+using DocumentParser.Parsers.Headers;
+using DocumentParser.Workers;
 
-namespace Services.Documents.Parser.Parsers.Annex
+namespace DocumentParser.Parsers.Annex
 {
     public class AnnexParserModel
     {
@@ -22,10 +22,8 @@ namespace Services.Documents.Parser.Parsers.Annex
         /// <value> 0 - корень 1 - приложение к 0 приложению</value>
         public int Hierarchy {get;set;}
         public bool HierarchyChecked = false;
-        public Services.Documents.Core.DocumentElements.Annex Annex {get;} = new Services.Documents.Core.DocumentElements.Annex();
+        public DocumentElements.Annex Annex {get;} = new DocumentElements.Annex();
         public List<ElementStructure> RootElements {get;} = new List<ElementStructure>();
-        // public List<FootNoteInfo> FootNoteElements {get;} = new List<FootNoteInfo>();
-        // public List<ElementStructure> NoteElements {get;} = new List<ElementStructure>();
         public List<HeaderParserModel> Headers {get;} = new List<HeaderParserModel>();
     }
 }

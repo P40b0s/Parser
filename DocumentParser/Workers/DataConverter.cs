@@ -1,9 +1,9 @@
 ﻿using Services.Documents.Core;
 using System;
 using System.Linq;
-using RunProperties = Services.Documents.Core.DocumentElements.RunProperties;
+using RunProperties = DocumentParser.DocumentElements.RunProperties;
 
-namespace Services.Documents.Parser.Workers
+namespace DocumentParser.Workers
 {    
     
     public static class DataConverter

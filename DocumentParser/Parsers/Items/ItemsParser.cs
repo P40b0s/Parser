@@ -1,14 +1,13 @@
 using System.Collections.Generic;
-using Services.Documents.Parser.Workers;
-using Services.Documents.Core.DocumentElements;
-using Services.Documents.Parser.TokensDefinitions;
-using Services.Documents.Lexer.Tokens;
+using DocumentParser.Workers;
+using DocumentParser.DocumentElements;
+using DocumentParser.TokensDefinitions;
+using Lexer;
 using System.Linq;
 using System;
-using Services.Documents.Core.Interfaces;
-using Core.Extensions;
+using Utils.Extensions;
 
-namespace Services.Documents.Parser.Parsers.Items
+namespace DocumentParser.Parsers.Items
 {
     /// <summary>
     /// Класс обертка для итемов, здесь мы получем номер и постфикс итема, на сколько нужно отрезать абзац
@@ -54,7 +53,7 @@ namespace Services.Documents.Parser.Parsers.Items
             Number = extractor.GetUnicodeString(firstItemToken.CustomGroups[0]);
             Postfix = extractor.GetUnicodeString(firstItemToken.CustomGroups[1]);
             CuttingLenght = FirstItemToken.Length;
-            extractor.SetElementNode(First, Core.NodeType.Абзац);
+            extractor.SetElementNode(First, NodeType.Абзац);
             //Первый параграф мы не добавляем в спмисок, от него еще надо отрезать номер.
             //скорректировать значение отрезаного номера для гиперссылок и сносок если они там есть
             //First.HyperTextInfo.hyperLinks[0].LinkStartIndex
@@ -78,7 +77,7 @@ namespace Services.Documents.Parser.Parsers.Items
             Indents.Add(firstIndent);
             foreach (var p in  paragraps)
             {
-                    extractor.SetElementNode(p, Core.NodeType.Абзац);
+                    extractor.SetElementNode(p, NodeType.Абзац);
                     Indents.Add(new Indent(p.ParagraphProperties,
                                                     p.ElementIndex,
                                                     p.WordElement.Text.GetHash(),
@@ -135,13 +134,13 @@ namespace Services.Documents.Parser.Parsers.Items
             return cast;
         }
        
-        Predicate<ElementStructure> IsItem = i => i.NodeType == Core.NodeType.item0 ||
-                   i.NodeType == Core.NodeType.item1 ||
-                   i.NodeType == Core.NodeType.item2 ||
-                   i.NodeType == Core.NodeType.item3 ||
-                   i.NodeType == Core.NodeType.item4 ||
-                   i.NodeType == Core.NodeType.item5 ||
-                   i.NodeType == Core.NodeType.item6;
+        Predicate<ElementStructure> IsItem = i => i.NodeType == NodeType.item0 ||
+                   i.NodeType == NodeType.item1 ||
+                   i.NodeType == NodeType.item2 ||
+                   i.NodeType == NodeType.item3 ||
+                   i.NodeType == NodeType.item4 ||
+                   i.NodeType == NodeType.item5 ||
+                   i.NodeType == NodeType.item6;
 
         /// <summary>
         /// Группируем итемы по их типу итема
@@ -158,49 +157,49 @@ namespace Services.Documents.Parser.Parsers.Items
                 {
                     foreach(var itm in groppedItems)
                     {
-                        extractor.SetElementNode(itm, Core.NodeType.item0);
+                        extractor.SetElementNode(itm, NodeType.item0);
                     }
                 }
                 if(i == 1)
                 {
                     foreach(var itm in groppedItems)
                     {
-                        extractor.SetElementNode(itm, Core.NodeType.item1);
+                        extractor.SetElementNode(itm, NodeType.item1);
                     }
                 }
                 if(i == 2)
                 {
                     foreach(var itm in groppedItems)
                     {
-                        extractor.SetElementNode(itm, Core.NodeType.item2);
+                        extractor.SetElementNode(itm, NodeType.item2);
                     }
                 }
                 if(i == 3)
                 {
                     foreach(var itm in groppedItems)
                     {
-                        extractor.SetElementNode(itm, Core.NodeType.item3);
+                        extractor.SetElementNode(itm, NodeType.item3);
                     }
                 }
                 if(i == 4)
                 {
                     foreach(var itm in groppedItems)
                     {
-                        extractor.SetElementNode(itm, Core.NodeType.item4);
+                        extractor.SetElementNode(itm, NodeType.item4);
                     }
                 }
                 if(i == 5)
                 {
                     foreach(var itm in groppedItems)
                     {
-                        extractor.SetElementNode(itm, Core.NodeType.item5);
+                        extractor.SetElementNode(itm, NodeType.item5);
                     }
                 }
                 if(i == 6)
                 {
                     foreach(var itm in groppedItems)
                     {
-                        extractor.SetElementNode(itm, Core.NodeType.item6);
+                        extractor.SetElementNode(itm, NodeType.item6);
                     }
                 }
             }
@@ -222,7 +221,7 @@ namespace Services.Documents.Parser.Parsers.Items
                 {
                     var fToken =  currentTokens.FirstOrDefault(f=>(i.StartIndex <= f.StartIndex && (i.StartIndex + i.Length) >= f.EndIndex));
                     //Берет больше чем есть в списке итемов надо ограеничить его
-                    var pars = i.TakeWhile(Core.NodeType.Сноска, IsItem, items);
+                    var pars = i.TakeWhile(NodeType.Сноска, IsItem, items);
                     var itm = new ItemWrapper(i, pars, fToken, extractor);
                     readyItems.Add(itm);
                     forDelete.Add(i);
@@ -231,53 +230,53 @@ namespace Services.Documents.Parser.Parsers.Items
             }
             foreach(var rItem in readyItems)
             {
-                if(rItem.nodeType == Core.NodeType.item0)
+                if(rItem.nodeType == NodeType.item0)
                 {
                     outItems.Add(new ItemWrapper(rItem));
                 }
-                if(rItem.nodeType == Core.NodeType.item1)
+                if(rItem.nodeType == NodeType.item1)
                 {
-                    var h = outItems.Last(l=>l.nodeType == Core.NodeType.item0);
+                    var h = outItems.Last(l=>l.nodeType == NodeType.item0);
                     h.AddSubitem(rItem, h);
                 }
-                if(rItem.nodeType == Core.NodeType.item2)
+                if(rItem.nodeType == NodeType.item2)
                 {
-                    var h = outItems.Last(l=>l.nodeType == Core.NodeType.item0);
-                    var h1 = h.Items.Last(l=>l.nodeType == Core.NodeType.item1) as ItemWrapper;
+                    var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                    var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1) as ItemWrapper;
                     h1.AddSubitem(rItem, h1);
                 }
-                if(rItem.nodeType == Core.NodeType.item3)
+                if(rItem.nodeType == NodeType.item3)
                 {
-                    var h = outItems.Last(l=>l.nodeType == Core.NodeType.item0);
-                    var h1 = h.Items.Last(l=>l.nodeType == Core.NodeType.item1);
-                    var h2 = h1.Items.Last(l=>l.nodeType == Core.NodeType.item2) as ItemWrapper;
+                    var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                    var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                    var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2) as ItemWrapper;
                     h2.AddSubitem(rItem, h2);
                 }
-                if(rItem.nodeType == Core.NodeType.item4)
+                if(rItem.nodeType == NodeType.item4)
                 {
-                    var h = outItems.Last(l=>l.nodeType == Core.NodeType.item0);
-                    var h1 = h.Items.Last(l=>l.nodeType == Core.NodeType.item1);
-                    var h2 = h1.Items.Last(l=>l.nodeType == Core.NodeType.item2);
-                    var h3 = h2.Items.Last(l=>l.nodeType == Core.NodeType.item3) as ItemWrapper;
+                    var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                    var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                    var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
+                    var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3) as ItemWrapper;
                     h3.AddSubitem(rItem, h3);
                 }
-                if(rItem.nodeType == Core.NodeType.item5)
+                if(rItem.nodeType == NodeType.item5)
                 {
-                    var h = outItems.Last(l=>l.nodeType == Core.NodeType.item0);
-                    var h1 = h.Items.Last(l=>l.nodeType == Core.NodeType.item1);
-                    var h2 = h1.Items.Last(l=>l.nodeType == Core.NodeType.item2);
-                    var h3 = h2.Items.Last(l=>l.nodeType == Core.NodeType.item3);
-                    var h4 = h3.Items.Last(l=>l.nodeType == Core.NodeType.item4) as ItemWrapper;
+                    var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                    var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                    var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
+                    var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3);
+                    var h4 = h3.Items.Last(l=>l.nodeType == NodeType.item4) as ItemWrapper;
                     h4.AddSubitem(rItem, h4);
                 }
-                if(rItem.nodeType == Core.NodeType.item6)
+                if(rItem.nodeType == NodeType.item6)
                 {
-                    var h = outItems.Last(l=>l.nodeType == Core.NodeType.item0);
-                    var h1 = h.Items.Last(l=>l.nodeType == Core.NodeType.item1);
-                    var h2 = h1.Items.Last(l=>l.nodeType == Core.NodeType.item2);
-                    var h3 = h2.Items.Last(l=>l.nodeType == Core.NodeType.item3);
-                    var h4 = h3.Items.Last(l=>l.nodeType == Core.NodeType.item4);
-                    var h5 = h4.Items.Last(l=>l.nodeType == Core.NodeType.item5) as ItemWrapper;
+                    var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                    var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                    var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
+                    var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3);
+                    var h4 = h3.Items.Last(l=>l.nodeType == NodeType.item4);
+                    var h5 = h4.Items.Last(l=>l.nodeType == NodeType.item5) as ItemWrapper;
                     h5.AddSubitem(rItem, h5);
                 }
             }

@@ -1,15 +1,13 @@
 using System.Collections.Generic;
-using Services.Documents.Lexer;
-using Services.Documents.Parser.Workers;
-using Services.Documents.Core.DocumentElements;
-using MainCore = Core;
-using Services.Documents.Parser.TokensDefinitions;
-using Services.Documents.Lexer.Tokens;
+using Lexer;
+using DocumentParser.Workers;
+using DocumentParser.DocumentElements;
 using System.Linq;
-using Core.Extensions;
-using Services.Documents.Parser.Parsers.Headers;
+using DocumentParser.Parsers.Headers;
+using DocumentParser.TokensDefinitions;
+using Utils.Extensions;
 
-namespace Services.Documents.Parser.Parsers.Annex
+namespace DocumentParser.Parsers.Annex
 {
     //центральный модуль парсинга документа, один на каждый док, отсюда вызываются все остальные модули
     public class AnnexParser : ParserBase<AnnexToken>
@@ -124,13 +122,13 @@ namespace Services.Documents.Parser.Parsers.Annex
                 newAnnex.Annex.ApprovedPrefix.Prefix = token.Value;
                 //должно по идее все быть в пределах 1 параграфа
                 var approvedElement = extractor.GetElements(token).FirstOrDefault();
-                extractor.SetElementNode(approvedElement, Core.NodeType.Приложение);
+                extractor.SetElementNode(approvedElement, NodeType.Приложение);
                 newAnnex.Annex.ApprovedPrefix.Number = extractor.GetUnicodeString(approvedNumberToken.CustomGroups[0]);
-                var date = MainCore.DateTimeHelpers.GetDate(approvedDataToken.CustomGroups[0].Value, approvedDataToken.CustomGroups[1].Value, approvedDataToken.CustomGroups[2].Value);
+                var date = Utils.Extensions.DateTimeExtensions.GetDate(approvedDataToken.CustomGroups[0].Value, approvedDataToken.CustomGroups[1].Value, approvedDataToken.CustomGroups[2].Value);
                 if(!date.HasValue)
                     throw new ParserException($"Неправильный формат даты в приложении № {Annexes.Count + 1}", ErrorType.Fatal);
                 newAnnex.Annex.ApprovedPrefix.Date = date.Value;
-                newAnnex.Annex.ApprovedPrefix.Organ = extractor.GetUnicodeString(approvedElement, new MainCore.TextIndex(token.Length, (approvedDataToken.StartIndex - token.Length - approvedElement.StartIndex ))).Trim();
+                newAnnex.Annex.ApprovedPrefix.Organ = extractor.GetUnicodeString(approvedElement, new TextIndex(token.Length, (approvedDataToken.StartIndex - token.Length - approvedElement.StartIndex ))).Trim();
                 //возможно надо взять в расчет indentation(left) у этих абзацев он примерно 5000
                 //прверяем следующий может такое быть что это типа лоп информации
                 // у него такой же отступ как у первго
@@ -139,7 +137,7 @@ namespace Services.Documents.Parser.Parsers.Annex
                 if(nextPar != null && nextPar.ParagraphProperties.Ind?.Left > 300)
                 {
                     newAnnex.Annex.ApprovedPrefix.ExtendedInfo = extractor.GetUnicodeString(nextPar);
-                    extractor.SetElementNode(nextPar, Core.NodeType.Приложение);
+                    extractor.SetElementNode(nextPar, NodeType.Приложение);
                 }
                 var nameToken = approvedNumberToken.FindForward(AnnexToken.ТипПриложения, 3);
                 searchName(nameToken, newAnnex);
@@ -182,25 +180,25 @@ namespace Services.Documents.Parser.Parsers.Annex
                 if(annexParentToken.TokenType == AnnexToken.ПриложениеКПриложению)
                 {
                     var prefixElement = extractor.GetElements(annexParentToken).FirstOrDefault();
-                    annex.Annex.AnnexPrefix.AnnexTo = extractor.GetUnicodeString(prefixElement, new MainCore.TextIndex(annexParentToken.EndIndex - prefixElement.StartIndex, prefixElement.WordElement.Length - (annexParentToken.EndIndex - prefixElement.StartIndex))).Trim();
+                    annex.Annex.AnnexPrefix.AnnexTo = extractor.GetUnicodeString(prefixElement, new TextIndex(annexParentToken.EndIndex - prefixElement.StartIndex, prefixElement.WordElement.Length - (annexParentToken.EndIndex - prefixElement.StartIndex))).Trim();
                     var parentName = annex.Annex.AnnexPrefix.AnnexTo.ToSearchString();
                     var parent = Annexes.FirstOrDefault(f=>f.SearchName == parentName);
                     if(parent == null)
                             throw new ParserException($"Не могу определить предка {token.Value} {numberToken?.Value} {annexParentToken.Value} {annex.Annex.AnnexPrefix.AnnexTo}", ErrorType.Fatal);
                     annex.Parent = parent;
                     annex.Hierarchy = 1;
-                    extractor.SetElementNode(prefixElement, Core.NodeType.Приложение);
+                    extractor.SetElementNode(prefixElement, NodeType.Приложение);
                 }
                 else
                 {
                     //Здесь больше ничего не делаем и так понятно что приложение к документу который мы разбираем в данный момент
                     //сюда его реквизиты пробрасывать незачем
                     var prefixElement = extractor.GetElements(annexParentToken).FirstOrDefault();
-                    annex.Annex.AnnexPrefix.AnnexTo = extractor.GetUnicodeString(prefixElement, new MainCore.TextIndex(annexParentToken.Length, prefixElement.WordElement.Length - annexParentToken.Length)).Trim();
+                    annex.Annex.AnnexPrefix.AnnexTo = extractor.GetUnicodeString(prefixElement, new TextIndex(annexParentToken.Length, prefixElement.WordElement.Length - annexParentToken.Length)).Trim();
                     annex.Hierarchy = 0;
-                    extractor.SetElementNode(prefixElement, Core.NodeType.Приложение);
+                    extractor.SetElementNode(prefixElement, NodeType.Приложение);
                 }
-                extractor.SetElementNode(token, Core.NodeType.Приложение);
+                extractor.SetElementNode(token, NodeType.Приложение);
                 var nameToken = annexParentToken.FindForward(AnnexToken.ТипПриложения, 3);
                 searchName(nameToken, annex);
                 Annexes.Add(annex);
@@ -225,10 +223,10 @@ namespace Services.Documents.Parser.Parsers.Annex
             if(!extractor.Properties.IsBold(nameElement.WordElement.Element))
                 exceptions.Add(new ParserException($"Наименование приложения № {Annexes.Count + 1} не выделено жирным шрифтом", ErrorType.Warning));
             annex.Annex.AnnexType = extractor.GetUnicodeString(nameToken);
-            annex.Annex.Name = extractor.GetUnicodeString(nameElement,  new MainCore.TextIndex(nameToken.Length, nameElement.WordElement.Length - nameToken.Length));
+            annex.Annex.Name = extractor.GetUnicodeString(nameElement,  new TextIndex(nameToken.Length, nameElement.WordElement.Length - nameToken.Length));
             annex.SearchName = annex.Annex.Name.ToSearchString();
             annex.Annex.SearchName = annex.SearchName;
-            extractor.SetElementNode(nameElement, Core.NodeType.Приложение);
+            extractor.SetElementNode(nameElement, NodeType.Приложение);
             annex.LastElement = nameElement;
             annex.StartIndex = nameElement.ElementIndex + 1;
             var meta = nameElement.Next();

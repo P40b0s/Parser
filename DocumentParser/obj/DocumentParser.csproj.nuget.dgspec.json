@@ -17,15 +17,22 @@
           "/home/phobos/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
-          "net5.0"
+          "net6.0"
         ],
         "sources": {
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net5.0": {
-            "targetAlias": "net5.0",
-            "projectReferences": {}
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {
+              "/home/phobos/projects/net/KND/Lexer/Lexer.csproj": {
+                "projectPath": "/home/phobos/projects/net/KND/Lexer/Lexer.csproj"
+              },
+              "/home/phobos/projects/net/KND/Utils/Utils.csproj": {
+                "projectPath": "/home/phobos/projects/net/KND/Utils/Utils.csproj"
+              }
+            }
           }
         },
         "warningProperties": {
@@ -35,8 +42,18 @@
         }
       },
       "frameworks": {
-        "net5.0": {
-          "targetAlias": "net5.0",
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "DocumentFormat.OpenXml": {
+              "target": "Package",
+              "version": "[2.15.0, )"
+            },
+            "System.Drawing.Common": {
+              "target": "Package",
+              "version": "[5.0.2, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -52,7 +69,117 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/5.0.206/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/6.0.100/RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/phobos/projects/net/KND/Lexer/Lexer.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/phobos/projects/net/KND/Lexer/Lexer.csproj",
+        "projectName": "Lexer",
+        "projectPath": "/home/phobos/projects/net/KND/Lexer/Lexer.csproj",
+        "packagesPath": "/home/phobos/.nuget/packages/",
+        "outputPath": "/home/phobos/projects/net/KND/Lexer/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/phobos/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.1-beta1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/6.0.100/RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/phobos/projects/net/KND/Utils/Utils.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/phobos/projects/net/KND/Utils/Utils.csproj",
+        "projectName": "Utils",
+        "projectPath": "/home/phobos/projects/net/KND/Utils/Utils.csproj",
+        "packagesPath": "/home/phobos/.nuget/packages/",
+        "outputPath": "/home/phobos/projects/net/KND/Utils/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/phobos/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/lib64/dotnet/sdk/6.0.100/RuntimeIdentifierGraph.json"
         }
       }
     }

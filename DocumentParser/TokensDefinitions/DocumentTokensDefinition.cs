@@ -1,7 +1,7 @@
-using Services.Documents.Lexer.Tokenizer;
-using Services.Documents.Parser.Regexes;
+using Lexer.Tokenizer;
+using DocumentParser.Regexes;
 
-namespace Services.Documents.Parser.TokensDefinitions
+namespace DocumentParser.TokensDefinitions
 {
     public enum DocumentToken
     {
@@ -14,6 +14,7 @@ namespace Services.Documents.Parser.TokensDefinitions
         Вид_Постановление,
         Вид_Распоряжение,
         Вид_Указ,
+        Вид_Приказ,
         Орган,
         Орган_Правительство,
         Орган_Президент,
@@ -28,8 +29,9 @@ namespace Services.Documents.Parser.TokensDefinitions
         Слово,
         ТекстВКавычках,
         ТекстВСкобках,
-        
-        Примечание
+        Игнор,
+        Примечание,
+        НачалоПредложения
         
 
 
@@ -52,7 +54,9 @@ namespace Services.Documents.Parser.TokensDefinitions
             AddToken(DocumentToken.Вид_Указ, "указ", 1);
             AddToken(DocumentToken.Вид_Распоряжение, "распоряжение", 1);
             AddToken(DocumentToken.Вид_Постановление, "постановление", 1);
+            AddToken(DocumentToken.Вид_Приказ, "приказ", 1);
             AddToken(DocumentToken.Слово, "\\S+", 10);
+            AddToken(DocumentToken.НачалоПредложения, "\\S+\\s+\\S+", 3);
             AddToken(DocumentToken.ОдобренСФ, $"одобрен{ws}советом{ws}федерации", 1);
             AddToken(DocumentToken.ПринятГД, $"принят{ws}государственной{ws}думой", 1);
             AddToken(DocumentToken.ДлиннаяДата, $"(?:от\\s*)?(?<date>\\d{{1,2}})\\s*(?<month>{Templates.Months})\\s*(?<year>\\d{{4}})\\s*(?:г[ода.]+)?", 1);
@@ -66,6 +70,7 @@ namespace Services.Documents.Parser.TokensDefinitions
             AddToken(DocumentToken.Подписант, $"[А-Я]{{1}}[.][А-Я]{{1}}[.][А-Яа-я]+", 1);
             AddToken(DocumentToken.Номер, $"(?:N|№)\\s*(?<number>[^\\s]+)", 1);
             AddToken(DocumentToken.ТекстВСкобках, $"[(][^)]+[)]", 2);
+            AddToken(DocumentToken.Игнор, $"москва", 1);
            
            
             

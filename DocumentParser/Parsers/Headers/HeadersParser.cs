@@ -1,17 +1,14 @@
 using System.Collections.Generic;
-using Services.Documents.Lexer;
-using Services.Documents.Parser.Workers;
-using Services.Documents.Parser.TokensDefinitions;
-using Services.Documents.Lexer.Tokens;
+using Lexer;
+using DocumentParser.Workers;
+using DocumentParser.TokensDefinitions;
 using System.Linq;
-using Core;
-using Services.Documents.Parser.Parsers.Annex;
-using Services.Documents.Parser.Parsers.Requisites;
-using Services.Documents.Core.DocumentElements;
-using Services.Documents.Core.Interfaces;
-using Services.Documents.Core.DocumentElements.FootNotes;
+using DocumentParser.Parsers.Annex;
+using DocumentParser.Parsers.Requisites;
+using DocumentParser.DocumentElements;
+using DocumentParser.DocumentElements.FootNotes;
 
-namespace Services.Documents.Parser.Parsers.Headers
+namespace DocumentParser.Parsers.Headers
 {
 
     public class Root
@@ -62,7 +59,7 @@ namespace Services.Documents.Parser.Parsers.Headers
             }
             foreach(var h in Headers)
             {
-                var items = h.LastElement.TakeTo(t=>t.NodeType == Core.NodeType.Заголовок);
+                var items = h.LastElement.TakeTo(t=>t.NodeType == NodeType.Заголовок);
                 var last = items.LastOrDefault();
                 if(last != null)
                     h.EndIndex = last.ElementIndex;
@@ -71,7 +68,7 @@ namespace Services.Documents.Parser.Parsers.Headers
             
             getAnnexHeaders(annexParser);
              //Берем все итемы в теле документа которые не вошли в хедеры
-            BodyRootElements.AddRange(requisitesParser.BeforeBodyElement.TakeTo(t=>t.NodeType == Core.NodeType.Заголовок));
+            BodyRootElements.AddRange(requisitesParser.BeforeBodyElement.TakeTo(t=>t.NodeType == NodeType.Заголовок));
             return true;
         }
         /// <summary>
@@ -85,14 +82,14 @@ namespace Services.Documents.Parser.Parsers.Headers
                 var firstItem = h.RootElements.FirstOrDefault();
                 if(firstItem != null)
                 {
-                    if(firstItem.NodeType == Core.NodeType.Таблица)
+                    if(firstItem.NodeType == NodeType.Таблица)
                     {
                         h.Header.Table = firstItem.Table;
                         h.RootElements.Remove(firstItem);
                     } 
                     else
                     {
-                        var table = firstItem.FindForward(t=>t.NodeType == Core.NodeType.Таблица, 1);
+                        var table = firstItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
                         if(table != null)
                         {
                             h.Header.Table = table.Table;
@@ -108,14 +105,14 @@ namespace Services.Documents.Parser.Parsers.Headers
                 var firstRootItem = a.RootElements.FirstOrDefault();
                 if(firstRootItem != null)
                 {
-                    if(firstRootItem.NodeType == Core.NodeType.Таблица)
+                    if(firstRootItem.NodeType == NodeType.Таблица)
                     {
                         a.Annex.Table = firstRootItem.Table;
                         a.RootElements.Remove(firstRootItem);
                     }
                     else
                     {
-                        var table = firstRootItem.FindForward(t=>t.NodeType == Core.NodeType.Таблица, 1);
+                        var table = firstRootItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
                         if(table != null)
                         {
                             a.Annex.Table = table.Table;
@@ -131,8 +128,8 @@ namespace Services.Documents.Parser.Parsers.Headers
             //Добавляем к хедеру футноты
             foreach (var h in Headers)
             {
-                var foots = h.RootElements.Where(w=>w.NodeType == Core.NodeType.Сноска);
-                var footsPars = h.RootElements.Where(w=>w.NodeType == Core.NodeType.АбзацСноски);
+                var foots = h.RootElements.Where(w=>w.NodeType == NodeType.Сноска);
+                var footsPars = h.RootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
                 foreach(var f in foots)
                 {
                     if(h.Header.FootNotes == null)
@@ -145,8 +142,8 @@ namespace Services.Documents.Parser.Parsers.Headers
             //Добавляем к приложению футноты
             foreach(var a in annexParser.Annexes)
             {
-                var foots = a.RootElements.Where(w=>w.NodeType == Core.NodeType.Сноска);
-                var footsPars = a.RootElements.Where(w=>w.NodeType == Core.NodeType.АбзацСноски);
+                var foots = a.RootElements.Where(w=>w.NodeType == NodeType.Сноска);
+                var footsPars = a.RootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
                 foreach(var f in foots)
                 {
                     if(a.Annex.FootNotes == null)
@@ -156,8 +153,8 @@ namespace Services.Documents.Parser.Parsers.Headers
                 a.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
             }
             //Добавляем к боди документа футноты
-            var foots0 = BodyRootElements.Where(w=>w.NodeType == Core.NodeType.Сноска);
-            var footsPars0 = BodyRootElements.Where(w=>w.NodeType == Core.NodeType.АбзацСноски);
+            var foots0 = BodyRootElements.Where(w=>w.NodeType == NodeType.Сноска);
+            var footsPars0 = BodyRootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
             foreach(var f in foots0)
             {
                 BodyFootNotes.Add(f.FootNoteInfo);
@@ -199,12 +196,12 @@ namespace Services.Documents.Parser.Parsers.Headers
             try
             {
                 var headerPar = extractor.GetElements(token).FirstOrDefault();
-                if(headerPar.NodeType == Core.NodeType.АбзацТаблицы)
+                if(headerPar.NodeType == NodeType.АбзацТаблицы)
                     return false;
                 if(headerPar.IsChange)
                     return false;
                 var header = new HeaderParserModel();
-                extractor.SetElementNode(token, Core.NodeType.Заголовок);
+                extractor.SetElementNode(token, NodeType.Заголовок);
                 header.Header.Type = token.CustomGroups[0].Value;
                 var number = extractor.GetUnicodeString(token.CustomGroups[1]);
                 if(number == null)

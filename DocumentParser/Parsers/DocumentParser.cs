@@ -1,28 +1,27 @@
 using System.Collections.Generic;
-using Services.Documents.Lexer;
-using Services.Documents.Parser.Workers;
+using Lexer;
+using DocumentParser.Workers;
 using System.Threading.Tasks;
-using Services.Documents.Core.DocumentElements;
-using Services.Documents.Parser.TokensDefinitions;
-using Services.Documents.Parser.Parsers.Requisites;
+using DocumentParser.DocumentElements;
+using DocumentParser.TokensDefinitions;
+using DocumentParser.Parsers.Requisites;
 using System.Linq;
-using Services.Documents.Parser.Parsers.Headers;
-using Services.Documents.Parser.Parsers.Annex;
-using Services.Documents.Parser.Parsers.Items;
-using Core.Extensions;
-using Services.Documents.Settings;
+using DocumentParser.Parsers.Headers;
+using DocumentParser.Parsers.Annex;
+using DocumentParser.Parsers.Items;
+using Utils.Extensions;
 using System.IO;
 
-namespace Services.Documents.Parser.Parsers
+namespace DocumentParser.Parsers
 {
     //центральный модуль парсинга документа, один на каждый док, отсюда вызываются все остальные модули
     public class DocumentParser : ParserBase<DocumentToken>
     {
         ISettings settings {get;}
-        public DocumentParser(string filePath, ISettings _settings)
+        public DocumentParser(string filePath)
         {
             this.filePath = filePath;
-            settings = _settings;
+            settings = new Settings();
             word = new WordProcessing(settings);
         }
         public Document document {get;} = new Document();
@@ -122,7 +121,7 @@ namespace Services.Documents.Parser.Parsers
                     //Часть 31 статьи 1 Федерального закона от 26 декабря 2008 года № 294-ФЗ.....
                     //дополнить пунктом 24 следующего содержания:
                     //элемент имеет флаг IsChange и определен как абзац поэтому добавляем условие для абзаца
-                    if(i.NodeType == Core.NodeType.НеОпределено || i.NodeType == Core.NodeType.Абзац || i.NodeType == Core.NodeType.МетаАбзац || i.NodeType == Core.NodeType.МетаИнформация)
+                    if(i.NodeType == NodeType.НеОпределено || i.NodeType == NodeType.Абзац || i.NodeType == NodeType.МетаАбзац || i.NodeType == NodeType.МетаИнформация)
                     {
                         if(h.Header.Indents == null)
                                 h.Header.Indents = new List<Indent>();
@@ -138,23 +137,23 @@ namespace Services.Documents.Parser.Parsers
                                             null, //Почему не ищем таблицу?
                                             i.IsChange,
                                             0,
-                                            Core.NodeType.Абзац
+                                            NodeType.Абзац
                                             );
                         h.Header.Indents.Add(ind);
                     }
-                    if(i.NodeType == Core.NodeType.Таблица)
+                    if(i.NodeType == NodeType.Таблица)
                     {
                        var l =  h.Header.Indents.LastOrDefault();
                        if(l != null)
                         l.Table = i.Table;
                     }
                 }
-                h.RootElements.RemoveAll(r=>r.NodeType == Core.NodeType.НеОпределено);
+                h.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
             }
             //Перемещаем все неопознаные элементы из рута документа абзацы документа
             foreach(var i in headersParser.BodyRootElements)
             {
-                if(i.NodeType == Core.NodeType.НеОпределено)
+                if(i.NodeType == NodeType.НеОпределено)
                 {
                     var ind = new Indent(i.ParagraphProperties,
                                             i.ElementIndex,
@@ -167,18 +166,18 @@ namespace Services.Documents.Parser.Parsers
                                             null,
                                             i.IsChange,
                                             0,
-                                            Core.NodeType.Абзац
+                                            NodeType.Абзац
                                             );
                     headersParser.BodyIndents.Add(ind);
                 }
             }
-            headersParser.BodyRootElements.RemoveAll(r=>r.NodeType == Core.NodeType.НеОпределено);
+            headersParser.BodyRootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
             //Перемещаем все неопознаные элементы из рутов приложений и хедеров приложений в абзацы приложений
             foreach(var a in annexParser.Annexes)
             {
                 foreach(var i in a.RootElements)
                 {
-                    if(i.NodeType == Core.NodeType.НеОпределено)
+                    if(i.NodeType == NodeType.НеОпределено)
                     {
                         if(a.Annex.Indents == null)
                             a.Annex.Indents = new List<Indent>();
@@ -193,17 +192,17 @@ namespace Services.Documents.Parser.Parsers
                                             null,
                                             i.IsChange,
                                             0,
-                                            Core.NodeType.Абзац
+                                            NodeType.Абзац
                                             );
                         a.Annex.Indents.Add(ind);
                     }
                 }
-                a.RootElements.RemoveAll(r=>r.NodeType == Core.NodeType.НеОпределено);
+                a.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
                 foreach(var h in a.Headers)
                 {
                     foreach(var i in h.RootElements)
                     {
-                        if(i.NodeType == Core.NodeType.НеОпределено)
+                        if(i.NodeType == NodeType.НеОпределено)
                         {
                             if(h.Header.Indents == null)
                                     h.Header.Indents = new List<Indent>();
@@ -218,12 +217,12 @@ namespace Services.Documents.Parser.Parsers
                                                 null,
                                                 i.IsChange,
                                                 0,
-                                                Core.NodeType.Абзац
+                                                NodeType.Абзац
                                                 );
                             h.Header.Indents.Add(ind);
                         }
                     }
-                    h.RootElements.RemoveAll(r=>r.NodeType == Core.NodeType.НеОпределено);
+                    h.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
                 }
             }
             //Рассовываем все приложения согласно иерархии
@@ -295,7 +294,7 @@ namespace Services.Documents.Parser.Parsers
                         continue;
                     }
                     if(first.Annex.Annexes == null)
-                            first.Annex.Annexes = new List<Core.DocumentElements.Annex>();
+                            first.Annex.Annexes = new List<DocumentElements.Annex>();
                     first.Annex.Annexes.Insert(0, annexParser.Annexes[i].Annex);
                     forRemove.Add(annexParser.Annexes[i]);
                 }

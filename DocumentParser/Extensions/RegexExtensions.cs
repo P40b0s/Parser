@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace Services.Documents.Parser.Extensions
+namespace DocumentParser.Extensions
 {
     public static class RegexExtensions
     {

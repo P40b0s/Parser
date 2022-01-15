@@ -1,7 +1,7 @@
-using Services.Documents.Lexer.Tokenizer;
-using Services.Documents.Parser.Regexes;
+using Lexer.Tokenizer;
+using DocumentParser.Regexes;
 
-namespace Services.Documents.Parser.TokensDefinitions
+namespace DocumentParser.TokensDefinitions
 {
     public enum ItemToken
     {

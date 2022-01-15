@@ -16,10 +16,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Xsl;
-using Services.Documents.Core.DocumentElements;
+using DocumentParser.DocumentElements;
 using Services.Documents.Settings;
 
-namespace Services.Documents.Parser.Workers
+namespace DocumentParser.Workers
 {    
     public struct FormulaResult
     {
@@ -60,7 +60,7 @@ namespace Services.Documents.Parser.Workers
             thumbSizeX = settings.Current.Settings.PreviewImegeThumbSizeX;
             thumbSizeY = settings.Current.Settings.PreviewImegeThumbSizeY;
         }
-        public Services.Documents.Core.DocumentElements.Image GetImage(Drawing drawing)
+        public DocumentParser.DocumentElements.Image GetImage(Drawing drawing)
         {
             try
             {
@@ -155,7 +155,7 @@ namespace Services.Documents.Parser.Workers
                 return new Image(Guid.Empty, null, 0, 0, new Thumb(null, 0, 0));
             }
         }
-        public Services.Documents.Core.DocumentElements.Image GetImage(Picture pic)
+        public DocumentParser.DocumentElements.Image GetImage(Picture pic)
         {
             try
             {
@@ -219,7 +219,7 @@ namespace Services.Documents.Parser.Workers
             }
         }
 
-        public bool SaveImage(Services.Documents.Core.DocumentElements.Image img, Guid docId, Guid runId)
+        public bool SaveImage(DocumentParser.DocumentElements.Image img, Guid docId, Guid runId)
         {
             try
             {

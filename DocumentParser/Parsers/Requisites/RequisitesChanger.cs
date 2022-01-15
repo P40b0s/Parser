@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-namespace Services.Documents.Parser.Parsers.Requisites
+namespace DocumentParser.Requisites
 {
     public static class RequisitesChanger
     {
@@ -59,7 +59,7 @@ namespace Services.Documents.Parser.Parsers.Requisites
         static List<(Regex source, string target)> OrgansChangerRx = new List<(Regex source, string target)>();
         static List<(Regex source, string target)> TypesChangerRx = new List<(Regex source, string target)>();
         static List<(Regex source, string target)> TypeByOrganChangerRx = new List<(Regex source, string target)>();
-        public static void Change(Services.Documents.Core.DocumentElements.Document d)
+        public static void Change(DocumentParser.DocumentElements.Document d)
         {
             //Заменяем органы
             foreach(var ch in OrgansChangerRx)

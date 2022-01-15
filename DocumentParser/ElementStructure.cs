@@ -1,23 +1,21 @@
 using System;
 using System.Collections.Generic;
-using Core;
-using Services.Documents.Core;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Services.Documents.Core.DocumentElements;
-using Services.Documents.Core.DocumentElements.FootNotes;
-using Services.Documents.Core.DocumentElements.HyperText;
-using Services.Documents.Core.DocumentElements.MetaInformation;
-using Services.Documents.Parser.Regexes;
+using DocumentParser.DocumentElements;
+using DocumentParser.DocumentElements.FootNotes;
+using DocumentParser.DocumentElements.HyperText;
+using DocumentParser.DocumentElements.MetaInformation;
 using System.Linq;
+using Lexer;
 using System.Threading.Tasks;
-using Comment = Services.Documents.Core.DocumentElements.Comment;
-using ParagraphProperties = Services.Documents.Core.DocumentElements.ParagraphProperties;
+using Comment = DocumentParser.DocumentElements.Comment;
+using ParagraphProperties = DocumentParser.DocumentElements.ParagraphProperties;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
-using Services.Documents.Parser.Workers;
+using DocumentParser.Workers;
 
-namespace Services.Documents.Parser
+namespace DocumentParser
 {
     public class ElementStructure
     {

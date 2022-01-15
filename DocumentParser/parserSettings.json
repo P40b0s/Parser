@@ -1,0 +1,12 @@
+{
+    "ImageSettings":
+    {
+        "MaxBodyImageSize" : 240000,
+        "PreviewImegeThumbSizeX" : 256,
+        "PreviewImegeThumbSizeY" : 256
+    },
+    "ParserRules":
+    {
+        "BoldNameRule" : true
+    }
+}

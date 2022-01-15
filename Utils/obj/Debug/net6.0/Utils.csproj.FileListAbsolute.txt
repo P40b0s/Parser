@@ -1,0 +1,12 @@
+/home/phobos/projects/net/KND/Utils/obj/Debug/net6.0/Utils.csproj.AssemblyReference.cache
+/home/phobos/projects/net/KND/Utils/obj/Debug/net6.0/Utils.GeneratedMSBuildEditorConfig.editorconfig
+/home/phobos/projects/net/KND/Utils/obj/Debug/net6.0/Utils.AssemblyInfoInputs.cache
+/home/phobos/projects/net/KND/Utils/obj/Debug/net6.0/Utils.AssemblyInfo.cs
+/home/phobos/projects/net/KND/Utils/obj/Debug/net6.0/Utils.csproj.CoreCompileInputs.cache
+/home/phobos/projects/net/KND/Utils/bin/Debug/net6.0/Utils.deps.json
+/home/phobos/projects/net/KND/Utils/bin/Debug/net6.0/Utils.dll
+/home/phobos/projects/net/KND/Utils/bin/Debug/net6.0/ref/Utils.dll
+/home/phobos/projects/net/KND/Utils/bin/Debug/net6.0/Utils.pdb
+/home/phobos/projects/net/KND/Utils/obj/Debug/net6.0/Utils.dll
+/home/phobos/projects/net/KND/Utils/obj/Debug/net6.0/ref/Utils.dll
+/home/phobos/projects/net/KND/Utils/obj/Debug/net6.0/Utils.pdb

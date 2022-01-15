@@ -4,7 +4,7 @@ using Services.Documents.Settings;
 using System;
 using System.Collections.Generic;
 
-namespace Services.Documents.Parser.Workers
+namespace DocumentParser.Workers
 {
     public struct CommentWrapper
     {
@@ -36,7 +36,7 @@ namespace Services.Documents.Parser.Workers
         public DateTime? Date {get;set;}
         public string Initials {get;set;}
         public List<string> Paragraphs {get;}
-        public Services.Documents.Core.DocumentElements.Comment ToComment => new Services.Documents.Core.DocumentElements.Comment(Paragraphs, Auhtor, Initials, Date);
+        public DocumentParser.DocumentElements.Comment ToComment => new DocumentParser.DocumentElements.Comment(Paragraphs, Auhtor, Initials, Date);
         
     }
 

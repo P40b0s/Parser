@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
-using Core.Extensions;
+using Utils.Extensions;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Services.Documents.Core.DocumentElements;
-using Services.Documents.Parser.Extensions;
-using Services.Documents.Parser.Workers;
+using DocumentParser.DocumentElements;
+using DocumentParser.Workers;
 
-namespace Services.Documents.Parser.Parsers
+namespace DocumentParser.Parsers
 {
-    public class TableParser : Services.Documents.Parser.Parsers.ParserBase
+    public class TableParser : ParserBase
     {
         public TableParser(WordProcessing extractor)
         {
@@ -19,7 +18,7 @@ namespace Services.Documents.Parser.Parsers
         {
             Status("Обработка таблиц...");
             var percentage = 0;
-            var tables = extractor.GetElements(Core.NodeType.Таблица);
+            var tables = extractor.GetElements(NodeType.Таблица);
             var count = tables.Count();
             foreach (var item in tables)
             {
@@ -35,7 +34,7 @@ namespace Services.Documents.Parser.Parsers
         /// <summary>
         /// Обработка таблиц Сохраняем структуру и свойства таблицы и извлекаем из нее параграфы
         /// </summary>
-        Services.Documents.Core.DocumentElements.DocumentTable parseTable(ElementStructure table)
+        DocumentElements.DocumentTable parseTable(ElementStructure table)
         {
             var tableProperties = extractor.Properties.ExtractTableProperties(table.WordElement.Element);
             var rows = table.WordElement.Element.Elements<TableRow>().ToList();
@@ -90,7 +89,7 @@ namespace Services.Documents.Parser.Parsers
                                                 null,
                                                 par.IsChange,
                                                 0,
-                                                Core.NodeType.АбзацТаблицы
+                                                NodeType.АбзацТаблицы
                                                 );
                         cellItem.Indents.Add(indent);
                     }

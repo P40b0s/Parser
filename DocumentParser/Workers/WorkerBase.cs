@@ -1,10 +1,10 @@
-﻿using Services.Documents.Lexer;
+﻿using Lexer;
 using Services.Logger;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Services.Documents.Parser.Workers
+namespace DocumentParser.Workers
 {
     public abstract class WorkerBase
     {

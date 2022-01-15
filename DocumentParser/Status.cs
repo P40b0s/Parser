@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using Services.Documents.Lexer;
+using Lexer;
 
-namespace Services.Documents.Parser
+namespace DocumentParser
 {
     public delegate void StatusUpdate(string status);
     public delegate void ErrorUpdate(List<ParserException> pe);

@@ -1,13 +1,13 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Services.Documents.Core.DocumentElements;
+using DocumentParser.DocumentElements;
 using Services.Documents.Parser.Regexes;
 using Services.Documents.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Services.Documents.Parser.Workers
+namespace DocumentParser.Workers
 {
     public struct ParagraphWrapper
     {

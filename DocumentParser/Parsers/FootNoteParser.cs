@@ -1,17 +1,14 @@
 using System.Collections.Generic;
-using Services.Documents.Lexer;
-using Services.Documents.Parser.Workers;
-using Services.Documents.Parser.TokensDefinitions;
-using Services.Documents.Lexer.Tokens;
+using Lexer;
+using DocumentParser.Workers;
+using DocumentParser.TokensDefinitions;
 using System.Linq;
 using System;
-using Core;
-using Services.Documents.Core.Interfaces;
-using Services.Documents.Core.DocumentElements;
-using Core.Extensions;
-using Services.Documents.Core.DocumentElements.FootNotes;
+using DocumentParser.DocumentElements;
+using DocumentParser.DocumentElements.FootNotes;
+using Utils.Extensions;
 
-namespace Services.Documents.Parser.Parsers
+namespace DocumentParser.Parsers
 {
     public class FootNoteWithItems
     {
@@ -44,12 +41,12 @@ namespace Services.Documents.Parser.Parsers
                 if(token.TokenType == FootNoteToken.Подчеркивания)
                 {
                     var pod = extractor.GetElements(token).FirstOrDefault();
-                    pod.NodeType = Core.NodeType.Подчеркивание;
+                    pod.NodeType = NodeType.Подчеркивание;
                 }
                 if(token.TokenType == FootNoteToken.Примечание)
                 {
                     var pod = extractor.GetElements(token).FirstOrDefault();
-                    pod.NodeType = Core.NodeType.Примечание;
+                    pod.NodeType = NodeType.Примечание;
                 }
             }
             var footsCommentParagraphs = extractor.GetParagrapsByComment("сноски");
@@ -102,7 +99,7 @@ namespace Services.Documents.Parser.Parsers
         }
         private void getLinks((List<FootNoteWithItems> foots, Token<FootNoteToken> line) list)
         {
-            var allLinks = list.line.FindBackward(f=>f.TokenType == FootNoteToken.СсылкаНаСноску, s=>s.TokenType == FootNoteToken.Сноска);
+            var allLinks = list.line.TakeWhileBackward(f=>f.TokenType == FootNoteToken.СсылкаНаСноску, s=>s.TokenType == FootNoteToken.Сноска);
             foreach(var foo in list.foots)
             {
                 var links = allLinks.Where(w=>parse(w) == foo.Foot.Number);
@@ -148,10 +145,10 @@ namespace Services.Documents.Parser.Parsers
             {
                 var broken = new List<Token<FootNoteToken>>();
                 var line = token.Before(FootNoteToken.Подчеркивания);
-                if(line == null)
+                if(!line.IsOk)
                     return (null, null);
                 
-                var footnotes = line.TakeForward(FootNoteToken.Сноска);
+                var footnotes = line.Token.FindForwardMany(f=>f.TokenType == FootNoteToken.Сноска);
                 var prevNum = 0;
                 for(int i = 0; i< footnotes.Count; i++)
                 {
@@ -175,13 +172,13 @@ namespace Services.Documents.Parser.Parsers
                 foreach(var f in footnotes)
                 {
                     var pod = extractor.GetElements(f).FirstOrDefault();
-                    pod.NodeType = Core.NodeType.Сноска;
+                    pod.NodeType = NodeType.Сноска;
                 }
 
                 foreach(var f in footnotes)
                 {
                     var par = extractor.GetElements(f).FirstOrDefault();
-                    var pars = par.TakeTo(t=>t.NodeType == Core.NodeType.Сноска || t.NodeType == Core.NodeType.Примечание);
+                    var pars = par.TakeTo(t=>t.NodeType == NodeType.Сноска || t.NodeType == NodeType.Примечание);
                     var item = new FootNoteWithItems(par, extractor.GetUnicodeString(f.CustomGroups[0]), parse(f));
                     var fInd = new Indent(par.ParagraphProperties,
                                          par.ElementIndex,
@@ -194,7 +191,7 @@ namespace Services.Documents.Parser.Parsers
                                          null,
                                          false,
                                          f.CustomGroups[0].Length,
-                                         Core.NodeType.АбзацСноски
+                                         NodeType.АбзацСноски
                                          );
                     item.Foot.Indents = new List<Indent>();
                     item.Foot.Indents.Add(fInd);
@@ -211,14 +208,14 @@ namespace Services.Documents.Parser.Parsers
                                          null,
                                          false,
                                          0,
-                                         Core.NodeType.АбзацСноски
+                                         NodeType.АбзацСноски
                                          ));
-                        extractor.SetElementNode(p, Core.NodeType.АбзацСноски);
+                        extractor.SetElementNode(p, NodeType.АбзацСноски);
                     }
                     list.Add(item);
 
                 }
-                return (list, line);
+                return (list, line.Token);
             }
             return (null, null);
         }

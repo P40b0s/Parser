@@ -1,8 +1,8 @@
-using Services.Documents.Parser.Workers;
-using Services.Documents.Parser.TokensDefinitions;
+using DocumentParser.Workers;
+using DocumentParser.TokensDefinitions;
 using System.Linq;
 
-namespace Services.Documents.Parser.Parsers
+namespace DocumentParser.Parsers
 {
     public class ChangesParser : ParserBase<ChangesIndentsToken>
     {
@@ -63,8 +63,8 @@ namespace Services.Documents.Parser.Parsers
                     extractor.SetChange(changePars);
                     foreach (var item in changePars)
                     {
-                        if(item.NodeType != Core.NodeType.Таблица)
-                            extractor.SetElementNode(item.WordElement.Element, Core.NodeType.Абзац);
+                        if(item.NodeType != NodeType.Таблица)
+                            extractor.SetElementNode(item.WordElement.Element, NodeType.Абзац);
                     }
                 }
             percent++;

@@ -1,5 +1,5 @@
 
-namespace Services.Documents.Parser.Regexes
+namespace DocumentParser.Regexes
 {
     class Quotations
     {

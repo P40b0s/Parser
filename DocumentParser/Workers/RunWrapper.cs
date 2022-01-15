@@ -5,15 +5,15 @@ using Services.Documents.Parser.Regexes;
 using System.Collections.Generic;
 using System.Linq;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
-using RunProperties = Services.Documents.Core.DocumentElements.RunProperties;
-using Comment = Services.Documents.Core.DocumentElements.Comment;
-using Services.Documents.Core.DocumentElements;
+using RunProperties = DocumentParser.DocumentElements.RunProperties;
+using Comment = DocumentParser.DocumentElements.Comment;
+using DocumentParser.DocumentElements;
 using Services.Documents.Settings;
 
-namespace Services.Documents.Parser.Workers
+namespace DocumentParser.Workers
 {
     
-    public class RunElement : Services.Documents.Core.DocumentElements.Run
+    public class RunElement : DocumentParser.DocumentElements.Run
     {
         public RunElement(bool commentStart,
          bool commentEnd,
@@ -203,7 +203,7 @@ namespace Services.Documents.Parser.Workers
         public bool HaveImage => Runs.Any(c=>c.HaveImage);
         public bool CommentStart => Runs.Any(a=>a.CommentStart);
         public List<RunElement> GetRuns() => Runs;
-        public List<Services.Documents.Core.DocumentElements.Run> GetCustRuns() => Runs.Cast<Services.Documents.Core.DocumentElements.Run>().ToList();
+        public List<DocumentParser.DocumentElements.Run> GetCustRuns() => Runs.Cast<DocumentParser.DocumentElements.Run>().ToList();
         public List<RunElement> GetRuns(int indentStartIndex)
         {
             var currentCount = 0;
@@ -224,9 +224,9 @@ namespace Services.Documents.Parser.Workers
             }
             return CutRuns;
         }
-        public List<Services.Documents.Core.DocumentElements.Run> GetCustRuns(int indentStartIndex)
+        public List<DocumentParser.DocumentElements.Run> GetCustRuns(int indentStartIndex)
         {
-            return GetRuns(indentStartIndex).Cast<Services.Documents.Core.DocumentElements.Run>().ToList();
+            return GetRuns(indentStartIndex).Cast<DocumentParser.DocumentElements.Run>().ToList();
         }
     }
 
