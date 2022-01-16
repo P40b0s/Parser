@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Lexer.Tokenizer;
-
+using System.Runtime.CompilerServices;
 namespace Lexer
 {
     public class Token<T> : ITextIndex
     {
-        public Token(bool isLast = false){ IsLast = isLast;}
         public Token(T tokenType)
         {
             TokenType = tokenType;
@@ -57,7 +56,6 @@ namespace Lexer
         /// </summary>
         /// <value></value>
         public int Length => EndIndex - StartIndex;
-        public bool IsLast {get;}
         /// <summary>
         /// Номер позиции в массиве
         /// </summary>
@@ -83,7 +81,7 @@ namespace Lexer
         {
             var index = Position + 1;
             if(tokens.Count <= index)
-                return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+                return new TokenResult<T>(null, outOfRangeException(index));
             return new TokenResult<T>(tokens[index]);
         }
         public TokenResult<T> Next(T nextIs) => Next(nextIs, 0);
@@ -99,11 +97,11 @@ namespace Lexer
                 {
                     if(i+1 < tokens.Count)
                         return new TokenResult<T>(tokens[i+1]);
-                    else return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {i-1}", TokenErrorType.Range));
+                    else return new TokenResult<T>(null, outOfRangeException(i-1));
                         
                 }
             }
-            return new TokenResult<T>(null, new TokenException($"Этой ошибки не должно существовыть! Токен не смог найти сам себя у себя в массиве! парадокс) {getTokenName(this.TokenType)}", TokenErrorType.WrongFound));
+            return new TokenResult<T>(null, neverException());
         }
         public bool LastIs(T last)
         {
@@ -123,7 +121,7 @@ namespace Lexer
         {
             var index = Position + 1 + skip;
             if(tokens.Count <= index)
-                return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+                return new TokenResult<T>(null, outOfRangeException(index));
             if(tokens[index].TokenType.Equals(nextIs))
             {
                 return new TokenResult<T>(tokens[index]);
@@ -131,7 +129,7 @@ namespace Lexer
             else
             {
                 var found = tokens[index].TokenType;
-                return new TokenResult<T>(null, new TokenException($"На позиции {index} вместо ожидаемого {getTokenName(nextIs)} обнаружен {getTokenName(found)}", TokenErrorType.WrongFound));
+                return new TokenResult<T>(null, wrongFoundException(index, nextIs, found));
             }
         }
          /// <summary>
@@ -144,7 +142,7 @@ namespace Lexer
         {
             var index = Position + 1;
             if(tokens.Count == index)
-                return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+                return new TokenResult<T>(null, outOfRangeException(index));
             for (int i = 0; i <= maxDeep; i++)
             {
                 index = index + i;
@@ -153,9 +151,9 @@ namespace Lexer
                     if(oneOf.Invoke(tokens[index]))
                         return new TokenResult<T>(tokens[index]);
                 }
-                else return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));     
+                else return new TokenResult<T>(null, outOfRangeException(index));     
             }
-            return new TokenResult<T>(null, new TokenException($"На позициях {index} - {index + maxDeep} токены не найдены", TokenErrorType.NotFound));
+            return new TokenResult<T>(null, notFountOnPositionException(index, index + maxDeep));
         }
          /// <summary>
         /// Ищем то незнаем что, занем что не ищем) Берем только тот токен что не значиться в предикате
@@ -166,7 +164,7 @@ namespace Lexer
         {
             var index = Position + 1;
             if(tokens.Count == index)
-                return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+                return new TokenResult<T>(null, outOfRangeException(index));
             for (int i = 0; i < tokens.Count; i++)
             {
                 index = index + i;
@@ -175,15 +173,26 @@ namespace Lexer
                     if(ignore.Invoke(tokens[index]))
                         return new TokenResult<T>(tokens[index]);
                 }
-                else return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));     
+                else return new TokenResult<T>(null, outOfRangeException(index));     
             }
-            return new TokenResult<T>(null, new TokenException($"Токены не найдены", TokenErrorType.NotFound));
+            return new TokenResult<T>(null, customException("Не найдено ни одного токена"));
         }
+
+        //TODO На потом:
+        // passing expression, accessing value
+        // public static IEnumerable<T> Filter<T>(this IEnumerable<T> collection, Expression<Func<T, bool>> predicate)
+        // {
+        //     var binExpr = predicate.Body as BinaryExpression;
+        //     var value = binExpr.Right;
+
+        //     var func = predicate.Compile();
+        //     return collection.Where(func);
+        // }
         public TokenResult<T> FindForward(T searchedToken, int maxDeep = 0)
         {
             var index = Position + 1;
             if(tokens.Count == index)
-                return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+                return new TokenResult<T>(null, outOfRangeException(index));
             for (int i = 0; i <= maxDeep; i++)
             {
                 index = index + i;
@@ -192,9 +201,9 @@ namespace Lexer
                     if(tokens[index].TokenType.Equals(searchedToken))
                         return new TokenResult<T>(tokens[index]);
                 }
-                else return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));     
+                else return new TokenResult<T>(null, outOfRangeException(index));     
             }
-             return new TokenResult<T>(null, new TokenException($"На позициях {index} - {index + maxDeep} токен {getTokenName(searchedToken)} не найден", TokenErrorType.NotFound));
+             return new TokenResult<T>(null, notFountOnPositionException(index, index + maxDeep, searchedToken));
         }
         /// <summary>
         /// Получаем массив искомых токенов, метод прерывается если встречается токен отличный от искомых 
@@ -241,7 +250,7 @@ namespace Lexer
         {
             var index = Position - 1;
             if(index == 0)
-                return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+                return new TokenResult<T>(null, outOfRangeException(index));
             for (int i = 0; i <= maxDeep; i++)
             {
                 index = index - i;
@@ -251,9 +260,9 @@ namespace Lexer
                         return new TokenResult<T>(tokens[index]);
                 }
                 else
-                    return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));     
+                    return new TokenResult<T>(null, outOfRangeException(index));     
             }
-            return new TokenResult<T>(null, new TokenException($"На позициях {index- maxDeep} - {index} токен {getTokenName(searchedToken)} не найден", TokenErrorType.NotFound));
+            return new TokenResult<T>(null, notFountOnPositionException(index- maxDeep, index, searchedToken));
                     
         }
         /// <summary>
@@ -309,7 +318,7 @@ namespace Lexer
         {
             var index = Position - 1;
             if(index == 0)
-                return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+                return new TokenResult<T>(null, outOfRangeException(index));
             for (int i = 0; i <= maxDeep; i++)
             {
                 index = index - i;
@@ -319,9 +328,9 @@ namespace Lexer
                         return new TokenResult<T>(tokens[index]);
                 }
                 else
-                    return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));     
+                    return new TokenResult<T>(null, outOfRangeException(index));     
             }
-            return new TokenResult<T>(null, new TokenException($"На позициях {index- maxDeep} - {index} токены не найдены", TokenErrorType.NotFound));
+            return new TokenResult<T>(null, notFountOnPositionException(index- maxDeep, index));
         }
        
         public TokenResult<T> Before()
@@ -329,7 +338,7 @@ namespace Lexer
             var index = Position - 1;
             if(index < 0)
                 return new TokenResult<T>(tokens[index]);
-            return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+            return new TokenResult<T>(null, outOfRangeException(index));
         }
         public TokenResult<T> Before(T beforeIs) => Before(beforeIs, 0);
          /// <summary>
@@ -345,10 +354,10 @@ namespace Lexer
                 {
                         if(i-1 >= 0)
                             return new TokenResult<T>(tokens[i-1]);
-                        else return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {i-1}", TokenErrorType.Range));
+                        else return new TokenResult<T>(null, outOfRangeException(i-1));
                 }
             }
-            return new TokenResult<T>(null, new TokenException($"Токен не смог найти сам себя у себя в массиве! парадокс) {getTokenName(this.TokenType)}", TokenErrorType.WrongFound));
+            return new TokenResult<T>(null, neverException());
         }
 
         /// <summary>
@@ -367,10 +376,10 @@ namespace Lexer
                 else
                 {
                     var found = tokens[index].TokenType;
-                    return new TokenResult<T>(null, new TokenException($"На позиции {index} вместо ожидаемого {getTokenName(beforeIs)} обнаружен {getTokenName(found)}", TokenErrorType.WrongFound));
+                    return new TokenResult<T>(null, wrongFoundException(index, beforeIs, found));
                 }
             }  
-            else return new TokenResult<T>(null, new TokenException($"Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range));
+            else return new TokenResult<T>(null, outOfRangeException(index));
         }
        
 
@@ -383,8 +392,100 @@ namespace Lexer
         {
             return new TokenResult<T>(this);
         }
+        public bool HaveCustomGroups => this.CustomGroups.Count > 0;
+        public TokenResult<T> GetDate()
+        {
+            if(this.CustomGroups.Count != 3)
+                return new TokenResult<T>(null, customException($"Группа данного токена не совпадает с сигнатурой даты: {this.Value}"));
+            var date = getDate(this.CustomGroups[0].Value, this.CustomGroups[1].Value, this.CustomGroups[2].Value);
+            if(date == null)
+                return new TokenResult<T>(null, customException($"Ошибка преобразования даты: {this.Value}"));
+            return new TokenResult<T>(this, date);
+        }
 
 
         private string getTokenName(T token) => Enum.GetName(typeof(T), token);
+
+        private TokenException customException(string message, [CallerMemberName]string callerMemberName = null) =>
+            new TokenException($"{currentToken} в методе: {callerMemberName} возникла ошибка - {message}", TokenErrorType.NotFound);
+        private TokenException outOfRangeException(int index, [CallerMemberName]string callerMemberName = null) =>
+            new TokenException($"{currentToken} в методе: {callerMemberName} возникла ошибка - Запрос выходит за пределы массива токенов, запрашиваемый индекс: {index}", TokenErrorType.Range);
+        
+        private TokenException wrongFoundException(int index, T waitingToken, T foundedToken, [CallerMemberName]string callerMemberName = null) =>
+         new TokenException($"{currentToken} в методе: {callerMemberName} возникла ошибка - на позиции {index} вместо ожидаемого {getTokenName(waitingToken)} обнаружен {getTokenName(foundedToken)}", TokenErrorType.WrongFound);
+        
+        private TokenException notFountOnPositionException(int startIndex, int endIndex, [CallerMemberName]string callerMemberName = null) => 
+            new TokenException($"{currentToken} в методе: {callerMemberName} возникла ошибка - на позициях {startIndex} - {endIndex} токены не найдены");
+        private TokenException notFountOnPositionException(int startIndex, int endIndex, T token, [CallerMemberName]string callerMemberName = null) => 
+            new TokenException($"{currentToken} в методе: {callerMemberName} возникла ошибка - на позициях {startIndex} - {endIndex} токен {getTokenName(token)} не найден");
+        private TokenException neverException([CallerMemberName]string callerMemberName = null) =>
+            new TokenException($"{currentToken} в методе: {callerMemberName} возникла ошибка - токен не смог найти сам себя у себя в массиве! парадокс)", TokenErrorType.WrongFound);
+        private string currentToken => $"При операции с токеном {TypeName} на позиции {Position}";
+
+        
+         /// <summary>
+        /// Получение даты из строки
+        /// </summary>
+        /// <param name="date">Дата</param>
+        /// <param name="month">Месяц</param>
+        /// <param name="year">Год</param>
+        /// <returns></returns>
+        private DateTime? getDate(string date, string month, string year)
+        {
+            System.Text.RegularExpressions.Regex isDigit = new System.Text.RegularExpressions.Regex("\\d+");
+            bool monthIsWord = !isDigit.IsMatch(month);
+            DateTime? signDate = null;
+            if (string.IsNullOrEmpty(date) || string.IsNullOrEmpty(year) || string.IsNullOrEmpty(month))
+                return signDate;
+            try
+            {
+                var y = int.Parse(year);
+                var m = monthIsWord ? MonthToNumberConverter(month) : int.Parse(month);
+                var d = int.Parse(date);
+                signDate = new DateTime(y, m, d);
+                return signDate;
+            }
+            catch
+            {
+                return signDate;
+            }
+        }
+
+        /// <summary>
+        /// Конвертация текущего месяца в его номер
+        /// </summary>
+        /// <param name="month">Месяц в виде: января февраля марта итд...</param>
+        /// <returns></returns>
+        int MonthToNumberConverter(string month)
+        {
+            switch (month.ToLower().Trim())
+            {
+                default:
+                case "января":
+                    return 1;
+                case "февраля":
+                    return 2;
+                case "марта":
+                    return 3;
+                case "апреля":
+                    return 4;
+                case "мая":
+                    return 5;
+                case "июня":
+                    return 6;
+                case "июля":
+                    return 7;
+                case "августа":
+                    return 8;
+                case "сентября":
+                    return 9;
+                case "октября":
+                    return 10;
+                case "ноября":
+                    return 11;
+                case "декабря":
+                    return 12;
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace DocumentParser.Requisites
 {
@@ -15,21 +15,21 @@ namespace DocumentParser.Requisites
             if(System.IO.File.Exists(OrgansFile))
             {
                 var org = System.IO.File.ReadAllText(OrgansFile);
-                RequisitesChanger.OrgansChanger = JsonConvert.DeserializeObject<List<(string, string)>>(org);
+                RequisitesChanger.OrgansChanger = JsonSerializer.Deserialize<List<(string, string)>>(org);
                 foreach(var c in RequisitesChanger.OrgansChanger)
                     RequisitesChanger.OrgansChangerRx.Add((new Regex(c.source), c.target));
             }
             if(System.IO.File.Exists(TypesFile))
             {
                 var tp = System.IO.File.ReadAllText(TypesFile);
-                RequisitesChanger.TypesChanger = JsonConvert.DeserializeObject<List<(string, string)>>(tp);
+                RequisitesChanger.TypesChanger = JsonSerializer.Deserialize<List<(string, string)>>(tp);
                 foreach(var c in RequisitesChanger.TypesChanger)
                     RequisitesChanger.TypesChangerRx.Add((new Regex(c.source), c.target));
             }
             if(System.IO.File.Exists(TypeByOrganFile))
             {
                 var tporg = System.IO.File.ReadAllText(TypeByOrganFile);
-                RequisitesChanger.TypeByOrganChanger = JsonConvert.DeserializeObject<List<(string, string)>>(tporg);
+                RequisitesChanger.TypeByOrganChanger = JsonSerializer.Deserialize<List<(string, string)>>(tporg);
                 foreach(var c in RequisitesChanger.TypeByOrganChanger)
                     RequisitesChanger.TypeByOrganChangerRx.Add((new Regex(c.source), c.target));
             }
@@ -39,17 +39,17 @@ namespace DocumentParser.Requisites
             System.IO.Directory.CreateDirectory("configs");
             if(RequisitesChanger.OrgansChanger.Count > 0)
             {
-                var org = JsonConvert.SerializeObject(RequisitesChanger.OrgansChanger);
+                var org = JsonSerializer.Serialize(RequisitesChanger.OrgansChanger);
                 System.IO.File.WriteAllText(OrgansFile, org);
             }
             if(RequisitesChanger.TypesChanger.Count > 0)
             {
-                var tp = JsonConvert.SerializeObject(RequisitesChanger.TypesChanger);
+                var tp = JsonSerializer.Serialize(RequisitesChanger.TypesChanger);
                 System.IO.File.WriteAllText(TypesFile, tp);
             }
             if(RequisitesChanger.TypeByOrganChanger.Count > 0)
             {
-                var orgtp = JsonConvert.SerializeObject(RequisitesChanger.TypeByOrganChanger);
+                var orgtp = JsonSerializer.Serialize(RequisitesChanger.TypeByOrganChanger);
                 System.IO.File.WriteAllText(TypeByOrganFile, orgtp);
             }
         }

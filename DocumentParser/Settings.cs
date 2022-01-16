@@ -1,6 +1,5 @@
 
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 namespace DocumentParser
 {
 
@@ -27,7 +26,7 @@ namespace DocumentParser
             if(System.IO.File.Exists(fileName))
             {
                 var settings = await System.IO.File.ReadAllTextAsync(fileName);
-                Settings deserialized = JsonConvert.DeserializeObject<Settings>(settings);
+                Settings deserialized = System.Text.Json.JsonSerializer.Deserialize<Settings>(settings);
                 update(deserialized);
             }
             else

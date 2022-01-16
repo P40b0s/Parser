@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using System;
 
 namespace DocumentParser.DocumentElements
@@ -36,7 +35,7 @@ namespace DocumentParser.DocumentElements
 
     public struct Image
     {
-        [JsonConstructor]
+        [System.Text.Json.Serialization.JsonConstructor]
         public Image(Guid id, byte[] data, long sizeX, long sizeY, Thumb th)
         {
             Data = data;

@@ -1,4 +1,3 @@
-using Newtonsoft.Json;
 using DocumentParser.Interfaces;
 using System;
 using System.Collections.Generic;

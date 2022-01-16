@@ -1,5 +1,4 @@
 ﻿using Utils.Extensions;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -621,7 +620,7 @@ namespace DocumentParser.DocumentElements
         public bool IsMathFormula { get; set; } = false;
         public override string ToString()
         {
-            return JsonConvert.SerializeObject(this);
+            return System.Text.Json.JsonSerializer.Serialize(this);
         }
         public override bool Equals(object other)
         {
@@ -664,7 +663,7 @@ namespace DocumentParser.DocumentElements
 
         public string GetMD5()
         {
-            var serialized = JsonConvert.SerializeObject(this);
+            var serialized = System.Text.Json.JsonSerializer.Serialize(this);
             using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
             {
                return  serialized.GetHash();
@@ -740,7 +739,7 @@ namespace DocumentParser.DocumentElements
         public bool IsChange { get; set; }
         public override string ToString()
         {
-            return JsonConvert.SerializeObject(this);
+            return System.Text.Json.JsonSerializer.Serialize(this);
         }
 
         public override bool Equals(object other)
@@ -778,7 +777,7 @@ namespace DocumentParser.DocumentElements
 
         public string GetMD5()
         {
-            var serialized = JsonConvert.SerializeObject(this);
+            var serialized = System.Text.Json.JsonSerializer.Serialize(this);
             using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
             {
                 return serialized.GetHash();

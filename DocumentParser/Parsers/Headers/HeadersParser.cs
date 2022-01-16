@@ -23,7 +23,7 @@ namespace DocumentParser.Parsers.Headers
     /// итого у нас есть просто хедеры, хедеры приложений и рутовые итемы тела документа.
     /// Таблицы тоже добавляются к хедерам если они есть
     /// </summary>
-    public class HeadersParser : ParserBase<HeaderToken>
+    public class HeadersParser : LexerBase<HeaderToken>
     {
         AnnexParser annexParser {get;}
         RequisitesParser requisitesParser {get;}
@@ -46,16 +46,16 @@ namespace DocumentParser.Parsers.Headers
         private WordProcessing extractor {get;}
         public bool Parse()
         {
-            Status("Поиск заголовков");
+            UpdateStatus("Поиск заголовков");
             var percentage = 0;
-            tokens = lexer.Tokenize(extractor.FullText, new HeaderTokensDefinition()).ToList();
+            Tokenize(extractor.FullText, new HeaderTokensDefinition());
             var count = tokens.Count();
             foreach(var token in tokens)
             {
                 if(token.TokenType == HeaderToken.Заголовок)
                     parseHeaders(token);
                 percentage++;
-                Percentage("Поиск заголовков...", count, percentage);
+                UpdateStatus("Поиск заголовков...", count, percentage);
             }
             foreach(var h in Headers)
             {
@@ -69,7 +69,7 @@ namespace DocumentParser.Parsers.Headers
             getAnnexHeaders(annexParser);
              //Берем все итемы в теле документа которые не вошли в хедеры
             BodyRootElements.AddRange(requisitesParser.BeforeBodyElement.TakeTo(t=>t.NodeType == NodeType.Заголовок));
-            return true;
+            return !HasFatalError;
         }
         /// <summary>
         /// Добавляем таблицу к хедерам и к приложениям но только после поиска таблиц!
@@ -193,53 +193,42 @@ namespace DocumentParser.Parsers.Headers
 
         private bool parseHeaders(Token<HeaderToken> token)
         {
-            try
-            {
-                var headerPar = extractor.GetElements(token).FirstOrDefault();
-                if(headerPar.NodeType == NodeType.АбзацТаблицы)
-                    return false;
-                if(headerPar.IsChange)
-                    return false;
-                var header = new HeaderParserModel();
-                extractor.SetElementNode(token, NodeType.Заголовок);
-                header.Header.Type = token.CustomGroups[0].Value;
-                var number = extractor.GetUnicodeString(token.CustomGroups[1]);
-                if(number == null)
-                {
-                    exceptions.Add(new ParserException($"Не могу определить номер заголовка {token.Value}", ErrorType.Fatal));
-                    return false;
-                }
-                header.Header.Number = number;
-                header.Header.Postfix = token.CustomGroups[2].Value;
-                //Хрена в приложениях не выделено жирным шрифтом!
-                //if(!extractor.Properties.IsBold(headerPar.WordElement.Element))
-                //{
-                    ////Наименование статьи скорее всего слито с первым абзацем тут будем реализовывать эту логику
-                    ////Скорее всего возьмем первый абзац и добафим к абзацам
-                    ////только для начала его надо распарсить.....
-                //    throw new Exception("Способ обработки таких статей еще не определен");
-                //}
-                var name = extractor.GetUnicodeString(headerPar, new TextIndex(token.Length, headerPar.Length - token.Length));
-                header.Header.Name = name;
-                header.Header.ElementIndex = headerPar.ElementIndex;
-                var meta = headerPar.Next();
-                header.LastElement = headerPar;
-                header.StartIndex = headerPar.ElementIndex +1;
-                if(meta != null && meta.MetaInfo.FullIsMeta)
-                {
-                    header.Header.Meta = meta.MetaInfo;
-                    header.LastElement = meta;
-                    header.StartIndex = meta.ElementIndex +1;
-                }
-                Headers.Add(header);
-                Count++;
-                return true;
-            }
-            catch(ParserException pe)
-            {
-                exceptions.Add(pe);
+            var headerPar = extractor.GetElements(token).FirstOrDefault();
+            if(headerPar.NodeType == NodeType.АбзацТаблицы)
                 return false;
-            }     
+            if(headerPar.IsChange)
+                return false;
+            var header = new HeaderParserModel();
+            extractor.SetElementNode(token, NodeType.Заголовок);
+            header.Header.Type = token.CustomGroups[0].Value;
+            var number = extractor.GetUnicodeString(token.CustomGroups[1]);
+            if(number == null)
+                return AddError($"Не могу определить номер заголовка {token.Value}");
+            header.Header.Number = number;
+            header.Header.Postfix = token.CustomGroups[2].Value;
+            //Хрена в приложениях не выделено жирным шрифтом!
+            //if(!extractor.Properties.IsBold(headerPar.WordElement.Element))
+            //{
+                ////Наименование статьи скорее всего слито с первым абзацем тут будем реализовывать эту логику
+                ////Скорее всего возьмем первый абзац и добафим к абзацам
+                ////только для начала его надо распарсить.....
+            //    throw new Exception("Способ обработки таких статей еще не определен");
+            //}
+            var name = extractor.GetUnicodeString(headerPar, new TextIndex(token.Length, headerPar.Length - token.Length));
+            header.Header.Name = name;
+            header.Header.ElementIndex = headerPar.ElementIndex;
+            var meta = headerPar.Next();
+            header.LastElement = headerPar;
+            header.StartIndex = headerPar.ElementIndex +1;
+            if(meta.IsOk && meta.Element.MetaInfo.FullIsMeta)
+            {
+                header.Header.Meta = meta.Element.MetaInfo;
+                header.LastElement = meta.Element;
+                header.StartIndex = meta.Element.ElementIndex +1;
+            }
+            Headers.Add(header);
+            Count++;
+            return true;
         } 
     }
 }

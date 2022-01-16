@@ -15,7 +15,7 @@ using System.IO;
 namespace DocumentParser.Parsers
 {
     //центральный модуль парсинга документа, один на каждый док, отсюда вызываются все остальные модули
-    public class DocumentParser : ParserBase<DocumentToken>
+    public class DocumentParser : ParserBase
     {
         ISettings settings {get;}
         public DocumentParser(string filePath)
@@ -48,9 +48,9 @@ namespace DocumentParser.Parsers
             }
             var tokens = lexer.Tokenize(word.FullText, new DocumentsTokensDefinition());
             //tokensModel = new RequisiteTokensModel(tokens);
-            var requisites = new RequisitesParser(word, tokens.ToList(), document);
-            requisites.UpdateCallback+= c => Status(c, true);
-            requisites.ErrorCallback+= e => Error(e);
+            var requisites = new RequisitesParser(word, document);
+            requisites.UpdateCallback+= c => UpdateStatus(c);
+            requisites.ErrorCallback+= e => AddError(e.Message, null, e.ErrorType);
             requisites.Parse();
             exceptions.AddRange(requisites.exceptions);
             if(exceptions.Count > 0)

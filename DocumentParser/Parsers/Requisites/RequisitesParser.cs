@@ -8,7 +8,7 @@ using DocumentParser.TokensDefinitions;
 using DocumentParser.Workers;
 namespace DocumentParser.Parsers.Requisites;
 
-public class RequisitesParser : ParserBase<DocumentToken>
+public class RequisitesParser : LexerBase<DocumentToken>
 {
     WordProcessing extractor {get;}
     RequisiteTokensModel tokensRequisiteModel {get;} = new RequisiteTokensModel();
@@ -16,11 +16,11 @@ public class RequisitesParser : ParserBase<DocumentToken>
     public ElementStructure BeforeBodyElement {get;set;}
     public bool HasErrors => exceptions.Any(a=>a.ErrorType == ErrorType.Fatal);
     public bool HasWarnings => exceptions.Any(a=>a.ErrorType == ErrorType.Warning);
-    public RequisitesParser(WordProcessing extractor, List<Token<DocumentToken>> tokens, DocumentElements.Document doc)
+    public RequisitesParser(WordProcessing extractor, DocumentElements.Document doc)
     {
         this.extractor = extractor;
-        this.tokens = tokens;
         this.doc = doc;
+        Tokenize(extractor.FullText, new DocumentsTokensDefinition());
     }
 
     Predicate<Token<DocumentToken>> IsOrgan = d => 
@@ -47,7 +47,7 @@ public class RequisitesParser : ParserBase<DocumentToken>
             || d.TokenType == DocumentToken.Вид_ФКЗ);
     public bool Parse()
     {
-        Status("Определение реквизитов документа...");
+        UpdateStatus("Определение реквизитов документа...");
         if(!TypeBlock())
             return HasErrors;
         if(!OrganBlock())
@@ -64,23 +64,14 @@ public class RequisitesParser : ParserBase<DocumentToken>
     bool TypeBlock()
     {
         if(tokens.Count == 0)
-        {
-            exceptions.Add(new ParserException("Не найдено ни одного токена, поиск реквизитов невозможен", ErrorType.Fatal));
-            return false;
-        }
+            return AddError("Не найдено ни одного токена, поиск реквизитов невозможен");
         var first = tokens[0];
         var typeToken = first.FindForward(IsDocType, 2);
-        if(!typeToken.IsOk)
-        {
-            exceptions.Add(new ParserException("Не удалось определить вид документа: " + typeToken.Error, ErrorType.Fatal));
-            return false;
-        }
+        if(typeToken.IsError)
+            return AddError("Не удалось определить вид документа: ", typeToken.Error);
         var stringType = extractor.GetUnicodeString(typeToken.Token);
         if(stringType == null)
-        {
-            exceptions.Add(new ParserException($"Параграф вида документа \"{typeToken.Token.Value}\" не найден", ErrorType.Fatal));
-            return false;
-        }
+            return AddError($"Параграф вида документа \"{typeToken.Token.Value}\" не найден");
         stringType = stringType.NormalizeWhiteSpaces().NormalizeCase().Trim();
         doc.Type = stringType;
         tokensRequisiteModel.typeToken = typeToken.Token;
@@ -92,17 +83,14 @@ public class RequisitesParser : ParserBase<DocumentToken>
     {
         var posts = tokens.FindAll(f=>f.TokenType == DocumentToken.Должность);
         if(posts.Count == 0)
-        {
-            exceptions.Add(new ParserException("Не удалось определить должность подписанта", ErrorType.Fatal));
-            return false;
-        }
+            return AddError("Не удалось определить должность подписанта");
         //Должностей то несколько
         foreach(var p in posts)
         {
             var executor = p.Next(DocumentToken.Подписант);
-            if(!executor.IsOk)
+            if(executor.IsError)
             {
-                exceptions.Add(new ParserException($"Не удалось определить ФИО подписанта для должности {p.Value}", executor.Error));
+                AddError($"Не удалось определить ФИО подписанта для должности {p.Value}", executor.Error);
             }
             else
                 tokensRequisiteModel.personToken.Add(new ExecutorRequisiteToken(){postToken = p, executorToken = executor.Token});
@@ -120,43 +108,28 @@ public class RequisitesParser : ParserBase<DocumentToken>
         if(tokensRequisiteModel.organsTokens.FirstOrDefault(c=> c.TokenType == DocumentToken.Орган_Правительство) != null)
         {   
             var signD =  tokensRequisiteModel.typeToken.Next(DocumentToken.ДлиннаяДата);
-            if(!signD.IsOk)
-            {
-                exceptions.Add(new ParserException($"Не удалось найти дату подписания", signD.Error));
-                return false;
-            }
+            if(signD.IsError)
+                return AddError($"Не удалось найти дату подписания ", signD.Error);
             tokensRequisiteModel.signDateToken = signD.Token;
         }
         else
         {
             var signD = tokensRequisiteModel.personToken.Last().executorToken.FindForward(DocumentToken.ДлиннаяДата, 8);
-            if(!signD.IsOk)
-            {
-                exceptions.Add(new ParserException("Не удалось найти дату подписания", signD.Error));
-                return false;
-            }    
+            if(signD.IsError)
+                return AddError("Не удалось найти дату подписания ", signD.Error);
             tokensRequisiteModel.signDateToken = signD.Token;
         }
             
         var number =  tokensRequisiteModel.signDateToken.Next(DocumentToken.Номер);
-        if(!number.IsOk)
-        {
-            exceptions.Add(new ParserException($"Не удалось определить номер документа", number.Error));
-            return false;
-        }
+        if(number.IsError)
+            return AddError($"Не удалось определить номер документа ", number.Error);
         var n = extractor.GetUnicodeString(tokensRequisiteModel.numberToken.CustomGroups[0]);
         doc.Numbers.Add(new Number(n));
 
-        var signDate = Utils.Extensions.DateTimeExtensions.GetDate(tokensRequisiteModel.signDateToken.CustomGroups[0].Value,
-                                                tokensRequisiteModel.signDateToken.CustomGroups[1].Value,
-                                                tokensRequisiteModel.signDateToken.CustomGroups[2].Value,
-                                                true);
-        if(!signDate.HasValue)
-        {
-            exceptions.Add(new ParserException($"Не удалось привести дату к формату даты\\времени. {tokensRequisiteModel.signDateToken.Value}", number.Error));
-            return false;
-        }
-        doc.SignDate = signDate.Value;
+        var signDate = tokensRequisiteModel.signDateToken.GetDate();
+        if(signDate.IsError)
+            return AddError(signDate.Error.Message, number.Error);
+        doc.SignDate = signDate.Date.Value;
         foreach(var p in tokensRequisiteModel.personToken)
         {
             extractor.SetElementNode(p.postToken, NodeType.stop);
@@ -182,44 +155,25 @@ public class RequisitesParser : ParserBase<DocumentToken>
         //TODO не всешда присутствует дата принятия совфедом!!!
         var gd = tokens.FirstOrDefault(f => f.TokenType == DocumentToken.ПринятГД);
         if (gd == null)
-        {
-            exceptions.Add(new ParserException("Дата принятия в Государственной Думе не найдена"));
-            return false;
-        }
+            return AddError("Дата принятия в Государственной Думе не найдена");
         var gdDate = gd.Next(DocumentToken.ДлиннаяДата);
-        if (!gdDate.IsOk)
-        {
-            exceptions.Add(new ParserException("Неверный формат или отсуствует дата принятия в Государственной Думе ", gdDate.Error));
-            return false;
-        }
-        var GDDATE = Utils.Extensions.DateTimeExtensions.GetDate(gdDate.Token.CustomGroups[0].Value, gdDate.Token.CustomGroups[1].Value, gdDate.Token.CustomGroups[2].Value, true);
-        if (!GDDATE.HasValue)
-        {
-            exceptions.Add(new ParserException($"Дата принятия в Государственной Думе не распознана: {gdDate.Token.Value} - неправильный формат даты"));
-            return false;
-        }
-        doc.GDDate = GDDATE;
+        if (gdDate.IsError)
+            return AddError("Неверный формат или отсуствует дата принятия в Государственной Думе ", gdDate.Error);
+        var GDDATE = gdDate.Token.GetDate();
+        if (GDDATE.IsError)
+            return AddError($"Дата принятия в Государственной Думе не распознана: {GDDATE.Error.Message}");
+        doc.GDDate = GDDATE.Date.Value;
         extractor.SetElementNode(gdDate.Token, NodeType.stop);
         var sfToken = gdDate.Token.Next(DocumentToken.ОдобренСФ);
-        if (!sfToken.IsOk)
-        {
-            exceptions.Add(new ParserException("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error , ErrorType.Warning));
-            return true;
-        }
+        if (sfToken.IsError)
+            AddError("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error , ErrorType.Warning);
         var sfDate = sfToken.Token.Next();
-        if (!sfDate.IsOk)
-        {
-            exceptions.Add(new ParserException("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error));
-            return false;
-        }
-
-        var SFDATE = Utils.Extensions.DateTimeExtensions.GetDate(sfDate.Token.CustomGroups[0].Value, sfDate.Token.CustomGroups[1].Value, sfDate.Token.CustomGroups[2].Value, true);
-        if (!SFDATE.HasValue)
-        {
-            exceptions.Add(new ParserException($"Дата одобрения в Совете Федерации не распознана: {sfDate.Token.Value} - неправильный формат даты", ErrorType.Fatal));
-            return true;
-        }
-        doc.SFDate = SFDATE;
+        if (sfDate.IsError)
+            return AddError("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error);
+        var SFDATE = sfDate.Token.GetDate();
+        if (!SFDATE.IsError)
+            return AddError($"Дата одобрения в Совете Федерации не распознана: {SFDATE.Error.Message}");
+        doc.SFDate = SFDATE.Date.Value;
         extractor.SetElementNode(sfDate.Token, NodeType.stop);
         BeforeBodyElement = extractor.GetElements(sfDate.Token).FirstOrDefault();
         return true;
@@ -269,11 +223,8 @@ public class RequisitesParser : ParserBase<DocumentToken>
             mayBeName = lastToken.FindForward(DocumentToken.НачалоПредложения, 4);
             isGov = true;
         }
-        if(!mayBeName.IsOk)
-        {
-            exceptions.Add(new ParserException("Наименование документа не найдено ", mayBeName.Error));
-            return false;
-        }
+        if(mayBeName.IsError)
+            return AddError("Наименование документа не найдено ", mayBeName.Error);
         var name = extractor.GetElements(mayBeName.Token).FirstOrDefault();
         if(isGov || extractor.Settings.ParserRules.BoldNameRule)
         {
