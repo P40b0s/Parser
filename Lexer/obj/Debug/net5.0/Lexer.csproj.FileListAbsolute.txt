@@ -1,5 +1,0 @@
-/home/phobos/projects/net/KND/Lexer/obj/Debug/net5.0/Lexer.csprojAssemblyReference.cache
-/home/phobos/projects/net/KND/Lexer/obj/Debug/net5.0/Lexer.GeneratedMSBuildEditorConfig.editorconfig
-/home/phobos/projects/net/KND/Lexer/obj/Debug/net5.0/Lexer.AssemblyInfoInputs.cache
-/home/phobos/projects/net/KND/Lexer/obj/Debug/net5.0/Lexer.AssemblyInfo.cs
-/home/phobos/projects/net/KND/Lexer/obj/Debug/net5.0/Lexer.csproj.CoreCompileInputs.cache

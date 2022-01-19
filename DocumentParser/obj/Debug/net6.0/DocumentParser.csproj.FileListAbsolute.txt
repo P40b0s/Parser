@@ -1,5 +1,0 @@
-/home/phobos/projects/net/KND/DocumentParser/obj/Debug/net6.0/DocumentParser.csproj.AssemblyReference.cache
-/home/phobos/projects/net/KND/DocumentParser/obj/Debug/net6.0/DocumentParser.GeneratedMSBuildEditorConfig.editorconfig
-/home/phobos/projects/net/KND/DocumentParser/obj/Debug/net6.0/DocumentParser.AssemblyInfoInputs.cache
-/home/phobos/projects/net/KND/DocumentParser/obj/Debug/net6.0/DocumentParser.AssemblyInfo.cs
-/home/phobos/projects/net/KND/DocumentParser/obj/Debug/net6.0/DocumentParser.csproj.CoreCompileInputs.cache
