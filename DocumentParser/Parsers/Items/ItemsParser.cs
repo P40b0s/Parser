@@ -43,7 +43,6 @@ public class ItemsParser : LexerBase<ItemToken>
         items.RemoveAll(r=> hy.elements.FirstOrDefault(f=>f.ElementIndex == r.ElementIndex) != null);
         
         UpdateStatus("Поиск списочных элементов");
-        var percentage = 0;
         var count = currentTokens.Count();
 
         return cast;
