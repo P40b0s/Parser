@@ -6,6 +6,10 @@ using DocumentParser.DocumentElements;
 using Lexer;
 using DocumentParser.TokensDefinitions;
 using DocumentParser.Workers;
+using DocumentParser.Elements;
+using CSharpFunctionalExtensions;
+using System.Text.RegularExpressions;
+
 namespace DocumentParser.Parsers.Requisites;
 
 public class RequisitesParser : LexerBase<DocumentToken>
@@ -16,10 +20,12 @@ public class RequisitesParser : LexerBase<DocumentToken>
     public ElementStructure BeforeBodyElement {get;set;}
     public bool HasErrors => exceptions.Any(a=>a.ErrorType == ErrorType.Fatal);
     public bool HasWarnings => exceptions.Any(a=>a.ErrorType == ErrorType.Warning);
+    RequisitesParserRules rules {get;}
     public RequisitesParser(WordProcessing extractor, DocumentElements.Document doc)
     {
         this.extractor = extractor;
         this.doc = doc;
+        rules = extractor.Settings.RequisitesParserRules;
         Tokenize(extractor.FullText, new DocumentsTokensDefinition());
     }
 
@@ -66,15 +72,53 @@ public class RequisitesParser : LexerBase<DocumentToken>
         if(tokens.Count == 0)
             return AddError("Не найдено ни одного токена, поиск реквизитов невозможен");
         var first = tokens[0];
-        var typeToken = first.FindForward(IsDocType, 2);
+        var typeToken = first.FindForward(IsDocType, rules.DefaultRules.TypeSearchMaxDeep);
         if(typeToken.IsError)
             return AddError("Не удалось определить вид документа: ", typeToken.Error);
-        var stringType = extractor.GetUnicodeString(typeToken.Token);
+        var stringType = extractor.GetUnicodeString(typeToken.Value);
         if(stringType == null)
-            return AddError($"Параграф вида документа \"{typeToken.Token.Value}\" не найден");
+            return AddError($"Параграф вида документа \"{typeToken.Value.Value}\" не найден");
         stringType = stringType.NormalizeWhiteSpaces().NormalizeCase().Trim();
         doc.Type = stringType;
-        tokensRequisiteModel.typeToken = typeToken.Token;
+        tokensRequisiteModel.typeToken = typeToken.Value; 
+        return true;
+    }
+     bool OrganBlock ()
+    {
+        var before = tokensRequisiteModel.typeToken.FindBackwardMany(IsOrgan);
+        var next = tokensRequisiteModel.typeToken.FindForwardMany(IsOrgan);
+        if(before.Count == 0 && next.Count == 0)
+        {
+            exceptions.Add(new ParserException($"Не найдено ни одного принявшего органа, поиск осуществлялся от токена \"{tokensRequisiteModel.typeToken.Value}\", индекс: {tokensRequisiteModel.typeToken.StartIndex}"));
+            return false;
+        }
+        if(before.Count > 0)
+        {
+            foreach(var o in before)
+                tokensRequisiteModel.organsTokens.Add(o);
+        }
+        if(next.Count > 0)
+        {
+            foreach(var o in next)
+                tokensRequisiteModel.organsTokens.Add(o);
+        }
+        foreach(var o in tokensRequisiteModel.organsTokens)
+        {
+            var organ = new Organ(extractor.GetUnicodeString(o).NormalizeWhiteSpaces().NormalizeCase());
+            doc.Organs.Add(organ); 
+        }
+        //Проверяем кастомные правила для данного органа\типа документа, если они находятся то заменяем дефолтные на эти
+        foreach(var c in rules.CustomRequisiteRules)
+        {
+            var org = new Regex(c.Organ);
+            var tp = new Regex(c.Type);
+            if(tp.IsMatch(tokensRequisiteModel.typeToken.Value))
+            {
+                foreach(var o in tokensRequisiteModel.organsTokens)
+                    if(org.IsMatch(o.Value))
+                        rules.DefaultRules = c.RequisiteRule;
+            }
+        }
         return true;
     }
 
@@ -93,7 +137,7 @@ public class RequisitesParser : LexerBase<DocumentToken>
                 AddError($"Не удалось определить ФИО подписанта для должности {p.Value}", executor.Error);
             }
             else
-                tokensRequisiteModel.personToken.Add(new ExecutorRequisiteToken(){postToken = p, executorToken = executor.Token});
+                tokensRequisiteModel.personToken.Add(new ExecutorRequisiteToken(){postToken = p, executorToken = executor.Value});
         }
         if(tokensRequisiteModel.personToken.Count == 0)
             return false;
@@ -103,22 +147,9 @@ public class RequisitesParser : LexerBase<DocumentToken>
             var EXECUTOR = extractor.GetUnicodeString(e.executorToken);
             doc.Executors.Add(new Executor(EXECUTOR, POST.Trim()));
         }
-        
-        //Ветвление для правительства
-        if(tokensRequisiteModel.organsTokens.FirstOrDefault(c=> c.TokenType == DocumentToken.Орган_Правительство) != null)
-        {   
-            var signD =  tokensRequisiteModel.typeToken.Next(DocumentToken.ДлиннаяДата);
-            if(signD.IsError)
-                return AddError($"Не удалось найти дату подписания ", signD.Error);
-            tokensRequisiteModel.signDateToken = signD.Token;
-        }
-        else
-        {
-            var signD = tokensRequisiteModel.personToken.Last().executorToken.FindForward(DocumentToken.ДлиннаяДата, 8);
-            if(signD.IsError)
-                return AddError("Не удалось найти дату подписания ", signD.Error);
-            tokensRequisiteModel.signDateToken = signD.Token;
-        }
+        //Дату не находим, заканчиваем метод
+        if(!getSignDate())
+            return false;
             
         var number =  tokensRequisiteModel.signDateToken.Next(DocumentToken.Номер);
         if(number.IsError)
@@ -129,7 +160,7 @@ public class RequisitesParser : LexerBase<DocumentToken>
         var signDate = tokensRequisiteModel.signDateToken.GetDate();
         if(signDate.IsError)
             return AddError(signDate.Error.Message, number.Error);
-        doc.SignDate = signDate.Date.Value;
+        doc.SignDate = signDate.Value.Value;
         foreach(var p in tokensRequisiteModel.personToken)
         {
             extractor.SetElementNode(p.postToken, NodeType.stop);
@@ -139,6 +170,36 @@ public class RequisitesParser : LexerBase<DocumentToken>
         extractor.SetElementNode(tokensRequisiteModel.signDateToken, NodeType.stop);
         return true;  
     }
+
+    private bool getSignDate()
+    {
+        bool header = false;
+        bool footer = false;
+        if(rules.SearchSignDateOnHeader)
+        {   
+            var signD = tokensRequisiteModel.typeToken.FindForward(DocumentToken.ДлиннаяДата, rules.SignDateSearchMaxDeep);
+            if(signD.IsOk)
+            {
+                header = true;
+                tokensRequisiteModel.signDateToken = signD.Value;
+            }
+        }
+        if(rules.SearchSignDateOnFooter)
+        {
+            var signD = tokensRequisiteModel.personToken.Last().executorToken.FindForward(DocumentToken.ДлиннаяДата, rules.SignDateSearchMaxDeep);
+            if(signD.IsOk)
+            {
+                footer =  true;
+                tokensRequisiteModel.signDateToken = signD.Value;
+            }
+        }
+        if(!header && !footer)
+            return AddError("Не удалось найти дату подписания");
+        else return true;
+    }
+
+
+
     /// <summary>
     /// Парсинг блоков
     /// одобрен сф
@@ -179,42 +240,27 @@ public class RequisitesParser : LexerBase<DocumentToken>
         return true;
     }
 
-    bool OrganBlock ()
-    {
-        var before = tokensRequisiteModel.typeToken.FindBackwardMany(IsOrgan);
-        var next = tokensRequisiteModel.typeToken.FindForwardMany(IsOrgan);
-        if(before.Count == 0 && next.Count == 0)
-        {
-            exceptions.Add(new ParserException($"Не найдено ни одного принявшего органа, поиск осуществлялся от токена \"{tokensRequisiteModel.typeToken.Value}\", индекс: {tokensRequisiteModel.typeToken.StartIndex}"));
-            return false;
-        }
-        if(before.Count > 0)
-        {
-            foreach(var o in before)
-                tokensRequisiteModel.organsTokens.Add(o);
-        }
-        
-        if(next.Count > 0)
-        {
-            foreach(var o in next)
-                tokensRequisiteModel.organsTokens.Add(o);
-        }
-        foreach(var o in tokensRequisiteModel.organsTokens)
-        {
-            var organ = new Organ(extractor.GetUnicodeString(o).NormalizeWhiteSpaces().NormalizeCase());
-            doc.Organs.Add(organ); 
-        }
-        return true;
-    }
+   
+
+   
     /// <summary>
     /// Парсинг наименования
     /// </summary>
     bool NameBlock()
     {
+        if(rules.DefaultRules.NameInTypeString)
+        {
+            var nameToken = extractor.GetElements(tokensRequisiteModel.typeToken).FirstOrDefault();
+            if(nameToken == null)
+                return AddError("Наименование не найдено, внимание включен параметр - наименование находится в абзаце типа документа!");
+            doc.Name = extractor.GetUnicodeString(nameToken);
+            return true;
+        }
         Token<DocumentToken> lastToken = null;
         if(tokensRequisiteModel.typeToken.Position > tokensRequisiteModel.organsTokens.Last().Position)
             lastToken = tokensRequisiteModel.typeToken;
         else lastToken = tokensRequisiteModel.organsTokens.Last();
+        
         var mayBeName = lastToken.FindForward(DocumentToken.НачалоПредложения, 2);
         bool isGov = false;
         //FIXME хз будет так работать или нет ПРОВЕРИТЬ!

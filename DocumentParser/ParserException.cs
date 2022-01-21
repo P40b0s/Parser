@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Lexer;
 namespace DocumentParser;
 
 public enum ErrorType
@@ -11,15 +7,16 @@ public enum ErrorType
     Warning,
     Info
 }
-[Serializable]
-public class ParserException : Exception
+
+public class ParserException : CustomException<ErrorType>
 {
-    public ErrorType ErrorType {get;set;}
-    public DateTime Date {get;}
-    public ParserException(string message, ErrorType errorType = ErrorType.Fatal)
-        : base(message)
-    {
-        ErrorType = errorType;
-        Date = DateTime.Now;
-    }
+    public ParserException(string message, ErrorType error = ErrorType.Fatal) : base(message, error){}
 }
+
+public class ElementQueryException : CustomException<ErrorType>
+{
+    public ElementQueryException(string message, ErrorType error = ErrorType.Fatal) : base(message, error){}
+}
+
+
+

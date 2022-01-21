@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DocumentParser.Elements;
 using DocumentParser.Interfaces;
 using DocumentParser.Parsers.Headers;
 using DocumentParser.Workers;

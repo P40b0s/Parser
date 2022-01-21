@@ -18,15 +18,8 @@ public enum TokenErrorType
 }
 
 [Serializable]
-public class TokenException : Exception
+public class TokenException : CustomException<TokenErrorType>
 {
-    public TokenErrorType ErrorType {get;}
-    public DateTime Date {get;}
-    public TokenException(string message, TokenErrorType errorType = TokenErrorType.NotFound)
-        : base(message)
-    {
-        ErrorType = errorType;
-        Date = DateTime.Now;
-    }
+    public TokenException(string message, TokenErrorType error = TokenErrorType.NotFound) : base(message, error){}
 }
 

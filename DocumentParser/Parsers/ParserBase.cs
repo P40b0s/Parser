@@ -101,12 +101,24 @@ namespace DocumentParser.Parsers
         /// </summary>
         /// <param name="pe">Ошибка парсера</param>
         /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
-        protected bool AddError(string message,  TokenException tokenException = null, ErrorType errorType = ErrorType.Fatal)
+        protected bool AddError(string message,  TokenException tokenException, ErrorType errorType = ErrorType.Fatal)
+        {
+            ParserException  exception = new ParserException($"{message}. TokenError: {tokenException.Message}");
+            exceptions.Add(exception);
+            UpdateError(exception);
+            UpdateErrors();
+            if(exception.ErrorType == ErrorType.Fatal)
+                return false;
+            else return true;
+        }
+        /// <summary>
+        /// Добавляет ошибку в список ошибок
+        /// </summary>
+        /// <param name="pe">Ошибка парсера</param>
+        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
+        protected bool AddError(string message, ErrorType errorType = ErrorType.Fatal)
         {
             ParserException exception = new ParserException($"{message}");
-            if(tokenException!= null)
-                exception = new ParserException($"{message}. TokenError: {tokenException.Message}");
-            
             exceptions.Add(exception);
             UpdateError(exception);
             UpdateErrors();
