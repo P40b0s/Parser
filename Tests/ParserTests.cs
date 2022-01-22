@@ -26,6 +26,11 @@ public class Tests
     {
         new Files()
         {
+            FilePath = "соглашение.docx",
+            Description = "Соглашение МИД"
+        },
+        new Files()
+        {
             FilePath = "закон.docx",
             Description = "Старый вид законов"
         },
@@ -93,13 +98,13 @@ public class Tests
         public async ValueTask ParseRequisites()
         {
             var list = new List<(bool, string, Document)>();
-            for(int i = 5; i< files.Count; i++)
+            for(int i = 0; i< files.Count; i++)
             {
-
+                await settings.Load();
+                document = new Document();
+                word = new WordProcessing(settings);
                 var fi = new System.IO.FileInfo(files[i].GetPath);
                 document.FileName = fi.Name;
-                word = new WordProcessing(settings);
-                document = new Document();
                 await word.LoadDocument(files[i].GetPath);
                 Assert.True(word.Errors.Count == 0);
                 if(word.Errors.Count > 0)
@@ -114,13 +119,14 @@ public class Tests
                 if(rParser.HasErrors)
                     System.Console.WriteLine($"Ошибка в {files[i].Description}");
                 list.Add((!rParser.HasErrors, files[i].Description, document));
-                Assert.True(!rParser.HasErrors);
+                //Assert.True(!rParser.HasErrors);
             }
 
             foreach(var v in list)
             {
                 System.Console.WriteLine($"{v.Item1}, {v.Item2} \n" + $"{v.Item3.ToString()}");
             }
+            Assert.True(list.All(a=>a.Item1));
         }
 
     [Test]

@@ -81,7 +81,7 @@ public struct Result<T,E> : IResult<T,E> where E : IError, new()
     private T getValue()
     {
         if(this.IsError)
-            throw new TryGetValueIfErrorExistsException("Вы не можете получить Value, так как результат операции: false" + Error.Message);
+            throw new TryGetValueIfErrorExistsException("Вы не можете получить Value, так как результат операции: false " + Error.Message);
         else return value;
     }
      private E getError()

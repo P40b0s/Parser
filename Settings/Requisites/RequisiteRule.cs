@@ -18,6 +18,11 @@ public class RequisiteRule
     /// <value></value>
     public bool SignDateAfterType {get;set;} = false;
     /// <summary>
+    /// Дату подписания надо ловить после кастомного токена
+    /// </summary>
+    /// <value></value>
+    public bool SignDateAfterCustomToken {get;set;} = false;
+    /// <summary>
     ///Какой абзац по счету будет наименование после вида документа (необходимо для поиска наименования, только для шапки)
     /// например:
     /// приказ
@@ -43,5 +48,16 @@ public class RequisiteRule
     /// </summary>
     /// <value></value>
     public bool ParseGDSFAttributes {get;set;} = false;
+    /// <summary>
+    /// Отсутсвует номер
+    /// </summary>
+    /// <value></value>
+    public bool NoNumber {get;set;} = false;
+    /// <summary>
+    /// Отсутсвует подписант
+    /// </summary>
+    /// <value></value>
+    public bool NoExecutor {get;set;} = false;
+    public string CustomOrganName {get;set;} = "";
 
 }

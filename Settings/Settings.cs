@@ -41,34 +41,34 @@ public partial class Settings : ISettings
                 ParseGDSFAttributes = true,
             },
         }},
-        new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"федеральный{Templates.WsOrBr}закон", Rules = new AllRules() 
-        {
-            RequisiteRule = new RequisiteRule()
-            {
-                ParseGDSFAttributes = true,
-            },
-        }},
-        new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"закон{Templates.WsOrBr}российской{Templates.WsOrBr}федерации{Templates.WsOrBr}о{Templates.WsOrBr}поправке{Templates.WsOrBr}к{Templates.WsOrBr}конституции{Templates.WsOrBr}российской{Templates.WsOrBr}федерации", Rules = new AllRules() 
-        {
-            RequisiteRule = new RequisiteRule()
-            {
-                ParseGDSFAttributes = true,
-            },
-        }},
+        // new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"федеральный{Templates.WsOrBr}закон", Rules = new AllRules() 
+        // {
+        //     RequisiteRule = new RequisiteRule()
+        //     {
+        //         ParseGDSFAttributes = true,
+        //     },
+        // }},
+        // new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"закон{Templates.WsOrBr}российской{Templates.WsOrBr}федерации{Templates.WsOrBr}о{Templates.WsOrBr}поправке{Templates.WsOrBr}к{Templates.WsOrBr}конституции{Templates.WsOrBr}российской{Templates.WsOrBr}федерации", Rules = new AllRules() 
+        // {
+        //     RequisiteRule = new RequisiteRule()
+        //     {
+        //         ParseGDSFAttributes = true,
+        //     },
+        // }},
         new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = "закон", Rules = new AllRules() 
         {
             RequisiteRule = new RequisiteRule()
             {
                 ParseGDSFAttributes = true,
             },
-        }},
-        new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"федеральный{Templates.WsOrBr}конституционный{Templates.WsOrBr}закон", Rules = new AllRules() 
-        {
-            RequisiteRule = new RequisiteRule()
-            {
-                ParseGDSFAttributes = true,
-            },
-        }},
+        },Weight = 1},
+        // new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"федеральный{Templates.WsOrBr}конституционный{Templates.WsOrBr}закон", Rules = new AllRules() 
+        // {
+        //     RequisiteRule = new RequisiteRule()
+        //     {
+        //         ParseGDSFAttributes = true,
+        //     },
+        // }},
         new CustomRule<AllRules>(){Organ = $"правительство{Templates.WsOrBr}российской{Templates.WsOrBr}федерации", Type = "распоряжение", Rules = new AllRules() 
         {
             RequisiteRule = new RequisiteRule()
@@ -94,6 +94,16 @@ public partial class Settings : ISettings
                 NamePositionAfterTypeCorrection = 3,
             },
         }, Weight = 5},
+        new CustomRule<AllRules>(){Organ = $".+", Type = "соглашение", Rules = new AllRules() 
+        {
+            RequisiteRule = new RequisiteRule()
+            {   NameInTypeString = true,
+                NoExecutor = true,
+                NoNumber = true,
+                SignDateAfterCustomToken = true,
+                CustomOrganName = "Российская Федерация"
+            },
+        }},
     }; 
 
     [System.Text.Json.Serialization.JsonIgnore]

@@ -19,7 +19,7 @@ public class RequisitesTokenDefinition : TokenDefinitionBase<RequisitesTokenType
         addToken(RequisitesTokenType.Вид, $"закон{Templates.WsOrBr}российской{Templates.WsOrBr}федерации{Templates.WsOrBr}о{Templates.WsOrBr}поправке{Templates.WsOrBr}к{Templates.WsOrBr}конституции{Templates.WsOrBr}российской{Templates.WsOrBr}федерации", 1);
         addToken(RequisitesTokenType.Вид, $"федеральный{Templates.WsOrBr}конституционный{Templates.WsOrBr}закон", 1);
         addToken(RequisitesTokenType.Вид, "закон", 2);
-        addToken(RequisitesTokenType.Вид, "кодекс|указ|распоряжение|постановление|приказ", 1);
+        addToken(RequisitesTokenType.Вид, "кодекс|указ|распоряжение|постановление|приказ|соглашение", 1);
         
         addToken(RequisitesTokenType.ОдобренСФ, $"одобрен{Templates.WsOrBr}советом{Templates.WsOrBr}федерации", 1);
         addToken(RequisitesTokenType.ПринятГД, $"принят{Templates.WsOrBr}государственной{Templates.WsOrBr}думой", 1);
@@ -33,8 +33,9 @@ public class RequisitesTokenDefinition : TokenDefinitionBase<RequisitesTokenType
         
         addToken(RequisitesTokenType.ДлиннаяДата, $"(?:от\\s*)?(?<date>\\d{{1,2}})\\s*(?<month>{Templates.Months})\\s*(?<year>\\d{{4}})\\s*(?:г[ода.]+)?", 1);
         addToken(RequisitesTokenType.КороткаяДата, $"(?<date>\\d{{1,2}})[.](?<month>\\d{{1,2}})[.](?<year>\\d{{4}})", 1);
-        addToken(RequisitesTokenType.Подписант, $"[А-Я]{{1}}[.][А-Яа-я]+", 1);
-        addToken(RequisitesTokenType.Подписант, $"[А-Я]{{1}}[.][А-Я]{{1}}[.][А-Яа-я]+", 1);
+        addToken(RequisitesTokenType.ПередДатойПодписания, $"совершено{Templates.WsOrBrPlus}в{Templates.WsOrBrPlus}городе{Templates.WsOrBrPlus}\\S+", 1);
+        addToken(RequisitesTokenType.Подписант, $"[А-Я][.][А-Яа-я]+", 2);
+        addToken(RequisitesTokenType.Подписант, "[А-Я][.][А-Я][.][А-Яа-я]+", 1);
         addToken(RequisitesTokenType.Номер, $"(?:N|№)\\s*(?<number>[^\\s]+)", 1);
         addToken(RequisitesTokenType.Часть, "часть\\s+(первая|вторая|третья|четвертая|пятая|шестая|седьмая)", 1);
         //addToken(RequisitesTokenType.Слово, "\\S+", 10);

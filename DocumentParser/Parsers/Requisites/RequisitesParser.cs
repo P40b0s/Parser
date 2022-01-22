@@ -7,6 +7,7 @@ using DocumentParser.Workers;
 using DocumentParser.Elements;
 using SettingsWorker.Requisites;
 using SettingsWorker;
+using System.Collections.Generic;
 
 namespace DocumentParser.Parsers.Requisites;
 
@@ -64,15 +65,22 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
             return AddError($"Параграф вида документа \"{typeToken.Value.Value}\" не найден");
         stringType = stringType.NormalizeWhiteSpaces().NormalizeCase().Trim();
         doc.Type = stringType;
-        tokensRequisiteModel.typeToken = typeToken.Value; 
+        tokensRequisiteModel.typeToken = typeToken.Value;
+        //Первую раз делаем для доков у которых орган не играет значения
+        loadCustomRules();
         return true;
     }
-     bool OrganBlock ()
+    bool OrganBlock ()
     {
+        if(rules.DefaultRules.RequisiteRule.CustomOrganName != "")
+        {
+            doc.Organs.Add(new Organ(rules.DefaultRules.RequisiteRule.CustomOrganName));
+            return true;
+        }
         var before = tokensRequisiteModel.typeToken.FindBackwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
         var next = tokensRequisiteModel.typeToken.FindForwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
         if(before.Count == 0 && next.Count == 0)
-            return AddError(new ParserException($"Не найдено ни одного принявшего органа, поиск осуществлялся от токена \"{tokensRequisiteModel.typeToken.Value}\", индекс: {tokensRequisiteModel.typeToken.StartIndex}"));
+            return AddError("Не найдено ни однго принявшего органа!");
         if(before.Count > 0)
         {
             foreach(var o in before)
@@ -88,100 +96,141 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
             var organ = new Organ(extractor.GetUnicodeString(o).NormalizeWhiteSpaces().NormalizeCase());
             doc.Organs.Add(organ); 
         }
+        loadCustomRules();
+        return true;
+    }
+
+    private void loadCustomRules()
+    {
         //Проверяем кастомные правила для данного органа\типа документа, если они находятся то заменяем дефолтные на эти
         //На будущее можно добавить еще какие то особенности и отсюда переопределять дефолтные правила
+        var findedRules = new List<CustomRule<AllRules>>();
         for(int c = 0; c < rules.CustomRules.Count; c++)
         {
-            for(int o = 0; o < tokensRequisiteModel.organsTokens.Count; o++)
+            if(rules.CustomRules[c].Organ == ".+")
             {
-                if(rules.CustomRules[c].OrganRX().IsMatch(tokensRequisiteModel.organsTokens[o].Value))
+                if(rules.CustomRules[c].TypeRX().IsMatch(tokensRequisiteModel.typeToken.Value))
                 {
-                    if(rules.CustomRules[c].TypeRX().IsMatch(tokensRequisiteModel.typeToken.Value))
-                    {
-                        rules.DefaultRules = rules.CustomRules[c].Rules;
-                        UpdateStatus($"Установлены правила разбора для {rules.CustomRules[c].Organ} {rules.CustomRules[c].Type}");
-                    }   
-                }     
+                    findedRules.Add(rules.CustomRules[c]);
+                }   
             }
+            else
+            {
+                for(int o = 0; o < tokensRequisiteModel.organsTokens.Count; o++)
+                {
+                    if(rules.CustomRules[c].OrganRX().IsMatch(tokensRequisiteModel.organsTokens[o].Value))
+                    {
+                        if(rules.CustomRules[c].TypeRX().IsMatch(tokensRequisiteModel.typeToken.Value))
+                        {
+                            findedRules.Add(rules.CustomRules[c]);
+                        }   
+                    }     
+                }
+            }
+           
         }
-        return true;
+        var def = findedRules.OrderBy(o=>o.Weight).Count() > 0;
+        if(def)
+        {
+            rules.DefaultRules = findedRules[0].Rules;
+            UpdateStatus($"Установлены правила разбора для {findedRules[0].Organ} {findedRules[0].Type}");
+        }
     }
 
     
     bool SignDateNumberExecutorBlock()
     {
-        var posts = tokens.FindAll(f=>f.TokenType == RequisitesTokenType.Должность);
-        if(posts.Count == 0)
-            return AddError("Не удалось определить должность подписанта");
-        //Должностей то несколько
-        foreach(var p in posts)
+        if(!rules.DefaultRules.RequisiteRule.NoExecutor)
         {
-            var executor = p.Next(RequisitesTokenType.Подписант);
-            if(executor.IsError)
+            var posts = tokens.FindAll(f=>f.TokenType == RequisitesTokenType.Должность);
+            if(posts.Count == 0)
+                return AddError("Не удалось определить должность подписанта");
+            //Должностей то несколько
+            foreach(var p in posts)
             {
-                AddError($"Не удалось определить ФИО подписанта для должности {p.Value}", executor.Error);
+                var executor = p.Next(RequisitesTokenType.Подписант);
+                if(executor.IsError)
+                {
+                    AddError($"Не удалось определить ФИО подписанта для должности {p.Value}", executor.Error);
+                }
+                else
+                    tokensRequisiteModel.personToken.Add(new ExecutorRequisiteToken(){postToken = p, executorToken = executor.Value});
             }
-            else
-                tokensRequisiteModel.personToken.Add(new ExecutorRequisiteToken(){postToken = p, executorToken = executor.Value});
-        }
-        if(tokensRequisiteModel.personToken.Count == 0)
-            return false;
-        foreach(var e in tokensRequisiteModel.personToken)
-        {
-            var POST = extractor.GetUnicodeString(e.postToken);
-            var EXECUTOR = extractor.GetUnicodeString(e.executorToken);
-            doc.Executors.Add(new Executor(EXECUTOR, POST.Trim()));
+            if(tokensRequisiteModel.personToken.Count == 0)
+                return false;
+            foreach(var e in tokensRequisiteModel.personToken)
+            {
+                var POST = extractor.GetUnicodeString(e.postToken);
+                var EXECUTOR = extractor.GetUnicodeString(e.executorToken);
+                doc.Executors.Add(new Executor(EXECUTOR, POST.Trim()));
+                extractor.SetElementNode(e.postToken, NodeType.stop);
+                extractor.SetElementNode(e.executorToken, NodeType.stop);
+            }
+           
         }
         //Дату не находим, заканчиваем метод
         if(!getSignDate())
             return false;
-            
-        var number =  tokensRequisiteModel.signDateToken.Next(RequisitesTokenType.Номер);
-        if(number.IsError)
-            return AddError($"Не удалось определить номер документа ", number.Error);
-        tokensRequisiteModel.numberToken = number.Value;
-        var n = extractor.GetUnicodeString(tokensRequisiteModel.numberToken.CustomGroups[0]);
-        doc.Numbers.Add(new Number(n));
-
-        var signDate = tokensRequisiteModel.signDateToken.GetDate();
-        if(signDate.IsError)
-            return AddError(signDate.Error.Message, number.Error);
-        doc.SignDate = signDate.Value.Value;
-        foreach(var p in tokensRequisiteModel.personToken)
+        if(!rules.DefaultRules.RequisiteRule.NoNumber)
         {
-            extractor.SetElementNode(p.postToken, NodeType.stop);
-            extractor.SetElementNode(p.executorToken, NodeType.stop);
+            var number =  tokensRequisiteModel.signDateToken.Next(RequisitesTokenType.Номер);
+            if(number.IsError)
+                return AddError($"Не удалось определить номер документа ", number.Error);
+            tokensRequisiteModel.numberToken = number.Value;
+            var n = extractor.GetUnicodeString(tokensRequisiteModel.numberToken.CustomGroups[0]);
+            doc.Numbers.Add(new Number(n));
+            extractor.SetElementNode(tokensRequisiteModel.numberToken, NodeType.stop);
         }
-        extractor.SetElementNode(tokensRequisiteModel.numberToken, NodeType.stop);
         return true;  
     }
 
     private bool getSignDate()
     {
         bool ok = false;
-        if(rules.DefaultRules.RequisiteRule.SignDateAfterType)
-        {   
-            var signD = tokensRequisiteModel.typeToken.FindForward(RequisitesTokenType.ДлиннаяДата, rules.DefaultRules.RequisiteRule.SignDateSearchMaxDeep);
-            if(signD.IsOk)
+        if(rules.DefaultRules.RequisiteRule.SignDateAfterCustomToken)
+        {
+            var custom = tokens.GetFirst(f=>f.TokenType == RequisitesTokenType.ПередДатойПодписания);
+            if(custom.IsOk)
             {
-                ok = true;
-                tokensRequisiteModel.signDateToken = signD.Value;
-                extractor.SetElementNode(signD.Value, NodeType.stop);
+                var signD = custom.Value.Next(RequisitesTokenType.ДлиннаяДата);
+                if(signD.IsOk)
+                {
+                    tokensRequisiteModel.signDateToken = signD.Value;
+                    ok = true;
+                }
             }
         }
         else
         {
-            var signD = tokensRequisiteModel.personToken.Last().executorToken.FindForward(RequisitesTokenType.ДлиннаяДата, rules.DefaultRules.RequisiteRule.SignDateSearchMaxDeep);
-            if(signD.IsOk)
+            if(rules.DefaultRules.RequisiteRule.SignDateAfterType)
+            {   
+                var signD = tokensRequisiteModel.typeToken.FindForward(RequisitesTokenType.ДлиннаяДата, rules.DefaultRules.RequisiteRule.SignDateSearchMaxDeep);
+                if(signD.IsOk)
+                {
+                    ok = true;
+                    tokensRequisiteModel.signDateToken = signD.Value;
+                    extractor.SetElementNode(signD.Value, NodeType.stop);
+                }
+            }
+            else
             {
-                ok =  true;
-                tokensRequisiteModel.signDateToken = signD.Value;
-                extractor.SetElementNode(signD.Value, NodeType.stop);
+                var signD = tokensRequisiteModel.personToken.Last().executorToken.FindForward(RequisitesTokenType.ДлиннаяДата, rules.DefaultRules.RequisiteRule.SignDateSearchMaxDeep);
+                if(signD.IsOk)
+                {
+                    ok =  true;
+                    tokensRequisiteModel.signDateToken = signD.Value;
+                    extractor.SetElementNode(signD.Value, NodeType.stop);
+                }
             }
         }
+        
         if(!ok)
             return AddError("Не удалось найти дату подписания");
-        else return true;
+        var signDate = tokensRequisiteModel.signDateToken.GetDate();
+        if(signDate.IsError)
+            return AddError(signDate.Error.Message, signDate.Error);
+        doc.SignDate = signDate.Value.Value;
+        return true;
     }
 
 
@@ -213,7 +262,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         extractor.SetElementNode(gdDate.Value, NodeType.stop);
         var sfToken = gdDate.Value.Next(RequisitesTokenType.ОдобренСФ);
         if (sfToken.IsError)
-            AddError("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error , ErrorType.Warning);
+            return AddError("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error , ErrorType.Warning);
         var sfDate = sfToken.Value.Next();
         if (sfDate.IsError)
             return AddError("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error);
