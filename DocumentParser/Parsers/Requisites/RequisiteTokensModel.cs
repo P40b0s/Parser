@@ -8,7 +8,7 @@ namespace DocumentParser.Parsers.Requisites
     {
         public Token<RequisitesTokenType> typeToken {get;set;}
         public List<Token<RequisitesTokenType>> organsTokens {get;set;} = new List<Token<RequisitesTokenType>>();
-        public Token<RequisitesTokenType> nameToken {get;set;}
+        public Elements.ElementStructure nameElement {get;set;}
         public List<ExecutorRequisiteToken> personToken {get;set;} = new List<ExecutorRequisiteToken>();
         public Token<RequisitesTokenType> signDateToken {get;set;}
         public Token<RequisitesTokenType> numberToken {get;set;}

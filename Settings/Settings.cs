@@ -73,12 +73,27 @@ public partial class Settings : ISettings
         {
             RequisiteRule = new RequisiteRule()
             {
-                SearchSignDateOnFooter = false,
-                SearchSignDateOnHeader = true,
-                OverrideHeaderSignDateByFooterSignDate = false,
+                SignDateAfterType= true,
                 RequiredName = false,
+                NamePositionAfterTypeCorrection = 3,
             },
         }},
+        new CustomRule<AllRules>(){Organ = $"правительство{Templates.WsOrBr}российской{Templates.WsOrBr}федерации", Type = "постановление", Rules = new AllRules() 
+        {
+            RequisiteRule = new RequisiteRule()
+            {
+                SignDateAfterType= true,
+                NamePositionAfterTypeCorrection = 3,
+            },
+        }},
+        new CustomRule<AllRules>(){Organ = $".+", Type = "приказ", Rules = new AllRules() 
+        {
+            RequisiteRule = new RequisiteRule()
+            {
+                SignDateAfterType= true,
+                NamePositionAfterTypeCorrection = 3,
+            },
+        }, Weight = 5},
     }; 
 
     [System.Text.Json.Serialization.JsonIgnore]
@@ -99,10 +114,10 @@ public partial class Settings : ISettings
 public class Paths
 {
     public string RootDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-    public string DocumentsDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "Documents");
-    public string FilesUploadingDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "UploadedFiles");
-    public string XmlDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "Xml");
-    public string ConfigurationsDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "Configuration");
+    public string DocumentsDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/Documents");
+    public string FilesUploadingDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/UploadedFiles");
+    public string XmlDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/Xml");
+    public string ConfigurationsDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/Configuration");
 }
 
 

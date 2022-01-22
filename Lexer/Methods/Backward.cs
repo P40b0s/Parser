@@ -41,7 +41,7 @@ public partial class Token<T>
         {
             var index = withSelf ? Position : Position - 1;
             var result = new List<Token<T>>();
-            while(index >= 0 && oneOf.Invoke(tokens[index]))
+            while(index >= 0 && oneOf(tokens[index]))
             {
                 result.Add(tokens[index]);
                 index--;
@@ -62,12 +62,12 @@ public partial class Token<T>
             var result = new List<Token<T>>();
             for(int i = index; i >= 0; i--)
             {
-                if(skip.Invoke(tokens[index]))
+                if(skip(tokens[index]))
                 {
                     index--;
                     continue;
                 }
-                if(take.Invoke(tokens[index]))
+                if(take(tokens[index]))
                     result.Add(tokens[index]);
                 else break;
                 index--;
@@ -75,6 +75,7 @@ public partial class Token<T>
             return result;
         }
         /// <summary>
+        /// ТЕСТ!!!
         /// Поиск токена в обратном направлении (назад) по предикату
         /// </summary>
         /// <param name="searchedToken">Предикат</param>
@@ -85,16 +86,12 @@ public partial class Token<T>
             var index = Position - 1;
             if(index == 0)
                 return new Result<Token<T>, TokenException>(outOfRangeException(index));
-            for (int i = 0; i <= maxDeep; i++)
+                //5        10    
+            for (int i = index; i >= 0 && maxDeep >=0; i--)
             {
-                index = index - i;
-                if(index >= 0)
-                {
-                    if(oneOf.Invoke(tokens[index]))
-                        return new Result<Token<T>, TokenException>(tokens[index]);
-                }
-                else
-                    return new Result<Token<T>, TokenException>(outOfRangeException(index));     
+                if(oneOf.Invoke(tokens[index]))
+                    return new Result<Token<T>, TokenException>(tokens[index]);
+                maxDeep--;
             }
             return new Result<Token<T>, TokenException>(notFountOnPositionException(index- maxDeep, index));
         }
@@ -102,7 +99,7 @@ public partial class Token<T>
         public Result<Token<T>, TokenException> Before()
         {
             var index = Position - 1;
-            if(index < 0)
+            if(index >= 0)
                 return new Result<Token<T>, TokenException>(tokens[index]);
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
         }
@@ -118,9 +115,9 @@ public partial class Token<T>
             {
                 if(tokens[i].StartIndex == StartIndex)
                 {
-                        if(i-1 >= 0)
-                            return new Result<Token<T>, TokenException>(tokens[i-1]);
-                        else return new Result<Token<T>, TokenException>(outOfRangeException(i-1));
+                    if(i-1 >= 0)
+                        return new Result<Token<T>, TokenException>(tokens[i-1]);
+                    else return new Result<Token<T>, TokenException>(outOfRangeException(i-1));
                 }
             }
             return new Result<Token<T>, TokenException>(neverException());

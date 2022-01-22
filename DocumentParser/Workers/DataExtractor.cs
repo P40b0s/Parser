@@ -44,12 +44,12 @@ namespace DocumentParser.Workers
         public DataExtractor(MainDocumentPart prt, ISettings _settings)
         {
             part = prt;
+            settings = _settings;
             DocumentsDir = settings.Paths.DocumentsDirectory;
             FilesRootDirectory = settings.Paths.RootDirectory;
             RootDirectory = settings.Paths.RootDirectory;
             //ставим true иначе XslCompiledTransform не подгружает зависимые файлы схем
             AppContext.SetSwitch("Switch.System.Xml.AllowDefaultResolver", true);
-            settings = _settings;
             thumbSizeX = 256;
             thumbSizeY = 256;
         }

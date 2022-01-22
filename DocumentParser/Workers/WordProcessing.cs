@@ -326,7 +326,7 @@ namespace DocumentParser.Workers
         {
             var element = ElementsList.LastOrDefault(w=> w.StartIndex <= txt.StartIndex);
             if(element != null)
-                new Result<ElementStructure, ElementQueryException>(element);
+                return new Result<ElementStructure, ElementQueryException>(element);
             return new Result<ElementStructure, ElementQueryException>(new ElementQueryException($"Элемент с индексом {txt.StartIndex} не найден!"));    
         }
         public ElementStructure GetElement(ITextIndex txt) 

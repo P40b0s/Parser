@@ -8,30 +8,26 @@ public class RequisiteRule
     /// <value></value>
     public bool RequiredName {get;set;} = true;
     /// <summary>
-    /// Максимальная глубина поиска наименования документа
-    /// </summary>
-    /// <value></value>
-    public int NameSearchMaxDeep {get;set;} = 4;
-    /// <summary>
     ///Максимальная глубина поиска типа документа (от нулевого токена)
     /// </summary>
     /// <value></value>
-    public int TypeSearchMaxDeep {get;set;} = 2;
+    public int TypeSearchMaxDeep {get;set;} = 10;
     /// <summary>
-    ///Поиск даты подписания в заголовке документа
+    ///Дата подписаниянаходится после вида документа
     /// </summary>
     /// <value></value>
-    public bool SearchSignDateOnHeader {get;set;} = false;
+    public bool SignDateAfterType {get;set;} = false;
     /// <summary>
-    ///Поиск даты подписания в конце документа
+    ///Какой абзац по счету будет наименование после вида документа (необходимо для поиска наименования, только для шапки)
+    /// например:
+    /// приказ
+    /// от 83.12.3221 № 3231
+    /// москва
+    /// О чем наименование
+    /// здесь нименование будет 3 по счету значит выставляем 3
     /// </summary>
     /// <value></value>
-    public bool SearchSignDateOnFooter {get;set;} = true;
-    /// <summary>
-    ///Если найдены две даты подписания использовать ту которая расположена в конце документа
-    /// </summary>
-    /// <value></value>
-    public bool OverrideHeaderSignDateByFooterSignDate {get;set;} = true;
+    public int NamePositionAfterTypeCorrection {get;set;} = 1;
     /// <summary>
     ///Максимальная глубина поиска даты подписания
     /// </summary>

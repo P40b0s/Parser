@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Lexer;
+using Utils;
 
 namespace DocumentParser.Elements;
 
 
 public partial class ElementStructure
 {
-    public Result<ElementStructure, ElementQueryException> Next()
+    public Result<ElementStructure, ElementQueryException> Next(int skip = 1)
     {
-        var index = currentIndex + 1;
+        var index = currentIndex + skip;
         if(elements.Count > index)
             return new Result<ElementStructure, ElementQueryException>(elements[index]);
         else return new Result<ElementStructure, ElementQueryException>(rangeException(index));
@@ -24,11 +25,11 @@ public partial class ElementStructure
     public IEnumerable<ElementStructure> TakeBefore(Predicate<ElementStructure> stop)
     {
         var index = currentIndex - 1;
-        if(index == 0)
+        if(index <= 0)
             yield break;
         for (int i = index; i >=0; i--)
         {
-            if(isTableIndent.Invoke(elements[i]))
+            if(isTableIndent(elements[i]))
                 continue;
             if(isStopOrAnnex(elements[i]))
                 break;
@@ -38,11 +39,11 @@ public partial class ElementStructure
     public Result<ElementStructure, ElementQueryException> FindBackward(Predicate<ElementStructure> element)
     {
         var index = currentIndex - 1;
-        if(index == 0)
-            return new Result<ElementStructure, ElementQueryException>(rangeException(currentIndex - 1));
+        if(index <= 0)
+            return new Result<ElementStructure, ElementQueryException>(rangeException(index));
         for(int i = index; i >= 0; i--)
         {
-            if(element.Invoke(elements[i]))
+            if(element(elements[i]))
                 return new Result<ElementStructure, ElementQueryException>(elements[i]);
         }
         return new Result<ElementStructure, ElementQueryException>(notFoundException());
@@ -57,17 +58,15 @@ public partial class ElementStructure
     {
         var index = currentIndex+1;
         var skipCount = 0;
-        if(elements.Count == index)
+        if(elements.Count <= index)
             return new Result<ElementStructure, ElementQueryException>(rangeException(index));
-        for (int i = index; i < elements.Count; i++)
+        for (int i = index; i < elements.Count && skipCount <= skip; i++)
         {
-            if(skipCount > skip)
-                return new Result<ElementStructure, ElementQueryException>(customException($"На глубине поиска {skip} элемент не найден"));
-            if(isTableIndent.Invoke(elements[i]))
+            if(isTableIndent(elements[i]))
                 continue;         
-            if(isStopOrAnnex.Invoke(elements[i]))
+            if(isStopOrAnnex(elements[i]))
                 break;
-            if(el.Invoke(elements[i]))
+            if(el(elements[i]))
                 new Result<ElementStructure, ElementQueryException>(elements[i]);
             skipCount++;
         }
@@ -80,11 +79,11 @@ public partial class ElementStructure
     /// <returns></returns>
     public IEnumerable<ElementStructure> TakeWhile()
     {
-        if(elements.Count == (currentIndex+1))
+        if(elements.Count <= (currentIndex+1))
             yield break;
         for (int i = (currentIndex + 1); i < elements.Count; i++)
         {
-            if(isTableIndent.Invoke(elements[i]))
+            if(isTableIndent(elements[i]))
                 continue; 
             if(isStopOrAnnex(elements[i]))
                 break;
@@ -98,13 +97,13 @@ public partial class ElementStructure
     /// <returns></returns>
     public IEnumerable<ElementStructure> TakeTo(Predicate<ElementStructure> search)
     {
-        if(elements.Count == (currentIndex+1))
+        if(elements.Count <= (currentIndex+1))
             yield break;
         for (int i = (currentIndex + 1); i < elements.Count; i++)
         {
-            if(isTableIndent.Invoke(elements[i]))
+            if(isTableIndent(elements[i]))
                 continue;
-            if(search.Invoke(elements[i]) || isStopOrAnnex.Invoke(elements[i]))
+            if(search(elements[i]) || isStopOrAnnex(elements[i]))
                 break;
             yield return elements[i];
         }
@@ -116,15 +115,15 @@ public partial class ElementStructure
     /// <returns></returns>
     public IEnumerable<ElementStructure> TakeWhile(Predicate<ElementStructure> search)
     {
-        if(elements.Count == (currentIndex+1))
+        if(elements.Count <= (currentIndex+1))
                 yield break;
         for (int i = (currentIndex + 1); i < elements.Count; i++)
         {
             if(elements[i].NodeType == NodeType.Таблица)
                 continue; 
-            if(isTableIndent.Invoke(elements[i]))
+            if(isTableIndent(elements[i]))
                 continue; 
-            if(!search.Invoke(elements[i]))
+            if(!search(elements[i]))
                 break;
             yield return elements[i];
         }
@@ -138,7 +137,7 @@ public partial class ElementStructure
     /// <returns></returns>
     public IEnumerable<ElementStructure> TakeWhile(NodeType searchedToken, Predicate<ElementStructure> stop, List<ElementStructure> inItems)
     {
-        if(elements.Count == (currentIndex+1))
+        if(elements.Count <= (currentIndex+1))
                 yield break;
         for (int i = (currentIndex + 1); i < elements.Count; i++)
         {
@@ -146,7 +145,7 @@ public partial class ElementStructure
                 continue; 
             if(isTableIndent.Invoke(elements[i]))
                 continue; 
-            if(elements[i].NodeType == searchedToken || isStopOrAnnex(elements[i]) || stop.Invoke(elements[i]) || !inItems.Contains(elements[i]))
+            if(elements[i].NodeType == searchedToken || isStopOrAnnex(elements[i]) || stop(elements[i]) || !inItems.Contains(elements[i]))
                 break;
             yield return elements[i];
         }
@@ -155,7 +154,7 @@ public partial class ElementStructure
 
     public Result<ElementStructure, ElementQueryException> Before()
     {
-        if((currentIndex - 1) > 0)
+        if((currentIndex - 1) >= 0)
             return new Result<ElementStructure, ElementQueryException>(elements[(currentIndex -1)]);
         else return new Result<ElementStructure, ElementQueryException>(rangeException(currentIndex - 1));
     }

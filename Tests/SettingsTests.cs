@@ -2,7 +2,7 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 namespace Tests;
 
-public class Tests
+public class SettingsTests
 {
     [SetUp]
     public void Setup()

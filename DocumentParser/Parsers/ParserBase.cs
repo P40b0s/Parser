@@ -104,7 +104,7 @@ namespace DocumentParser.Parsers
         /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
         protected bool AddError(string message,  TokenException tokenException, ErrorType errorType = ErrorType.Fatal)
         {
-            ParserException  exception = new ParserException($"{message}. TokenError: {tokenException.Message}");
+            ParserException  exception = new ParserException($"{message}. TokenError: {tokenException.Message}", errorType);
             exceptions.Add(exception);
             UpdateError(exception);
             UpdateErrors();
@@ -132,7 +132,7 @@ namespace DocumentParser.Parsers
         /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
         protected bool AddError(string message, ErrorType errorType = ErrorType.Fatal)
         {
-            ParserException exception = new ParserException($"{message}");
+            ParserException exception = new ParserException($"{message}", errorType);
             exceptions.Add(exception);
             UpdateError(exception);
             UpdateErrors();

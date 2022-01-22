@@ -10,7 +10,7 @@ public partial class Token<T>
     public Result<Token<T>, TokenException> Next()
     {
         var index = Position + 1;
-        if(tokens.Count <= index)
+        if(tokens.Count < index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
         return new Result<Token<T>, TokenException>(tokens[index]);
     }
@@ -38,14 +38,7 @@ public partial class Token<T>
         }
         return new Result<Token<T>, TokenException>(neverException());
     }
-    public bool LastIs(T last)
-    {
-        var l = tokens.LastOrDefault();
-        if(l == null)
-            return false;
-        return l.TokenType.Equals(last);
-    }
-        
+   
     /// <summary>
     /// Следующий токен, используется когда нужно пропустить некоторое количество токенов, и мы знаем это количество.
     /// </summary>
@@ -55,12 +48,10 @@ public partial class Token<T>
     public Result<Token<T>, TokenException> Next(T nextIs, int skip)
     {
         var index = Position + 1 + skip;
-        if(tokens.Count <= index)
+        if(tokens.Count < index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
         if(tokens[index].TokenType.Equals(nextIs))
-        {
             return new Result<Token<T>, TokenException>(tokens[index]);
-        } 
         else
         {
             var found = tokens[index].TokenType;
@@ -73,20 +64,18 @@ public partial class Token<T>
     /// <param name="nextIs">Искомый токен</param>
     /// <param name="skip">Количество пропускаемых токенов</param>
     /// <returns></returns>
-    public Result<Token<T>, TokenException> FindForward(Predicate<Token<T>> oneOf, int maxDeep = 0)
+    public Result<Token<T>, TokenException> FindForward(Predicate<Token<T>> oneOf, int maxDeep = 0, bool withSelf = false)
     {
-        var index = Position + 1;
+        var index = withSelf? Position : Position + 1;
         if(tokens.Count == index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
-        for (int i = 0; i <= maxDeep; i++)
+        for (int i = index; i <= maxDeep + index; i++)
         {
-            index = index + i;
-            if(tokens.Count > index)
-            {
-                if(oneOf.Invoke(tokens[index]))
-                    return new Result<Token<T>, TokenException>(tokens[index]);
-            }
-            else return new Result<Token<T>, TokenException>(outOfRangeException(index));     
+            if(tokens.Count < i)
+                return new Result<Token<T>, TokenException>(outOfRangeException(i));
+            
+            if(oneOf(tokens[i]))
+                return new Result<Token<T>, TokenException>(tokens[i]);   
         }
         return new Result<Token<T>, TokenException>(notFountOnPositionException(index, index + maxDeep));
     }
@@ -100,15 +89,12 @@ public partial class Token<T>
         var index = Position + 1;
         if(tokens.Count == index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
-        for (int i = 0; i < tokens.Count; i++)
+        for (int i = index; i < tokens.Count; i++)
         {
-            index = index + i;
-            if(tokens.Count > index)
-            {
-                if(ignore.Invoke(tokens[index]))
-                    return new Result<Token<T>, TokenException>(tokens[index]);
-            }
-            else return new Result<Token<T>, TokenException>(outOfRangeException(index));     
+            if(tokens.Count < i)
+                return new Result<Token<T>, TokenException>(outOfRangeException(i));
+            if(ignore(tokens[index]))
+                return new Result<Token<T>, TokenException>(tokens[index]);    
         }
         return new Result<Token<T>, TokenException>(customException("Не найдено ни одного токена"));
     }
@@ -128,17 +114,15 @@ public partial class Token<T>
         var index = Position + 1;
         if(tokens.Count == index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
-        for (int i = 0; i <= maxDeep; i++)
+        for (int i = index; i <= maxDeep + index; i++)
         {
-            index = index + i;
-            if(tokens.Count > index)
-            {
-                if(tokens[index].TokenType.Equals(searchedToken))
-                    return new Result<Token<T>, TokenException>(tokens[index]);
-            }
-            else return new Result<Token<T>, TokenException>(outOfRangeException(index));     
+            if(tokens.Count < i)
+                return new Result<Token<T>, TokenException>(outOfRangeException(i));
+           
+            if(tokens[index].TokenType.Equals(searchedToken))
+                return new Result<Token<T>, TokenException>(tokens[index]);
         }
-            return new Result<Token<T>, TokenException>(notFountOnPositionException(index, index + maxDeep, searchedToken));
+        return new Result<Token<T>, TokenException>(notFountOnPositionException(index, index + maxDeep, searchedToken));
     }
     /// <summary>
     /// Получаем массив искомых токенов, метод прерывается если встречается токен отличный от искомых 

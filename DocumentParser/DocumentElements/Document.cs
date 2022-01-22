@@ -71,6 +71,11 @@ namespace DocumentParser.DocumentElements
         public DateTime SignDate { get; set; }
         public List<Number> Numbers { get; set;} = new List<Number>();
         public string Name { get; set; }
+        /// <summary>
+        /// Например в кодексах - ЧАСТЬ ЧЕТВЕРТАЯ
+        /// </summary>
+        /// <value></value>
+        public string Part{get;set;}
         public List<Executor> Executors { get; set; } = new List<Executor>();
         public string FileName { get; set; }
         /// <summary>

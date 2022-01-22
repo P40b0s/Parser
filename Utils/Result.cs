@@ -21,13 +21,13 @@ public struct Result<T> : IResult<T>
     public Result(T result)
     {
         value = result;
-        error = default;
+        error = null;
     }
     
     public Result(IError error)
     {
         this.error = error;
-        value = default;
+        value = default(T);
     }
     /// <summary>
     /// Значение результата
@@ -37,8 +37,8 @@ public struct Result<T> : IResult<T>
     private T value {get;init;}
     public IError Error => getError();
     private IError error {get;init;}
-    public bool IsOk => Error == null;
-    public bool IsError => Error != null;
+    public bool IsOk => error == null;
+    public bool IsError => error != null;
     private T getValue()
     {
         if(this.IsError)
@@ -60,13 +60,13 @@ public struct Result<T,E> : IResult<T,E> where E : IError, new()
     public Result(T result)
     {
         value = result;
-        error = default;
+        error = default(E);
     }
     
     public Result(E error)
     {
         this.error = error;
-        value = default;
+        value = default(T);
     }
     /// <summary>
     /// Значение результата
@@ -76,18 +76,18 @@ public struct Result<T,E> : IResult<T,E> where E : IError, new()
     private T value {get;init;}
     public E Error => getError();
     private E error {get;init;}
-    public bool IsOk => Error == null;
-    public bool IsError => Error != null;
+    public bool IsOk => error == null;
+    public bool IsError => error != null;
     private T getValue()
     {
         if(this.IsError)
-            throw new Exception("Вы пытаетесь получить результат операции, со статусом ERROR: " + Error.Message);
+            throw new TryGetValueIfErrorExistsException("Вы не можете получить Value, так как результат операции: false" + Error.Message);
         else return value;
     }
      private E getError()
     {
         if(!this.IsError)
-            throw new Exception("Вы пытаетесь получить ошибку операции, но операция завершена положительно и у нее есть результат: " + Value.ToString());
+            throw new TryGetErrorIfResultExistsException("Вы не можете получить Error, так как результат операции: true " + Value.ToString());
         else return error;
     }
 }

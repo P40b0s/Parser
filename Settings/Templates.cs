@@ -54,7 +54,13 @@ namespace SettingsWorker.Regexes
         /// Правые кавычки
         /// </summary>
         public static  string RightQuotationMark => $@"(?:{GetUnicodeChar(Quotations.RCav)}|{GetUnicodeChar(Quotations.Cav)}|{GetUnicodeChar(Quotations.Cav3Right)})";
+        // \s + мягкий перенос, звезда
         public static string WsOrBr => $"(\\s|{GetUnicodeChar(Templates.BRChar)})*";
+        /// <summary>
+        /// Стандартный пробел + мягкий перенос, плюс
+        /// </summary>
+        /// <returns></returns>
+        public static string WsOrBrPlus => $"(\u0020|{GetUnicodeChar(Templates.BRChar)})+";
         public static char BRChar => Templates.NewLines.SplitNewLine;
         public static class NewLines
         {
