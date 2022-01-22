@@ -1,27 +1,32 @@
 using System.Collections.Generic;
 using DocumentParser.Workers;
 using DocumentParser.DocumentElements;
-using DocumentParser.TokensDefinitions;
 using Lexer;
 using System.Linq;
 using System;
+using DocumentParser.Elements;
+using SettingsWorker.Items;
+using SettingsWorker;
+
 namespace DocumentParser.Parsers.Items;
 
 
-public class ItemsParser : LexerBase<ItemToken>
+public class ItemsParser : LexerBase<ItemTokenType>
 {
+    ISettings settings {get;}
     public List<ItemParserModel> Items {get;set;} = new List<ItemParserModel>();
     public ItemsParser(WordProcessing extractor)
     {
         this.extractor = extractor;
-        Tokenize(extractor.FullText, new ItemTokensDefinition());
+        settings = extractor.Settings;
+        Tokenize(extractor.FullText, new ItemTokensDefinition(settings.TokensDefinitions.ItemTokenDefinitions.TokenDefinitionSettings));
     }
     public int Count {get;set;}
     private WordProcessing extractor {get;}
     public List<Item> Parse(List<ElementStructure> items)
     {
         Items = new List<ItemParserModel>();
-        List<Token<ItemToken>> currentTokens = new List<Token<ItemToken>>();
+        List<Token<ItemTokenType>> currentTokens = new List<Token<ItemTokenType>>();
         Count = 0;
         foreach(var i in items)
         {
@@ -60,9 +65,9 @@ public class ItemsParser : LexerBase<ItemToken>
     /// Группируем итемы по их типу итема
     /// </summary>
     /// <param name="currentTokens"></param>
-    private void groupItems(List<Token<ItemToken>> currentTokens)
+    private void groupItems(List<Token<ItemTokenType>> currentTokens)
     {
-        IEnumerable<IGrouping<ItemToken, Token<ItemToken>>> gr = currentTokens.GroupBy(g => g.TokenType);
+        IEnumerable<IGrouping<ItemTokenType, Token<ItemTokenType>>> gr = currentTokens.GroupBy(g => g.TokenType);
         for(int i = 0; i < gr.Count(); i++)
         {
             var groppedItems = gr.ElementAt(i).ToList();
@@ -124,7 +129,7 @@ public class ItemsParser : LexerBase<ItemToken>
     /// <param name="currentTokens"></param>
     /// <param name="items"></param>
     /// <returns></returns>
-    private (List<ItemWrapper> items, List<ElementStructure> elements) getHierarchyItems(List<Token<ItemToken>> currentTokens, List<ElementStructure> items)
+    private (List<ItemWrapper> items, List<ElementStructure> elements) getHierarchyItems(List<Token<ItemTokenType>> currentTokens, List<ElementStructure> items)
     {
         List<ItemWrapper> readyItems = new List<ItemWrapper>();
         List<ItemWrapper> outItems = new List<ItemWrapper>();

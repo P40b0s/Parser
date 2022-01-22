@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using DocumentParser.Workers;
 using DocumentParser.DocumentElements;
-using DocumentParser.TokensDefinitions;
 using Lexer;
 using Utils.Extensions;
+using DocumentParser.Elements;
+using SettingsWorker.Items;
+
 namespace DocumentParser.Parsers.Items;
 /// <summary>
 /// Класс обертка для итемов, здесь мы получем номер и постфикс итема, на сколько нужно отрезать абзац
@@ -13,7 +15,7 @@ public class ItemWrapper : Item
 {
     ItemWrapper Parent {get;set;}
     int CuttingLenght {get;set;}
-    Token<ItemToken> FirstItemToken {get;set;}
+    Token<ItemTokenType> FirstItemToken {get;set;}
     ElementStructure First {get;set;}
     public void AddSubitem(ItemWrapper item, ItemWrapper parent)
     {
@@ -39,7 +41,7 @@ public class ItemWrapper : Item
         Indents = item.Indents;
         ElementIndex = item.ElementIndex;
     }
-    public ItemWrapper(ElementStructure first, IEnumerable<ElementStructure> paragraps, Token<ItemToken> firstItemToken, WordProcessing extractor)
+    public ItemWrapper(ElementStructure first, IEnumerable<ElementStructure> paragraps, Token<ItemTokenType> firstItemToken, WordProcessing extractor)
     {
         
         First = first;

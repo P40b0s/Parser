@@ -1,22 +1,26 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
-namespace Settings;
+namespace SettingsWorker;
 
 public partial class Settings
 {
     
     JsonSerializerOptions getOptions()  
     {
-        var encoderSettings = new TextEncoderSettings();
+        //Не работает аллоу для <>+
+        //var encoderSettings = new TextEncoderSettings();
         //Символ который не пропускаем через фильтр
-        encoderSettings.AllowCharacters('<', '>', '+', '\u2116');
-        encoderSettings.ForbidCharacter('\u00ad');
-        encoderSettings.AllowRanges(UnicodeRanges.Cyrillic, UnicodeRanges.BasicLatin);
+        //encoderSettings.AllowCharacters('<', '>', '+', '\u2116');
+        //encoderSettings.ForbidCharacter('\u00ad');
+        //encoderSettings.ForbidCharacters('<', '>', '+', '\u2116');
+        //encoderSettings.AllowRanges(UnicodeRanges.Cyrillic, UnicodeRanges.BasicLatin);
+        
         return new JsonSerializerOptions()
         {
             WriteIndented = true,
-            Encoder = JavaScriptEncoder.Create(encoderSettings),
+            //Encoder = JavaScriptEncoder.Create(encoderSettings),
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
     }
         
@@ -35,7 +39,7 @@ public partial class Settings
         if(System.IO.File.Exists(fileName))
         {
             var settings = await System.IO.File.ReadAllTextAsync(fileName);
-            var deserialized = System.Text.Json.JsonSerializer.Deserialize<Settings>(settings);
+            var deserialized = System.Text.Json.JsonSerializer.Deserialize<Settings>(settings, getOptions());
             if(deserialized != null)
             {
                 update(deserialized);

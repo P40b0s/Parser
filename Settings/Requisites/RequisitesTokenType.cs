@@ -1,4 +1,4 @@
-namespace Settings.Requisites;
+namespace SettingsWorker.Requisites;
 
 public enum RequisitesTokenType
 {
@@ -23,7 +23,4 @@ public enum RequisitesTokenType
     /// </summary>
     Часть,
     НачалоПредложения
-    
-
-
 }

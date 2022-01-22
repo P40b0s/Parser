@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using Utils;
 
 namespace DocumentParser.Parsers
 {
@@ -116,9 +117,37 @@ namespace DocumentParser.Parsers
         /// </summary>
         /// <param name="pe">Ошибка парсера</param>
         /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
+        protected bool AddError(IError error)
+        {
+            ParserException exception = new ParserException(error.Message);
+            exceptions.Add(exception);
+            UpdateError(exception);
+            UpdateErrors();
+            return false;
+        }
+        /// <summary>
+        /// Добавляет ошибку в список ошибок
+        /// </summary>
+        /// <param name="pe">Ошибка парсера</param>
+        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
         protected bool AddError(string message, ErrorType errorType = ErrorType.Fatal)
         {
             ParserException exception = new ParserException($"{message}");
+            exceptions.Add(exception);
+            UpdateError(exception);
+            UpdateErrors();
+            if(exception.ErrorType == ErrorType.Fatal)
+                return false;
+            else return true;
+        }
+
+        /// <summary>
+        /// Добавляет ошибку в список ошибок
+        /// </summary>
+        /// <param name="pe">Ошибка парсера</param>
+        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
+        protected bool AddError(ParserException exception)
+        {
             exceptions.Add(exception);
             UpdateError(exception);
             UpdateErrors();

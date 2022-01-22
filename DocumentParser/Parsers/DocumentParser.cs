@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using Lexer;
 using DocumentParser.Workers;
 using System.Threading.Tasks;
 using DocumentParser.DocumentElements;
-using DocumentParser.TokensDefinitions;
 using DocumentParser.Parsers.Requisites;
 using System.Linq;
 using DocumentParser.Parsers.Headers;
@@ -11,6 +9,7 @@ using DocumentParser.Parsers.Annex;
 using DocumentParser.Parsers.Items;
 using Utils.Extensions;
 using System.IO;
+using SettingsWorker;
 
 namespace DocumentParser.Parsers
 {
@@ -21,7 +20,8 @@ namespace DocumentParser.Parsers
         public DocumentParser(string filePath)
         {
             this.filePath = filePath;
-            settings = new Settings();
+            settings = new SettingsWorker.Settings();
+            settings.Load();
             word = new WordProcessing(settings);
         }
         public Document document {get;} = new Document();
@@ -46,8 +46,7 @@ namespace DocumentParser.Parsers
                     exceptions.Add(new ParserException(e.Message));
                 return false;
             }
-            var tokens = lexer.Tokenize(word.FullText, new DocumentsTokensDefinition());
-            //tokensModel = new RequisiteTokensModel(tokens);
+            
             var requisites = new RequisitesParser(word, document);
             requisites.UpdateCallback+= c => UpdateStatus(c);
             requisites.ErrorCallback+= e => AddError(e.Message, null, e.ErrorType);
@@ -56,31 +55,31 @@ namespace DocumentParser.Parsers
             if(exceptions.Count > 0)
                 return false;
             var changesParser = new ChangesParser(word);
-            changesParser.UpdateCallback+= c => Status(c, true);
-            changesParser.ErrorCallback+= e => Error(e);
+            changesParser.UpdateCallback+= c => UpdateStatus(c);
+            changesParser.ErrorCallback+= e => AddError(e);
             changesParser.Parse();
             exceptions.AddRange(changesParser.exceptions);
             var metaParser = new MetaParser(word);
-            metaParser.UpdateCallback+= c => Status(c, true);
-            metaParser.ErrorCallback+= e => Error(e);
+            metaParser.UpdateCallback+= c => UpdateStatus(c);
+            metaParser.ErrorCallback+= e => AddError(e);
             metaParser.Parse();
             exceptions.AddRange(metaParser.exceptions);
             var annexParser = new AnnexParser(word);
-            annexParser.UpdateCallback+= c => Status(c, true);
-            annexParser.ErrorCallback+= e => Error(e);
+            annexParser.UpdateCallback+= c => UpdateStatus(c);
+            annexParser.ErrorCallback+= e => AddError(e);
             annexParser.Parse();
             exceptions.AddRange(annexParser.exceptions);
             var headersParser = new HeadersParser(word, annexParser, requisites);
-            headersParser.UpdateCallback+= c => Status(c, true);
-            headersParser.ErrorCallback+= e => Error(e);
+            headersParser.UpdateCallback+= c => UpdateStatus(c);
+            headersParser.ErrorCallback+= e => AddError(e);
             headersParser.Parse();
             exceptions.AddRange(headersParser.exceptions);
             //
             //FIXME проблемы с выборкой итемов из примечаний и сносок
             //необходимо это делать после поиска заголовков, чтоб проставить конечные точки
             var footNodeParser = new FootNoteParser(word);
-            footNodeParser.UpdateCallback+= c => Status(c, true);
-            footNodeParser.ErrorCallback+= e => Error(e);
+            footNodeParser.UpdateCallback+= c => UpdateStatus(c);
+            footNodeParser.ErrorCallback+= e => AddError(e);
             footNodeParser.Parse();
             exceptions.AddRange(footNodeParser.exceptions);
             //Таблицу ищем после футнотов а футноты после хедеров и приложений...
@@ -90,7 +89,7 @@ namespace DocumentParser.Parsers
             headersParser.GetTables();
             headersParser.GetFootNotes();
             //находим все итемы подитемы итд...
-            Status("Обработка списочных элементов...", true);
+            UpdateStatus("Обработка списочных элементов...");
             var itemsParser = new ItemsParser(word);
             headersParser.BodyItems = itemsParser.Parse(headersParser.BodyRootElements);
             var count = headersParser.Headers.Count() + annexParser.Annexes.Count();
@@ -99,7 +98,7 @@ namespace DocumentParser.Parsers
             {
                 h.Header.Items = itemsParser.Parse(h.RootElements);
                 percentage++;
-                Percentage("Обработка списочных элементов...", count, percentage, true);
+                UpdateStatus("Обработка списочных элементов...", count, percentage);
             }
             foreach(var a in annexParser.Annexes)
             {
@@ -110,7 +109,7 @@ namespace DocumentParser.Parsers
                     h.Header.Items = itemsParser.Parse(h.RootElements);
                 }
                 percentage++;
-                Percentage("Обработка списочных элементов...", count, percentage, true);
+                UpdateStatus("Обработка списочных элементов...", count, percentage);
             }
             //Перемещаем все неопознаные элементы из рутов хедеров в абзацы хедеров
             foreach(var h in headersParser.Headers)
@@ -249,7 +248,7 @@ namespace DocumentParser.Parsers
             // }
             // annexParser.Annexes.RemoveAll(r=>forRemove.Contains(r));
             
-            Status("Формирование документа...", true);
+            UpdateStatus("Формирование документа...");
             document.Body = new DocumentBody(headersParser.Headers.Select(s=>s.Header).ToList(),
                                             headersParser.BodyIndents,
                                             headersParser.BodyItems,

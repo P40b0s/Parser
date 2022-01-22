@@ -1,101 +1,105 @@
 using System.Collections.Generic;
 using Lexer;
 using DocumentParser.Workers;
-using DocumentParser.TokensDefinitions;
 using System.Linq;
 using DocumentParser.DocumentElements.MetaInformation;
+using SettingsWorker.Metas;
+using DocumentParser.Elements;
+using SettingsWorker;
 
 namespace DocumentParser.Parsers
 {
-    public class MetaParser : ParserBase<MetaToken>
+    public class MetaParser : LexerBase<MetaTokenType>
     {
         public List<ElementStructure> MetaParagraphs {get;} = new List<ElementStructure>();
+        ISettings settings {get;}
         public MetaParser(WordProcessing extractor)
         {
             this.extractor = extractor;
+            settings = extractor.Settings;
         }
         public int Count {get;set;}
         private WordProcessing extractor {get;}
         public bool Parse()
         {
-            Status("Поиск метаинформации...");
+            UpdateStatus("Поиск метаинформации...");
             var percentage = 0;
-            tokens = lexer.Tokenize(extractor.FullText, new MetaTokensDefinition()).ToList();
+            Tokenize(extractor.FullText, new MetaTokensDefinition(settings.TokensDefinitions.MetaTokenDefinition.TokenDefinitionSettings));
             var count = tokens.Count();
             foreach(var token in tokens)
             {
-                if(token.TokenType == MetaToken.НовыйАбзац || token.TokenType == MetaToken.ТекущийАбзац)
+                if(token.TokenType == MetaTokenType.НовыйАбзац || token.TokenType == MetaTokenType.ТекущийАбзац)
                 {
                     //Если после начала скобок сразу конец скобок, идем на следующий токен;
-                    var end = token.Next(MetaToken.Конец);
+                    var end = token.Next(MetaTokenType.Конец);
                     if(end.IsOk)
                         continue;
                     //Если после начала скобок сразу идет еще начало скобок то идем на следующий токен;
-                    var doubleStart = token.Next(MetaToken.ТекущийАбзац);
+                    var doubleStart = token.Next(MetaTokenType.ТекущийАбзац);
                     if(doubleStart.IsOk)
                         continue;
-                    var isNew = token.TokenType == MetaToken.НовыйАбзац;
-                    if(getMeta(token.ToResult(), NodeType.МетаИнформация, isNew, token))
+                    var isNew = token.TokenType == MetaTokenType.НовыйАбзац;
+                    if(getMeta(token, NodeType.МетаИнформация, isNew, token))
                     {
                         Count++;
                         continue;
                     }
-                    var next = token.Next(MetaToken.Абзац);
+                    var next = token.Next(MetaTokenType.Абзац);
                     if(next.IsOk)
                     {
-                        if(getMeta(next, NodeType.МетаАбзац, isNew, token))
+                        if(getMeta(next.Value, NodeType.МетаАбзац, isNew, token))
                             Count++;
                         continue;
                     }
-                    next = token.Next(MetaToken.Пункт);
+                    next = token.Next(MetaTokenType.Пункт);
                     if(next.IsOk)
                     {
-                        if(getMeta(next, NodeType.МетаПункт, isNew, token))
+                        if(getMeta(next.Value, NodeType.МетаПункт, isNew, token))
                             Count++;
                         continue;
                     }
-                    next = token.Next(MetaToken.Наименование);
+                    next = token.Next(MetaTokenType.Наименование);
                     if(next.IsOk)
                     {
-                        if(getMeta(next, NodeType.МетаИнформация, isNew, token))
+                        if(getMeta(next.Value, NodeType.МетаИнформация, isNew, token))
                             Count++;
                         continue;
                     }
-                    next = token.Next(MetaToken.Статья);
+                    next = token.Next(MetaTokenType.Статья);
                     if(next.IsOk)
                     {
-                        if(getMeta(next, NodeType.МетаСтатья, isNew, token))
+                        if(getMeta(next.Value, NodeType.МетаСтатья, isNew, token))
                             Count++;
                         continue;
                     }
-                    next = token.Next(MetaToken.Глава);
+                    next = token.Next(MetaTokenType.Глава);
                     if(next.IsOk)
                     {
-                        if(getMeta(next, NodeType.Глава, isNew, token))
+                        if(getMeta(next.Value, NodeType.Глава, isNew, token))
                             Count++;
                         continue;
                     }
-                    next = token.Next(MetaToken.Раздел);
+                    next = token.Next(MetaTokenType.Раздел);
                     if(next.IsOk)
                     {
-                        if(getMeta(next, NodeType.МетаРаздел, isNew, token))
+                        if(getMeta(next.Value, NodeType.МетаРаздел, isNew, token))
                             Count++;
                         continue;
                     }
-                    next = token.Next(MetaToken.Приложение);
+                    next = token.Next(MetaTokenType.Приложение);
                     if(next.IsOk)
                     {
-                        if(getMeta(next, NodeType.МетаПриложение, isNew, token))
+                        if(getMeta(next.Value, NodeType.МетаПриложение, isNew, token))
                             Count++;
                         continue;
                     }
                 }
                 percentage++;
-                Percentage("Поиск метаинформации...", count, percentage);
+                UpdateStatus("Поиск метаинформации...", count, percentage);
             }
             return true;
         }
-        private void setMeta(Token<MetaToken> token, NodeType nodeType, MetaAction action, bool isNewParagraph, Token<MetaToken> start)
+        private void setMeta(Token<MetaTokenType> token, NodeType nodeType, MetaAction action, bool isNewParagraph, Token<MetaTokenType> start)
         {
            
             if(isNewParagraph)
@@ -113,93 +117,93 @@ namespace DocumentParser.Parsers
                 extractor.SetMetaNode(metaPar, NodeType.НеОпределено, action, meta, false);
             }
         }
-        private bool getMeta(TokenResult<MetaToken> token, NodeType structure, bool isNew, Token<MetaToken> start)
+        private bool getMeta(Token<MetaTokenType> token, NodeType structure, bool isNew, Token<MetaTokenType> start)
         {   
-            var action = token.Token.Next(MetaToken.Редакции);
+            var action = token.Next(MetaTokenType.Редакции);
             var actionEnum = MetaAction.edit;
-            if(!action.IsOk)
+            if(action.IsError)
             {
-                action = token.Token.Next(MetaToken.Дополнен);
+                action = token.Next(MetaTokenType.Дополнен);
                 actionEnum = MetaAction.add;
             }  
-            if(!action.IsOk)
+            if(action.IsError)
             {
-                action = token.Token.Next(MetaToken.Утратил);
+                action = token.Next(MetaTokenType.Утратил);
                 actionEnum = MetaAction.delete;
             }
             //Команды не найдены
-            if(!action.IsOk)
+            if(action.IsError)
                 return false;
             //после команды обнаружен признак завершения последовательности
-            var end = action.Token.Next(MetaToken.Конец);
+            var end = action.Value.Next(MetaTokenType.Конец);
             if(end.IsOk)
             {
-                setMeta(action.Token, structure, actionEnum, isNew, start);
+                setMeta(action.Value, structure, actionEnum, isNew, start);
                 return true;   
             }
             //и проверяем на едицу структуры - бывает дополнен пункт.... а бывает пункт дополнен
             //соответсвенно в этом блоке есть какая то единица - пункт статья раздел итд...
             else
             {
-                var structAfterCommand = action.Token.Next(MetaToken.Абзац);
+                var structAfterCommand = action.Value.Next(MetaTokenType.Абзац);
                 var structureAfterCommand = NodeType.МетаАбзац;
-                if(!structAfterCommand.IsOk)
+                if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Token.Next(MetaToken.Пункт);
+                    structAfterCommand  = action.Value.Next(MetaTokenType.Пункт);
                     structureAfterCommand = NodeType.МетаПункт;
                 }
-                if(!structAfterCommand.IsOk)
+                if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Token.Next(MetaToken.Наименование);
+                    structAfterCommand  = action.Value.Next(MetaTokenType.Наименование);
                     structureAfterCommand = NodeType.МетаИнформация;
                 }
-                if(!structAfterCommand.IsOk)
+                if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Token.Next(MetaToken.Статья);
+                    structAfterCommand  = action.Value.Next(MetaTokenType.Статья);
                     structureAfterCommand = NodeType.МетаСтатья;
                 }
-                if(!structAfterCommand.IsOk)
+                if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Token.Next(MetaToken.Глава);
+                    structAfterCommand  = action.Value.Next(MetaTokenType.Глава);
                     structureAfterCommand = NodeType.МетаГлава;
                 }
-                if(!structAfterCommand.IsOk)
+                if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Token.Next(MetaToken.Раздел);
+                    structAfterCommand  = action.Value.Next(MetaTokenType.Раздел);
                     structureAfterCommand = NodeType.МетаРаздел;
                 }
-                if(!structAfterCommand.IsOk)
+                if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Token.Next(MetaToken.Приложение);
+                    structAfterCommand  = action.Value.Next(MetaTokenType.Приложение);
                     structureAfterCommand = NodeType.МетаПриложение;
                 }
                 //если найдена структура то проверяем на конец, если конца нет то продолжаем поиск дальше
-                if(!structAfterCommand.IsOk)
+                if(structAfterCommand.IsError)
                 {
                     action = structAfterCommand;
                     structure = structureAfterCommand;
-                    var end3 = action.Token.Next(MetaToken.Конец);
+                    var end3 = action.Value.Next(MetaTokenType.Конец);
                     if(end3.IsOk)
                     {
-                        setMeta(action.Token, structure, actionEnum, isNew, start);
+                        setMeta(action.Value, structure, actionEnum, isNew, start);
                         return true;   
                     }
                 }
             }
             //Если не закрыта скобка то выдаем ошибку
-            var error = action.Token.Next();
-            if(error.IsOk && (error.Token.TokenType == MetaToken.ТекущийАбзац || error.Token.TokenType == MetaToken.НовыйАбзац))
+            var error = action.Value.Next();
+            if(error.IsOk && (error.Value.TokenType == MetaTokenType.ТекущийАбзац || error.Value.TokenType == MetaTokenType.НовыйАбзац))
             {
-                addException(action, ")");
-                return false;
+                var el = extractor.GetElement(error.Value);
+                return AddError($"Ошибка разбора блока с метаинформацией: {el.WordElement.Text} получено значение: \"{error.Value}\" ожидалось: \")\"");
             }
-           return getMeta(action, structure, isNew, start);
+           return getMeta(action.Value, structure, isNew, start);
         }
-        private void addException(TokenResult<MetaToken> token, string waitToken)
-        {
-            var par = extractor.GetElements(token.Token).FirstOrDefault();
-            exceptions.Add(new ParserException($"Ошибка разбора блока с метаинформацией: {par.WordElement.Text} получено значение: \"{token.Token.Next().Token.Value}\" ожидалось: \"{waitToken}\""));
-        }
+        // private void addException(Result<MetaTokenType> token, string waitToken)
+        // {
+        //     var par = extractor.GetElements(token.Token).FirstOrDefault();
+        //     exceptions.Add(new ParserException($"Ошибка разбора блока с метаинформацией: {par.WordElement.Text} получено значение: \"{token.Token.Next().Token.Value}\" ожидалось: \"{waitToken}\""));
+        // }
         
     }
 }

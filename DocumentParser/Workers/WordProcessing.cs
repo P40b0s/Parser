@@ -3,13 +3,16 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentParser.DocumentElements;
 using DocumentParser.DocumentElements.MetaInformation;
+using DocumentParser.Elements;
 using Lexer;
+using SettingsWorker;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Utils;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 
 namespace DocumentParser.Workers
@@ -38,6 +41,11 @@ namespace DocumentParser.Workers
         Body Body {get;set;}
         public string FullText {get;set;}
         private string _docxPath {get; set;}
+        /// <summary>
+        /// Дефолтные настройки преопределяются после парсера реквизитов,
+        /// Там мы можем предопределить настройки для нужных пар Орган/вид документа
+        /// </summary>
+        /// <value></value>
         public ISettings Settings {get;}
         public WordProcessing(ISettings _settings)
         {
@@ -237,7 +245,6 @@ namespace DocumentParser.Workers
                 }
                 catch (Exception ex)
                 {
-                    logger.Fatal(ex);
                     Errors.Add(ex);
                 }
             });
@@ -311,9 +318,16 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex);
                 return null;
             }
+        }
+
+        public Result<ElementStructure, ElementQueryException> GetSingleElement(ITextIndex txt)
+        {
+            var element = ElementsList.LastOrDefault(w=> w.StartIndex <= txt.StartIndex);
+            if(element != null)
+                new Result<ElementStructure, ElementQueryException>(element);
+            return new Result<ElementStructure, ElementQueryException>(new ElementQueryException($"Элемент с индексом {txt.StartIndex} не найден!"));    
         }
         public ElementStructure GetElement(ITextIndex txt) 
         => ElementsList.LastOrDefault(w=> w.StartIndex <= txt.StartIndex);  
@@ -451,7 +465,6 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex);
                 Errors.Add(ex);
                 return "";
             }
@@ -467,7 +480,6 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex);
                 Errors.Add(ex);
                 return "";
             }
@@ -495,14 +507,13 @@ namespace DocumentParser.Workers
                         if(el.GetType() == typeof(Text))
                             txt += DataConverter.ConvertText((el as Text).Text, runProperties).Item1;
                         if(el.GetType() == typeof(Break))
-                            txt += Regexes.Templates.BRChar;
+                            txt += SettingsWorker.Regexes.Templates.BRChar;
                    }
                  }
                 return txt;
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex);
                 Errors.Add(ex);
                 return "";
             }

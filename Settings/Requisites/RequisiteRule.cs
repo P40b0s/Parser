@@ -1,4 +1,4 @@
-namespace Settings.Requisites;
+namespace SettingsWorker.Requisites;
 public class RequisiteRule
 {
     /// <summary>
@@ -7,6 +7,11 @@ public class RequisiteRule
     /// </summary>
     /// <value></value>
     public bool RequiredName {get;set;} = true;
+    /// <summary>
+    /// Максимальная глубина поиска наименования документа
+    /// </summary>
+    /// <value></value>
+    public int NameSearchMaxDeep {get;set;} = 4;
     /// <summary>
     ///Максимальная глубина поиска типа документа (от нулевого токена)
     /// </summary>

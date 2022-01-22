@@ -1,14 +1,13 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Services.Documents.Core;
-using Services.Documents.Parser.Regexes;
 using System.Collections.Generic;
 using System.Linq;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 using RunProperties = DocumentParser.DocumentElements.RunProperties;
 using Comment = DocumentParser.DocumentElements.Comment;
 using DocumentParser.DocumentElements;
-using Services.Documents.Settings;
+using SettingsWorker;
+using SettingsWorker.Regexes;
 
 namespace DocumentParser.Workers
 {
@@ -98,29 +97,24 @@ namespace DocumentParser.Workers
                     {
                         CommentId = (r as CommentReference).Id;
                     }
+                    //TODO убираем это, все храним в одном джсоне
                     //Те изображения которые занимают меньше 240 кб храним прямо в теле, остальные храним в отдельной базе
                     //Для изображений больше 240 кб храним тумбы размером 256х256 для предпросмотра
                     if(r.GetType() == typeof(Picture))
                     {
-                        var img = new Image(Image = extractor.GetImage((r as Picture)), Id);
-                        if(img.Length <= sett.Current.Settings.MaxBodyImageSize)
-                            Image = new Image(img, Id);
-                        else if(runImages != null)
-                        {
-                            runImages.Add(img);
-                            Image = new Image(Id, img.Length, img.Thumbland);
-                        }
+                        var i = extractor.GetImage((r as Picture));
+                        if(i.IsOk)
+                            Image = new Image(i.Value, Id);
+                        else
+                            System.Console.WriteLine(i.Error);
                     } 
                     if(r.GetType() == typeof(Drawing))
                     {
-                        var img = new Image(Image = extractor.GetImage((r as Drawing)), Id);
-                        if(img.Length <= sett.Current.Settings.MaxBodyImageSize)
-                            Image = new Image(img, Id);
-                        else if(runImages != null)
-                        {
-                            runImages.Add(img);
-                            Image = new Image(Id, img.Length, img.Thumbland);
-                        }
+                        var i = extractor.GetImage((r as Drawing));
+                        if(i.IsOk)
+                            Image = new Image(i.Value, Id);
+                        else
+                            System.Console.WriteLine(i.Error);
                     }
                 }
             }

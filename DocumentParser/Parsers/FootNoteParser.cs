@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using Lexer;
 using DocumentParser.Workers;
-using DocumentParser.TokensDefinitions;
 using System.Linq;
 using System;
 using DocumentParser.DocumentElements;
 using DocumentParser.DocumentElements.FootNotes;
 using Utils.Extensions;
+using DocumentParser.Elements;
+using SettingsWorker.FootNotes;
+using SettingsWorker;
 
 namespace DocumentParser.Parsers
 {
@@ -22,28 +24,30 @@ namespace DocumentParser.Parsers
         public ElementStructure First {get;set;}
         public FootNoteInfo Foot {get;set;}
     }
-    public class FootNoteParser : ParserBase<FootNoteToken>
+    public class FootNoteParser : LexerBase<FootNoteTokenType>
     {
+        ISettings settings {get;}
         public FootNoteParser(WordProcessing extractor)
         {
             this.extractor = extractor;
+            settings = extractor.Settings;
         }
         public int Count {get;set;}
         private WordProcessing extractor {get;}
 
         public bool Parse()
         {
-            Status("Поиск сносок...");
-            tokens = lexer.Tokenize(extractor.FullText, new FootNoteTokensDefinition()).ToList();
+            UpdateStatus("Поиск сносок...");
+            Tokenize(extractor.FullText, new FootNoteTokensDefinition(settings.TokensDefinitions.FootNoteTokenDefinition.TokenDefinitionSettings));
             var count = tokens.Count();
             foreach(var token in tokens)
             {
-                if(token.TokenType == FootNoteToken.Подчеркивания)
+                if(token.TokenType == FootNoteTokenType.Подчеркивания)
                 {
                     var pod = extractor.GetElements(token).FirstOrDefault();
                     pod.NodeType = NodeType.Подчеркивание;
                 }
-                if(token.TokenType == FootNoteToken.Примечание)
+                if(token.TokenType == FootNoteTokenType.Примечание)
                 {
                     var pod = extractor.GetElements(token).FirstOrDefault();
                     pod.NodeType = NodeType.Примечание;
@@ -67,7 +71,7 @@ namespace DocumentParser.Parsers
                     getLinks(foot);
                 }
                 percentage++;
-                Percentage("Поиск сносок...", count, percentage);
+                UpdateStatus("Поиск сносок...", count, percentage);
             }
             return true;
         }
@@ -76,7 +80,7 @@ namespace DocumentParser.Parsers
         {
             var percentage = 0;
             var count = footsElements.Count();
-            var currentTokens = new List<Token<FootNoteToken>>();
+            var currentTokens = new List<Token<FootNoteTokenType>>();
             foreach(var i in footsElements)
             {
                 foreach(var t in tokens)
@@ -93,13 +97,13 @@ namespace DocumentParser.Parsers
                     getLinks(foot);
                 }
                 percentage++;
-                Percentage("Поиск сносок...", count, percentage);
+                UpdateStatus("Поиск сносок...", count, percentage);
             }
             return true;
         }
-        private void getLinks((List<FootNoteWithItems> foots, Token<FootNoteToken> line) list)
+        private void getLinks((List<FootNoteWithItems> foots, Token<FootNoteTokenType> line) list)
         {
-            var allLinks = list.line.TakeWhileBackward(f=>f.TokenType == FootNoteToken.СсылкаНаСноску, s=>s.TokenType == FootNoteToken.Сноска);
+            var allLinks = list.line.TakeWhileBackward(f=>f.TokenType == FootNoteTokenType.СсылкаНаСноску, s=>s.TokenType == FootNoteTokenType.Сноска);
             foreach(var foo in list.foots)
             {
                 var links = allLinks.Where(w=>parse(w) == foo.Foot.Number);
@@ -138,17 +142,17 @@ namespace DocumentParser.Parsers
                     //TODO надо както вычленить абзацы сносок походу только коментариями
                     //они могут быть либо одним абзацем либо нумерованным списком без вложенности
         }
-        private (List<FootNoteWithItems>, Token<FootNoteToken> line) searchFootNotes(Token<FootNoteToken> token)
+        private (List<FootNoteWithItems>, Token<FootNoteTokenType> line) searchFootNotes(Token<FootNoteTokenType> token)
         {
             var list = new List<FootNoteWithItems>();
-            if(token.TokenType == FootNoteToken.Сноска)
+            if(token.TokenType == FootNoteTokenType.Сноска)
             {
-                var broken = new List<Token<FootNoteToken>>();
-                var line = token.Before(FootNoteToken.Подчеркивания);
+                var broken = new List<Token<FootNoteTokenType>>();
+                var line = token.Before(FootNoteTokenType.Подчеркивания);
                 if(!line.IsOk)
                     return (null, null);
                 
-                var footnotes = line.Token.FindForwardMany(f=>f.TokenType == FootNoteToken.Сноска);
+                var footnotes = line.Value.FindForwardMany(f=>f.TokenType == FootNoteTokenType.Сноска);
                 var prevNum = 0;
                 for(int i = 0; i< footnotes.Count; i++)
                 {
@@ -215,11 +219,11 @@ namespace DocumentParser.Parsers
                     list.Add(item);
 
                 }
-                return (list, line.Token);
+                return (list, line.Value);
             }
             return (null, null);
         }
-        private int parse(Token<FootNoteToken> token)
+        private int parse(Token<FootNoteTokenType> token)
         {
             var result = -1;
             if(token.CustomGroups[0].Value.Contains("*"))
@@ -233,7 +237,7 @@ namespace DocumentParser.Parsers
             return result;
         }
 
-        private void addException(Token<FootNoteToken> token)
+        private void addException(Token<FootNoteTokenType> token)
         {
             var par = extractor.GetElements(token).FirstOrDefault();
             exceptions.Add(new ParserException($"Не найдена ссылка на: {par.WordElement.Text}"));

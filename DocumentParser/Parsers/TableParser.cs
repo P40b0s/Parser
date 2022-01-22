@@ -4,19 +4,23 @@ using Utils.Extensions;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentParser.DocumentElements;
 using DocumentParser.Workers;
+using DocumentParser.Elements;
+using SettingsWorker;
 
 namespace DocumentParser.Parsers
 {
     public class TableParser : ParserBase
     {
+        ISettings settings {get;}
         public TableParser(WordProcessing extractor)
         {
             this.extractor = extractor;
+            settings = extractor.Settings;
         }
         private WordProcessing extractor {get;}
         public bool Parse()
         {
-            Status("Обработка таблиц...");
+            UpdateStatus("Обработка таблиц...");
             var percentage = 0;
             var tables = extractor.GetElements(NodeType.Таблица);
             var count = tables.Count();
@@ -24,7 +28,7 @@ namespace DocumentParser.Parsers
             {
                 item.Table = parseTable(item);
                 percentage++;
-                Percentage("Обработка таблиц...", count, percentage);
+                UpdateStatus("Обработка таблиц...", count, percentage);
             }
             return true;
         } 

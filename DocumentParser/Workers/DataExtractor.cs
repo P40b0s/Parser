@@ -1,12 +1,7 @@
-﻿using Core.Configuration;
-using DocumentFormat.OpenXml.Drawing.Wordprocessing;
+﻿using DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Newtonsoft.Json;
-using Services.Documents.Core;
-using Services.Logger;
-using MainCore = Core;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -17,7 +12,8 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Xsl;
 using DocumentParser.DocumentElements;
-using Services.Documents.Settings;
+using SettingsWorker;
+using Utils;
 
 namespace DocumentParser.Workers
 {    
@@ -34,10 +30,7 @@ namespace DocumentParser.Workers
     
     public class DataExtractor
     {
-        ILoggerService logger { get; } = new LoggerService();
-        Paths paths {get;} = MainCore.Configuration.CurrentConfiguration.Paths;
         public List<Exception> Errors { get; set; } = new List<Exception>();
-        
         const string MATHML = @"OMML2MML.XSL";
         const string LATEX = @"mmltex.xsl";
         private string DocumentsDir { get; }
@@ -51,16 +44,16 @@ namespace DocumentParser.Workers
         public DataExtractor(MainDocumentPart prt, ISettings _settings)
         {
             part = prt;
-            DocumentsDir = paths.DocumentsDirectory;
-            FilesRootDirectory = paths.RootDirectory;
-            RootDirectory = paths.RootDirectory;
+            DocumentsDir = settings.Paths.DocumentsDirectory;
+            FilesRootDirectory = settings.Paths.RootDirectory;
+            RootDirectory = settings.Paths.RootDirectory;
             //ставим true иначе XslCompiledTransform не подгружает зависимые файлы схем
             AppContext.SetSwitch("Switch.System.Xml.AllowDefaultResolver", true);
             settings = _settings;
-            thumbSizeX = settings.Current.Settings.PreviewImegeThumbSizeX;
-            thumbSizeY = settings.Current.Settings.PreviewImegeThumbSizeY;
+            thumbSizeX = 256;
+            thumbSizeY = 256;
         }
-        public DocumentParser.DocumentElements.Image GetImage(Drawing drawing)
+        public Result<DocumentParser.DocumentElements.Image, ParserException> GetImage(Drawing drawing)
         {
             try
             {
@@ -75,12 +68,12 @@ namespace DocumentParser.Workers
                         {
                             var nopicprops = nopic.ChildElements.OfType<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault();
                             if(nopicprops != null)
-                                throw new Exception($"Изображение {nopicprops.Name.Value} по адресу {nopicprops.Description.Value} не найдено");
+                                return new Result<Image, ParserException>(new ParserException($"Изображение {nopicprops.Name.Value} по адресу {nopicprops.Description.Value} не найдено"));
                             else
-                                throw new Exception($"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}");
+                                return new Result<Image, ParserException>(new ParserException($"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}"));
                         }   
                         else
-                            throw new Exception($"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}");
+                            return new Result<Image, ParserException>(new ParserException($"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}"));
                     }
                     var extent = drawing.Inline.GetFirstChild<Extent>();
                     long x = 0;
@@ -107,7 +100,7 @@ namespace DocumentParser.Workers
                             ms.Write(buffer, 0, read);
                         }
                         var th = GetReducedImage(thumbSizeX, thumbSizeY, ms);
-                        return new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY));
+                        return new Result<Image, ParserException>(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
                     }
                 }
                 if(drawing.Anchor != null)
@@ -142,7 +135,7 @@ namespace DocumentParser.Workers
                                 ms.Write(buffer, 0, read);
                             }
                             var th = GetReducedImage(thumbSizeX, thumbSizeY, ms);
-                            return new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY));
+                            return new Result<Image, ParserException>(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
                         }
                     }
                 }
@@ -150,12 +143,11 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex);
                 Errors.Add(ex);
-                return new Image(Guid.Empty, null, 0, 0, new Thumb(null, 0, 0));
+                return new Result<Image, ParserException>(new ParserException(ex.Message));
             }
         }
-        public DocumentParser.DocumentElements.Image GetImage(Picture pic)
+        public Result<DocumentParser.DocumentElements.Image, ParserException> GetImage(Picture pic)
         {
             try
             {
@@ -189,55 +181,46 @@ namespace DocumentParser.Workers
                         ms.Write(buffer, 0, read);
                     }
                     var th = GetReducedImage(thumbSizeX, thumbSizeY, ms);
-                    return new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY));
+                    return new Result<Image, ParserException>(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
                 }
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex);
                 Errors.Add(ex);
-                return new Image(Guid.Empty, null, 0, 0, new Thumb(null, 0, 0));
+                return new Result<Image, ParserException>(new ParserException(ex.Message));
             }
         }
 
         public byte[] GetReducedImage(int width, int height, Stream resourceImage)
         {
-            try
+            var image = System.Drawing.Image.FromStream(resourceImage);
+            var thumb = image.GetThumbnailImage(width, height, () => false, IntPtr.Zero);
+            using (var ms = new MemoryStream())
             {
-                var image = System.Drawing.Image.FromStream(resourceImage);
-                var thumb = image.GetThumbnailImage(width, height, () => false, IntPtr.Zero);
-                using (var ms = new MemoryStream())
-                {
-                    thumb.Save(ms,thumb.RawFormat);
-                    return  ms.ToArray();
-                }
-            }
-            catch (Exception e)
-            {
-                Errors.Add(e);
-                return null;
+                thumb.Save(ms,thumb.RawFormat);
+                return  ms.ToArray();
             }
         }
 
-        public bool SaveImage(DocumentParser.DocumentElements.Image img, Guid docId, Guid runId)
-        {
-            try
-            {
-                var pic = JsonConvert.SerializeObject(img);
-                using (FileStream fs = new FileStream(System.IO.Path.Combine(FilesRootDirectory, DocumentsDir, docId.ToString(), runId.ToString() + ".img"), FileMode.Create))
-                using (StreamWriter sw = new StreamWriter(fs))
-                {
-                    sw.Write(pic);
-                }
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Errors.Add(ex);
-                return false;
-            }
+        // public bool SaveImage(DocumentParser.DocumentElements.Image img, Guid docId, Guid runId)
+        // {
+        //     try
+        //     {
+        //         var pic = JsonConvert.SerializeObject(img);
+        //         using (FileStream fs = new FileStream(System.IO.Path.Combine(FilesRootDirectory, DocumentsDir, docId.ToString(), runId.ToString() + ".img"), FileMode.Create))
+        //         using (StreamWriter sw = new StreamWriter(fs))
+        //         {
+        //             sw.Write(pic);
+        //         }
+        //         return true;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         Errors.Add(ex);
+        //         return false;
+        //     }
            
-        }
+        // }
        
         public FormulaResult ExtractMathOffice(string folmulaOuterXml)
         {
@@ -314,7 +297,6 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
                 Errors.Add(ex);
                 return new FormulaResult("ОШИБКА ПРЕОБРАЗОВАНИЯ ФОРМУЛЫ", "ОШИБКА ПРЕОБРАЗОВАНИЯ ФОРМУЛЫ");
             }

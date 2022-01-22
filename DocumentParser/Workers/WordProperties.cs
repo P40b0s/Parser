@@ -1,8 +1,6 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Services.Documents.Core;
 using DocumentParser.DocumentElements;
-using Services.Documents.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +9,8 @@ using ParagraphProperties = DocumentParser.DocumentElements.ParagraphProperties;
 using RunProperties = DocumentParser.DocumentElements.RunProperties;
 using TableAlignment = DocumentParser.DocumentElements.TableAlignment;
 using TablePosition = DocumentParser.DocumentElements.TablePosition;
+using DocumentParser.Elements;
+using SettingsWorker;
 
 namespace DocumentParser.Workers
 {
@@ -47,7 +47,7 @@ namespace DocumentParser.Workers
     }
     // public interface IWordPropertiesService
     // {
-    //     Core.TableProperties ExtractTableProperties(Table table, Styles s);
+    //     TableProperties ExtractTableProperties(Table table, Styles s);
     //     TRowProperties ExtractRowProperties(TableRow row, Styles s);
     //     TCellProperties ExtractCellProperties(TableCell cell, Styles s);
     //     ParagraphProperties ExtractParagraphProperties(Paragraph pr, Styles styles);
@@ -73,7 +73,9 @@ namespace DocumentParser.Workers
             var runs = p.Elements<DocumentFormat.OpenXml.Wordprocessing.Run>().Select(r => ExtractRunProperties(r)).All(a => a.IsBold);
             return runs || (par?.RProperties?.IsBold ?? false);
         }
-
+        public bool IsBold(ElementStructure el) =>
+            IsBold(el.WordElement.Element);
+        
         public Style GetStyle(string styleid)
         {
             Style outStyle = null;
@@ -90,9 +92,9 @@ namespace DocumentParser.Workers
         #endregion
 
         #region table!
-        public Core.DocumentElements.TableProperties ExtractTableProperties(OpenXmlElement table)
+        public DocumentElements.TableProperties ExtractTableProperties(OpenXmlElement table)
         {
-            var returnProperties = new Core.DocumentElements.TableProperties();
+            var returnProperties = new DocumentElements.TableProperties();
             try
             {
                 DocumentFormat.OpenXml.Wordprocessing.TableProperties tProps = table.OfType<DocumentFormat.OpenXml.Wordprocessing.TableProperties>().SingleOrDefault();
@@ -110,18 +112,18 @@ namespace DocumentParser.Workers
                     {
                         returnProperties.TableBorders = new Borders();
                         if (borders.TopBorder != null && borders.TopBorder.Val != (BorderValues.None | BorderValues.Nil))
-                            returnProperties.TableBorders.Top = Core.DocumentElements.BorderType.single;
+                            returnProperties.TableBorders.Top = DocumentElements.BorderType.single;
                         if (borders.BottomBorder != null && borders.BottomBorder.Val != (BorderValues.None | BorderValues.Nil))
-                            returnProperties.TableBorders.Bottom = Core.DocumentElements.BorderType.single;
+                            returnProperties.TableBorders.Bottom = DocumentElements.BorderType.single;
                         //Для 2003 left для 2007+ start
                         if (borders.StartBorder != null && borders.StartBorder.Val != (BorderValues.None | BorderValues.Nil))
-                            returnProperties.TableBorders.Left = Core.DocumentElements.BorderType.single;
+                            returnProperties.TableBorders.Left = DocumentElements.BorderType.single;
                         if (borders.LeftBorder != null && borders.LeftBorder.Val != (BorderValues.None | BorderValues.Nil))
-                            returnProperties.TableBorders.Left = Core.DocumentElements.BorderType.single;
+                            returnProperties.TableBorders.Left = DocumentElements.BorderType.single;
                         if (borders.EndBorder != null && borders.EndBorder.Val != (BorderValues.None | BorderValues.Nil))
-                            returnProperties.TableBorders.Right = Core.DocumentElements.BorderType.single;
+                            returnProperties.TableBorders.Right = DocumentElements.BorderType.single;
                         if (borders.RightBorder != null && borders.RightBorder.Val != (BorderValues.None | BorderValues.Nil))
-                            returnProperties.TableBorders.Right = Core.DocumentElements.BorderType.single;
+                            returnProperties.TableBorders.Right = DocumentElements.BorderType.single;
                     }
                     if (jc != null)
                     {
@@ -168,9 +170,9 @@ namespace DocumentParser.Workers
                 return null;
             }
         }
-        public Core.DocumentElements.TRowProperties ExtractRowProperties(TableRow row)
+        public DocumentElements.TRowProperties ExtractRowProperties(TableRow row)
         {
-            var returnProperties = new Core.DocumentElements.TRowProperties();
+            var returnProperties = new DocumentElements.TRowProperties();
             try
             {
                 var rProps = row.Elements<TableRowProperties>().SingleOrDefault();
@@ -201,9 +203,9 @@ namespace DocumentParser.Workers
                 return null;
             }
         }
-        public Core.DocumentElements.TCellProperties ExtractCellProperties(TableCell cell)
+        public DocumentElements.TCellProperties ExtractCellProperties(TableCell cell)
         {
-            var returnProperties = new Core.DocumentElements.TCellProperties();
+            var returnProperties = new DocumentElements.TCellProperties();
             try
             {
                 var cProps = cell.Elements<TableCellProperties>().SingleOrDefault();
@@ -230,11 +232,11 @@ namespace DocumentParser.Workers
                     if (vAlign != null && vAlign.Val != null)
                     {
                         var align = vAlign.Val.Value;
-                        returnProperties.VAlign = (Core.DocumentElements.TableVerticalAlignmentValues)Enum.Parse(typeof(Core.DocumentElements.TableVerticalAlignmentValues), Enum.GetName(typeof(DocumentFormat.OpenXml.Wordprocessing.TableVerticalAlignmentValues), align));
+                        returnProperties.VAlign = (DocumentElements.TableVerticalAlignmentValues)Enum.Parse(typeof(DocumentElements.TableVerticalAlignmentValues), Enum.GetName(typeof(DocumentFormat.OpenXml.Wordprocessing.TableVerticalAlignmentValues), align));
                     }
                     if (borders != null)
                     {
-                        returnProperties.CellBorders = new Core.DocumentElements.Borders();
+                        returnProperties.CellBorders = new DocumentElements.Borders();
                         if (borders.TopBorder != null)
                             returnProperties.CellBorders.Top = GetBorderType(borders.TopBorder.Val);
                         if (borders.BottomBorder != null)
@@ -313,14 +315,14 @@ namespace DocumentParser.Workers
 
         #endregion
 
-        private Core.DocumentElements.BorderType GetBorderType(BorderValues val) =>
+        private DocumentElements.BorderType GetBorderType(BorderValues val) =>
 
             val switch
             {
-                BorderValues.None => Core.DocumentElements.BorderType.none,
-                BorderValues.Nil => Core.DocumentElements.BorderType.nill,
-                BorderValues.Single => Core.DocumentElements.BorderType.single,
-                _ => Core.DocumentElements.BorderType.fromParent
+                BorderValues.None => DocumentElements.BorderType.none,
+                BorderValues.Nil => DocumentElements.BorderType.nill,
+                BorderValues.Single => DocumentElements.BorderType.single,
+                _ => DocumentElements.BorderType.fromParent
             };
         #endregion
 
@@ -345,7 +347,7 @@ namespace DocumentParser.Workers
                     var ind = currentProps.Indentation ?? parStyle?.Indentation;
                     if (ind != null)
                     {
-                        returnProps.Ind = new Core.DocumentElements.Indentation()
+                        returnProps.Ind = new DocumentElements.Indentation()
                         {
                             FirstLine = DataConverter.DxaToPixels(ind.FirstLine?.Value ?? "0"),
                             Left = DataConverter.DxaToPixels((ind.Left?.Value ?? ind.Start?.Value) ?? "0"),

@@ -1,8 +1,8 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentParser.DocumentElements;
-using Services.Documents.Parser.Regexes;
-using Services.Documents.Settings;
+using SettingsWorker;
+using SettingsWorker.Regexes;
 using System;
 using System.Collections.Generic;
 using System.Linq;

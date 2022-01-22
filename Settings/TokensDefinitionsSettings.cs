@@ -1,4 +1,4 @@
-namespace Settings;
+namespace SettingsWorker;
 public struct TokenDefinitionSettings<T> where T : Enum
 {
     /// <summary>

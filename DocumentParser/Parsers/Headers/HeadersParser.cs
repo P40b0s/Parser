@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using Lexer;
 using DocumentParser.Workers;
-using DocumentParser.TokensDefinitions;
 using System.Linq;
 using DocumentParser.Parsers.Annex;
 using DocumentParser.Parsers.Requisites;
 using DocumentParser.DocumentElements;
 using DocumentParser.DocumentElements.FootNotes;
+using DocumentParser.Elements;
+using SettingsWorker;
+using SettingsWorker.Headers;
 
 namespace DocumentParser.Parsers.Headers
 {
@@ -23,11 +25,13 @@ namespace DocumentParser.Parsers.Headers
     /// итого у нас есть просто хедеры, хедеры приложений и рутовые итемы тела документа.
     /// Таблицы тоже добавляются к хедерам если они есть
     /// </summary>
-    public class HeadersParser : LexerBase<HeaderToken>
+    public class HeadersParser : LexerBase<HeaderTokenType>
     {
         AnnexParser annexParser {get;}
         RequisitesParser requisitesParser {get;}
+        ISettings settings {get;}
         public List<HeaderParserModel> Headers {get;} = new List<HeaderParserModel>();
+
         /// <summary>
         /// Корневые итемы в теле самого документа
         /// </summary>
@@ -39,6 +43,7 @@ namespace DocumentParser.Parsers.Headers
         public HeadersParser(WordProcessing extractor, AnnexParser aParser, RequisitesParser req)
         {
             this.extractor = extractor;
+            settings = extractor.Settings;
             annexParser = aParser;
             requisitesParser = req;
         }
@@ -48,11 +53,11 @@ namespace DocumentParser.Parsers.Headers
         {
             UpdateStatus("Поиск заголовков");
             var percentage = 0;
-            Tokenize(extractor.FullText, new HeaderTokensDefinition());
+            Tokenize(extractor.FullText, new HeaderTokensDefinition(settings.TokensDefinitions.HeadersTokenDefinitions.TokenDefinitionSettings));
             var count = tokens.Count();
             foreach(var token in tokens)
             {
-                if(token.TokenType == HeaderToken.Заголовок)
+                if(token.TokenType == HeaderTokenType.Заголовок)
                     parseHeaders(token);
                 percentage++;
                 UpdateStatus("Поиск заголовков...", count, percentage);
@@ -90,10 +95,10 @@ namespace DocumentParser.Parsers.Headers
                     else
                     {
                         var table = firstItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
-                        if(table != null)
+                        if(table.IsOk)
                         {
-                            h.Header.Table = table.Table;
-                            h.RootElements.Remove(table);
+                            h.Header.Table = table.Value.Table;
+                            h.RootElements.Remove(table.Value);
                         }
                     }
                 }
@@ -113,10 +118,10 @@ namespace DocumentParser.Parsers.Headers
                     else
                     {
                         var table = firstRootItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
-                        if(table != null)
+                        if(table.IsOk)
                         {
-                            a.Annex.Table = table.Table;
-                            a.RootElements.Remove(table);
+                            a.Annex.Table = table.Value.Table;
+                            a.RootElements.Remove(table.Value);
                         }
                     }
                 }
@@ -191,7 +196,7 @@ namespace DocumentParser.Parsers.Headers
             Headers.RemoveAll(r=> headersForRemove.Contains(r));            
         }
 
-        private bool parseHeaders(Token<HeaderToken> token)
+        private bool parseHeaders(Token<HeaderTokenType> token)
         {
             var headerPar = extractor.GetElements(token).FirstOrDefault();
             if(headerPar.NodeType == NodeType.АбзацТаблицы)
@@ -220,11 +225,11 @@ namespace DocumentParser.Parsers.Headers
             var meta = headerPar.Next();
             header.LastElement = headerPar;
             header.StartIndex = headerPar.ElementIndex +1;
-            if(meta.IsOk && meta.Element.MetaInfo.FullIsMeta)
+            if(meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
             {
-                header.Header.Meta = meta.Element.MetaInfo;
-                header.LastElement = meta.Element;
-                header.StartIndex = meta.Element.ElementIndex +1;
+                header.Header.Meta = meta.Value.MetaInfo;
+                header.LastElement = meta.Value;
+                header.StartIndex = meta.Value.ElementIndex +1;
             }
             Headers.Add(header);
             Count++;

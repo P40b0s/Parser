@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Settings;
+namespace SettingsWorker;
 public struct CustomRule<T>
 {
     public string Organ {get;set;}

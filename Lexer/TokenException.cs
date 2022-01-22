@@ -18,8 +18,10 @@ public enum TokenErrorType
 }
 
 [Serializable]
-public class TokenException : CustomException<TokenErrorType>
+public class TokenException : Utils.CustomError<TokenErrorType>
 {
-    public TokenException(string message, TokenErrorType error = TokenErrorType.NotFound) : base(message, error){}
+    public TokenException(){}
+    public TokenException(string message) : base(message){}
+    public TokenException(string message, TokenErrorType error) : base(message, error){}
 }
 

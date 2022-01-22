@@ -1,5 +1,5 @@
 
-namespace Settings.Regexes
+namespace SettingsWorker.Regexes
 {
     class Quotations
     {

@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Wordprocessing;
+using SettingsWorker;
 using System;
 using System.Collections.Generic;
 
