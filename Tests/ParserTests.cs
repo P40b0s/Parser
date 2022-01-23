@@ -103,19 +103,19 @@ public class Tests
                 var fi = new System.IO.FileInfo(files[i].GetPath);
                 document.FileName = fi.Name;
                 await word.LoadDocument(files[i].GetPath);
-                Assert.True(word.Errors.Count == 0);
-                if(word.Errors.Count > 0)
+                Assert.True(!word.HasFatalError);
+                if(word.GetExceptions().Count > 0)
                 {
-                    foreach(var e in word.Errors)
-                     System.Console.WriteLine(e.Message);
+                    foreach(var e in word.GetExceptions())
+                        System.Console.WriteLine(e.Message);
                 }
 
                 var rParser = new DocumentParser.Parsers.Requisites.RequisitesParser(word, document);
                 rParser.Parse();
                 
-                if(rParser.HasErrors)
+                if(rParser.HasFatalError)
                     System.Console.WriteLine($"Ошибка в {files[i].Description}");
-                list.Add((!rParser.HasErrors, files[i].Description, document));
+                list.Add((!rParser.HasFatalError, files[i].Description, document));
                 //Assert.True(!rParser.HasErrors);
             }
 
