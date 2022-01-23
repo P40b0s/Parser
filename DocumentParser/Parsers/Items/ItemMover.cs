@@ -4,39 +4,9 @@ using System.Linq;
 using DocumentParser.Parsers.Headers;
 using DocumentParser.Parsers.Annex;
 namespace DocumentParser.Parsers.Items;
+
 public partial class ItemsParser
 {
-    //AnnexParser annexParser {get;}
-    //HeadersParser headersParser{get;}
-    /// <summary>
-    /// Находим и рассовываем все итемы в приложениях, заголовках и в теле самого документа
-    /// </summary>
-    /// <param name="headersParser">Парсер заголовков</param>
-    /// <param name="annexParser">Парсер приложений</param>
-    // public ItemsParser(HeadersParser headersParser, AnnexParser annexParser)
-    // {
-    //     this.headersParser = headersParser;
-    //     this.annexParser = annexParser;
-    // }
-    /// <summary>
-    /// Находим и рассовываем все итемы в приложениях, заголовках и в теле самого документа
-    /// </summary>
-    /// <param name="headersParser">Парсер заголовков</param>
-    /// <param name="annexParser">Парсер приложений</param>
-    // public ItemsParser(HeadersParser headersParser)
-    // {
-    //     this.headersParser = headersParser;
-    // }
-    /// <summary>
-    /// Находим и рассовываем все итемы в приложениях, заголовках и в теле самого документа
-    /// </summary>
-    /// <param name="headersParser">Парсер заголовков</param>
-    /// <param name="annexParser">Парсер приложений</param>
-    // public ItemsParser(AnnexParser annexParser)
-    // {
-    //     this.annexParser = annexParser;
-    // }
-
     private void headersMove(List<HeaderParserModel> headers, System.Predicate<NodeType> predicate)
     {
         //Перемещаем все неопознаные элементы из рутов хедеров в абзацы хедеров
@@ -55,6 +25,7 @@ public partial class ItemsParser
                             headers[h].Header.Indents = new List<Indent>();
                     headers[h].Header.Indents.Insert(0, headers[h].RootElements[i].ToIndent());
                 }
+                //Надо ли ставить флаг только для хедеров?
                 if(headers[h].RootElements[i].NodeType == NodeType.Таблица)
                 {
                     var l =  headers[h].Header.Indents.LastOrDefault();
