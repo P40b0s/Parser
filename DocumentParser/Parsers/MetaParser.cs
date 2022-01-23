@@ -12,7 +12,6 @@ namespace DocumentParser.Parsers
     public class MetaParser : LexerBase<MetaTokenType>
     {
         public List<ElementStructure> MetaParagraphs {get;} = new List<ElementStructure>();
-        ISettings settings {get;}
         public MetaParser(WordProcessing extractor)
         {
             this.extractor = extractor;

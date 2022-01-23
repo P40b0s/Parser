@@ -13,7 +13,6 @@ namespace DocumentParser.Parsers.Annex
     //центральный модуль парсинга документа, один на каждый док, отсюда вызываются все остальные модули
     public class AnnexParser : LexerBase<AnnexTokenType>
     {
-        ISettings settings {get;}
         public List<AnnexParserModel> Annexes {get;} = new List<AnnexParserModel>();
         public AnnexParser(WordProcessing extractor)
         {
@@ -237,6 +236,39 @@ namespace DocumentParser.Parsers.Annex
                 annex.StartIndex = meta.Value.ElementIndex + 1;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Перемещение приложений согласно их иерархии (могут быть приложения к приложению)
+        /// Этот метод вызывается последним! после заголовков и итемов, а то потом 
+        /// появятся вложенные приложения и уже ничего не найдется
+        /// </summary>
+        public void MoveAnnexByHierarchy()
+        {
+             //Рассовываем все приложения согласно иерархии
+            List<AnnexParserModel> forRemove = new List<AnnexParserModel>();
+            List<AnnexParserModel> except = new List<AnnexParserModel>();
+            Annexes.Reverse();
+            for (int i = 0; i < Annexes.Count; i++)
+            {
+                var first = Annexes.Except(except).FirstOrDefault(f=>f.Hierarchy < Annexes[i].Hierarchy);
+                if(first != null)
+                {
+                    if(Annexes.IndexOf(first) < i)
+                    {
+                        except.Add(first);
+                        i--;
+                        continue;
+                    }
+                    if(first.Annex.Annexes == null)
+                            first.Annex.Annexes = new List<DocumentElements.Annex>();
+                    first.Annex.Annexes.Insert(0, Annexes[i].Annex);
+                    forRemove.Add(Annexes[i]);
+                }
+
+            }
+            Annexes.RemoveAll(r=>forRemove.Contains(r));
+            Annexes.Reverse();
         }
 
         

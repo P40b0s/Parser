@@ -2,7 +2,6 @@
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentParser.DocumentElements;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Borders = DocumentParser.DocumentElements.Borders;
 using ParagraphProperties = DocumentParser.DocumentElements.ParagraphProperties;
@@ -55,11 +54,9 @@ namespace DocumentParser.Workers
     //     RunProperties ExtractRunProperties(StyleRunProperties rsp, Styles styles);
     //     bool IsBold(Paragraph p, Styles s);
     // }
-    public class WordProperties
+    public class WordProperties : Parsers.ParserBase
     {
-        public List<Exception> Errors = new List<Exception>();
         private Styles styles {get;}
-        ISettings settings {get;}
         public WordProperties(Styles stylePart, ISettings _settings)
         {
             styles = stylePart;
@@ -166,7 +163,7 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return null;
             }
         }
@@ -199,7 +196,7 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return null;
             }
         }
@@ -264,7 +261,7 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return null;
             }
         }
@@ -373,7 +370,7 @@ namespace DocumentParser.Workers
                 }
                 catch (Exception ex)
                 {
-                    Errors.Add(ex);
+                    AddError(ex);
                     return null;
                 }
             }
@@ -405,7 +402,6 @@ namespace DocumentParser.Workers
                         {
                             return TextAlignmentEnum.left;
                         }
-
                 }
             }
             return a;
@@ -426,16 +422,9 @@ namespace DocumentParser.Workers
         }
 
 
-        public RunProperties ExtractRunProperties(StyleRunProperties rsp)
-        {
-
-            return ExtractRP(null, rsp);
-        }
-        public RunProperties ExtractRunProperties(DocumentFormat.OpenXml.Wordprocessing.Run run)
-        {
-
-            return ExtractRP(run);
-        }
+        public RunProperties ExtractRunProperties(StyleRunProperties rsp) => ExtractRP(null, rsp);
+      
+        public RunProperties ExtractRunProperties(DocumentFormat.OpenXml.Wordprocessing.Run run) => ExtractRP(run);
 
         private RunProperties ExtractRP(DocumentFormat.OpenXml.Wordprocessing.Run run, StyleRunProperties rsp = null)
         {
@@ -481,7 +470,7 @@ namespace DocumentParser.Workers
                 }
                 catch (Exception ex)
                 {
-                    Errors.Add(ex);
+                    AddError(ex);
                     return null;
                 }
             }

@@ -11,9 +11,8 @@ using SettingsWorker;
 namespace DocumentParser.Parsers.Items;
 
 
-public class ItemsParser : LexerBase<ItemTokenType>
+public partial class ItemsParser : LexerBase<ItemTokenType>
 {
-    ISettings settings {get;}
     public List<ItemParserModel> Items {get;set;} = new List<ItemParserModel>();
     public ItemsParser(WordProcessing extractor)
     {
@@ -49,7 +48,6 @@ public class ItemsParser : LexerBase<ItemTokenType>
         
         UpdateStatus("Поиск списочных элементов");
         var count = currentTokens.Count();
-
         return cast;
     }
     

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using DocumentParser.Workers;
 using System.Threading.Tasks;
 using DocumentParser.DocumentElements;
@@ -7,16 +6,26 @@ using System.Linq;
 using DocumentParser.Parsers.Headers;
 using DocumentParser.Parsers.Annex;
 using DocumentParser.Parsers.Items;
-using Utils.Extensions;
 using System.IO;
-using SettingsWorker;
 
 namespace DocumentParser.Parsers
 {
-    //центральный модуль парсинга документа, один на каждый док, отсюда вызываются все остальные модули
+    /// <summary>
+    /// Центральный модуль парсинга документа, один на каждый док, отсюда вызываются все остальные модули
+    /// Но остальные парсеры довольно самодостаточные и могут в неготорых случаях использоваться отдельно
+    /// Стандартная очередность рпботы парсеров:
+    /// 1. RequisitesParser
+    /// 2. ChangesParser
+    /// 3. MetaParser 
+    /// 4. AnnexParser
+    /// 5. HeadersParser
+    /// 6. FootNodeParser
+    /// 7. TableParser
+    /// 10. itemsParser.Parse(headersParser, annexParser);
+    /// 11. annexParser.MoveAnnexByHierarchy();
+    /// </summary>
     public class DocumentParser : ParserBase
     {
-        ISettings settings {get;}
         public DocumentParser(string filePath)
         {
             this.filePath = filePath;
@@ -32,48 +41,39 @@ namespace DocumentParser.Parsers
         public async ValueTask<bool> ParseDocument()
         {
             if(string.IsNullOrEmpty(filePath))
-            {
-                exceptions.Add(new ParserException("Не выбран файл для обработки"));
-                return false;
-            }
+                return AddError("Не выбран файл для обработки");
             var f = new FileInfo(filePath);
             document.FileName = f.Name;
             await word.LoadDocument(filePath);
-            
-            if(word.Errors.Count > 0)
-            {
-                foreach(var e in word.Errors)
-                    exceptions.Add(new ParserException(e.Message));
+            if(!AddError(word))
                 return false;
-            }
-            
+
             var requisites = new RequisitesParser(word, document);
             requisites.UpdateCallback+= c => UpdateStatus(c);
             requisites.ErrorCallback+= e => AddError(e.Message, null, e.ErrorType);
             requisites.Parse();
-            exceptions.AddRange(requisites.exceptions);
-            if(exceptions.Count > 0)
+            if(!AddError(requisites))
                 return false;
             var changesParser = new ChangesParser(word);
             changesParser.UpdateCallback+= c => UpdateStatus(c);
             changesParser.ErrorCallback+= e => AddError(e);
             changesParser.Parse();
-            exceptions.AddRange(changesParser.exceptions);
+            AddError(changesParser);
             var metaParser = new MetaParser(word);
             metaParser.UpdateCallback+= c => UpdateStatus(c);
             metaParser.ErrorCallback+= e => AddError(e);
             metaParser.Parse();
-            exceptions.AddRange(metaParser.exceptions);
+            AddError(metaParser);
             var annexParser = new AnnexParser(word);
             annexParser.UpdateCallback+= c => UpdateStatus(c);
             annexParser.ErrorCallback+= e => AddError(e);
             annexParser.Parse();
-            exceptions.AddRange(annexParser.exceptions);
+           
             var headersParser = new HeadersParser(word, annexParser, requisites);
             headersParser.UpdateCallback+= c => UpdateStatus(c);
             headersParser.ErrorCallback+= e => AddError(e);
             headersParser.Parse();
-            exceptions.AddRange(headersParser.exceptions);
+            
             //
             //FIXME проблемы с выборкой итемов из примечаний и сносок
             //необходимо это делать после поиска заголовков, чтоб проставить конечные точки
@@ -81,156 +81,24 @@ namespace DocumentParser.Parsers
             footNodeParser.UpdateCallback+= c => UpdateStatus(c);
             footNodeParser.ErrorCallback+= e => AddError(e);
             footNodeParser.Parse();
-            exceptions.AddRange(footNodeParser.exceptions);
+            AddError(footNodeParser);
             //Таблицу ищем после футнотов а футноты после хедеров и приложений...
             //замкнутый круг
             var tableParser = new TableParser(word);
-            tableParser.Parse();
-            headersParser.GetTables();
-            headersParser.GetFootNotes();
-            //находим все итемы подитемы итд...
-            UpdateStatus("Обработка списочных элементов...");
+            //Передаем, чтоб можно было вызвать пару методов headerParser после поиска таблиц
+            tableParser.Parse(headersParser);
             var itemsParser = new ItemsParser(word);
-            headersParser.BodyItems = itemsParser.Parse(headersParser.BodyRootElements);
-            var count = headersParser.Headers.Count() + annexParser.Annexes.Count();
-            var percentage = 0;
-            foreach(var h in headersParser.Headers)
-            {
-                h.Header.Items = itemsParser.Parse(h.RootElements);
-                percentage++;
-                UpdateStatus("Обработка списочных элементов...", count, percentage);
-            }
-            foreach(var a in annexParser.Annexes)
-            {
-                a.Annex.Items = itemsParser.Parse(a.RootElements);
-                foreach(var h in a.Headers)
-                {
-                    //a/Annex.Headers уже является сслкой на h/Header
-                    h.Header.Items = itemsParser.Parse(h.RootElements);
-                }
-                percentage++;
-                UpdateStatus("Обработка списочных элементов...", count, percentage);
-            }
-            //Перемещаем все неопознаные элементы из рутов хедеров в абзацы хедеров
-            foreach(var h in headersParser.Headers)
-            {
-                foreach(var i in h.RootElements)
-                {
-                    //для элементов определенных как абзац
-                    //Часть 31 статьи 1 Федерального закона от 26 декабря 2008 года № 294-ФЗ.....
-                    //дополнить пунктом 24 следующего содержания:
-                    //элемент имеет флаг IsChange и определен как абзац поэтому добавляем условие для абзаца
-                    if(i.NodeType == NodeType.НеОпределено || i.NodeType == NodeType.Абзац || i.NodeType == NodeType.МетаАбзац || i.NodeType == NodeType.МетаИнформация)
-                    {
-                        if(h.Header.Indents == null)
-                                h.Header.Indents = new List<Indent>();
-                        
-                        var ind = new Indent(i.ParagraphProperties,
-                                            i.ElementIndex,
-                                            i.WordElement.Text.GetHash(),
-                                            i.WordElement.RunWrapper.GetCustRuns(),
-                                            i.MetaInfo,
-                                            i.HyperTextInfo,
-                                            i.Comment,
-                                            i.FootNoteInfo,
-                                            null, //Почему не ищем таблицу?
-                                            i.IsChange,
-                                            0,
-                                            NodeType.Абзац
-                                            );
-                        h.Header.Indents.Add(ind);
-                    }
-                    if(i.NodeType == NodeType.Таблица)
-                    {
-                       var l =  h.Header.Indents.LastOrDefault();
-                       if(l != null)
-                        l.Table = i.Table;
-                    }
-                }
-                h.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
-            }
-            //Перемещаем все неопознаные элементы из рута документа абзацы документа
-            foreach(var i in headersParser.BodyRootElements)
-            {
-                if(i.NodeType == NodeType.НеОпределено)
-                {
-                    var ind = new Indent(i.ParagraphProperties,
-                                            i.ElementIndex,
-                                            i.WordElement.Text.GetHash(),
-                                            i.WordElement.RunWrapper.GetCustRuns(),
-                                            i.MetaInfo,
-                                            i.HyperTextInfo,
-                                            i.Comment,
-                                            i.FootNoteInfo,
-                                            null,
-                                            i.IsChange,
-                                            0,
-                                            NodeType.Абзац
-                                            );
-                    headersParser.BodyIndents.Add(ind);
-                }
-            }
-            headersParser.BodyRootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
-            //Перемещаем все неопознаные элементы из рутов приложений и хедеров приложений в абзацы приложений
-            foreach(var a in annexParser.Annexes)
-            {
-                foreach(var i in a.RootElements)
-                {
-                    if(i.NodeType == NodeType.НеОпределено)
-                    {
-                        if(a.Annex.Indents == null)
-                            a.Annex.Indents = new List<Indent>();
-                        var ind = new Indent(i.ParagraphProperties,
-                                            i.ElementIndex,
-                                            i.WordElement.Text.GetHash(),
-                                            i.WordElement.RunWrapper.GetCustRuns(),
-                                            i.MetaInfo,
-                                            i.HyperTextInfo,
-                                            i.Comment,
-                                            i.FootNoteInfo,
-                                            null,
-                                            i.IsChange,
-                                            0,
-                                            NodeType.Абзац
-                                            );
-                        a.Annex.Indents.Add(ind);
-                    }
-                }
-                a.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
-                foreach(var h in a.Headers)
-                {
-                    foreach(var i in h.RootElements)
-                    {
-                        if(i.NodeType == NodeType.НеОпределено)
-                        {
-                            if(h.Header.Indents == null)
-                                    h.Header.Indents = new List<Indent>();
-                            var ind = new Indent(i.ParagraphProperties,
-                                                i.ElementIndex,
-                                                i.WordElement.Text.GetHash(),
-                                                i.WordElement.RunWrapper.GetCustRuns(),
-                                                i.MetaInfo,
-                                                i.HyperTextInfo,
-                                                i.Comment,
-                                                i.FootNoteInfo,
-                                                null,
-                                                i.IsChange,
-                                                0,
-                                                NodeType.Абзац
-                                                );
-                            h.Header.Indents.Add(ind);
-                        }
-                    }
-                    h.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
-                }
-            }
-            //Рассовываем все приложения согласно иерархии
-            GetAnnexesHierarchy(annexParser);
+            itemsParser.Parse(headersParser, annexParser);
+            
+            AddError(headersParser);
+            AddError(itemsParser);
+            AddError(tableParser);
+
             // List<AnnexParserModel> forRemove = new List<AnnexParserModel>();
             // var index = -1;
             // for (int i = 0; i < annexParser.Annexes.Count; i++)
             // {
-            //     //FIXME тут надо изменить !!!
+            //     
             //     //var items = annexParser.Annexes
             //     if(index >=0)
             //     {
@@ -247,7 +115,7 @@ namespace DocumentParser.Parsers
             //     index = i-1;
             // }
             // annexParser.Annexes.RemoveAll(r=>forRemove.Contains(r));
-            
+            //Создаем документ
             UpdateStatus("Формирование документа...");
             document.Body = new DocumentBody(headersParser.Headers.Select(s=>s.Header).ToList(),
                                             headersParser.BodyIndents,
@@ -259,97 +127,11 @@ namespace DocumentParser.Parsers
                 document.ImagesLength = word.ImagesLenth;
             }
             var dd = word.GetElement(0);
-         
-                
-           
-            //Находим все хедеры в приложениях, все что не вошло в хедеры добавляем в рутовые элементы
-            
-
-        
-
-           
             //var items = word.GetElementsExcept(annexParser.Annexes.SelectMany(s=>s.RootItems), headersParser.Headers.SelectMany(s=>s.Items));
             //TEST
             //word.SaveDocument("/home/phobos/Документы/354_hl.docx");
             
-            return true;
-        }
-
-        private void GetAnnexesHierarchy(AnnexParser annexParser)
-        {
-             //Рассовываем все приложения согласно иерархии
-            List<AnnexParserModel> forRemove = new List<AnnexParserModel>();
-            List<AnnexParserModel> except = new List<AnnexParserModel>();
-            annexParser.Annexes.Reverse();
-            for (int i = 0; i < annexParser.Annexes.Count; i++)
-            {
-                var first = annexParser.Annexes.Except(except).FirstOrDefault(f=>f.Hierarchy < annexParser.Annexes[i].Hierarchy);
-                if(first != null)
-                {
-                    if(annexParser.Annexes.IndexOf(first) < i)
-                    {
-                        except.Add(first);
-                        i--;
-                        continue;
-                    }
-                    if(first.Annex.Annexes == null)
-                            first.Annex.Annexes = new List<DocumentElements.Annex>();
-                    first.Annex.Annexes.Insert(0, annexParser.Annexes[i].Annex);
-                    forRemove.Add(annexParser.Annexes[i]);
-                }
-
-            }
-            annexParser.Annexes.RemoveAll(r=>forRemove.Contains(r));
-            annexParser.Annexes.Reverse();
-        }
-        /// <summary>
-        /// ВЫФносим сюда для рекурсивного добавления элементов
-        /// </summary>
-        /// <typeparam name="int"></typeparam>
-        /// <returns></returns>
-        private List<int> indexes {get;set;}
-        public List<int> GetChildElementsIndexes(int index)
-        {
-            indexes = new List<int>();
-            //TODO нет поиска по итемам боди документа (поиск осущемтвляется только в хедерах)
-            foreach(var h in document.Body.Headers)
-            {
-                if(h.ElementIndex == index)
-                {
-                    AddAllItems(h.Items);
-                    foreach(var ind in h.Indents)
-                    {
-                        indexes.Add(ind.ElementIndex);
-                    }
-                }
-                if(h.Items != null)
-                foreach(var itm in h.Items)
-                {
-                    if(itm.ElementIndex == index)
-                    {
-                        foreach(var ind in itm.Indents)
-                        {
-                            indexes.Add(ind.ElementIndex);
-                        }
-                        AddAllItems(itm.Items);
-                    } 
-                }
-            }
-            indexes.Remove(index);
-            return indexes;
-        }
-
-        private void AddAllItems(List<Item> items)
-        {
-            if(items != null)
-            foreach(var i in items)
-            {
-                foreach(var ind in i.Indents)
-                {
-                    indexes.Add(ind.ElementIndex);
-                }
-                AddAllItems(i.Items);
-            }
+            return !HasFatalError;
         }
     }
 }

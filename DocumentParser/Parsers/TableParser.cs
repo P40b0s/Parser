@@ -5,20 +5,18 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentParser.DocumentElements;
 using DocumentParser.Workers;
 using DocumentParser.Elements;
-using SettingsWorker;
 
 namespace DocumentParser.Parsers
 {
     public class TableParser : ParserBase
     {
-        ISettings settings {get;}
         public TableParser(WordProcessing extractor)
         {
             this.extractor = extractor;
             settings = extractor.Settings;
         }
         private WordProcessing extractor {get;}
-        public bool Parse()
+        public bool Parse(Parsers.Headers.HeadersParser hParser)
         {
             UpdateStatus("Обработка таблиц...");
             var percentage = 0;
@@ -29,6 +27,11 @@ namespace DocumentParser.Parsers
                 item.Table = parseTable(item);
                 percentage++;
                 UpdateStatus("Обработка таблиц...", count, percentage);
+            }
+            if(hParser != null)
+            {
+                hParser.GetTables();
+                hParser.GetFootNotes();
             }
             return true;
         } 
@@ -50,10 +53,8 @@ namespace DocumentParser.Parsers
                     RIndex = r,
                     RowProperties = extractor.Properties.ExtractRowProperties(rows[r]),
                     Cells = new List<TCell>()
-
                 };
                 rowList.Add(rowItem);
-
                 var cells = rows[r].Elements<TableCell>().ToList();
                 int cellIndexModifier = 0;
                 for (int c = 0; c < cells.Count; c++)
@@ -72,7 +73,6 @@ namespace DocumentParser.Parsers
                         cellIndexModifier++;
                         continue;
                     }
-                        
                     if (cellItem.CellProperties.CellBorders == null)
                         cellItem.CellProperties.CellBorders = tableProperties.TableBorders;
                     rowItem.Cells.Add(cellItem);
@@ -104,11 +104,5 @@ namespace DocumentParser.Parsers
             return new DocumentTable(table.ElementIndex, tableProperties, rowList);
         }
         #endregion
-
-
-
-
-
-
     }
 }

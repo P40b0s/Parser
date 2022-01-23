@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
 using Utils;
+using System.Runtime.CompilerServices;
 
 namespace DocumentParser.Parsers
 {
@@ -30,6 +31,7 @@ namespace DocumentParser.Parsers
 
     public abstract class ParserBase
     {
+        protected SettingsWorker.ISettings settings {get;init;}
         /// <summary>
         /// Вызывается при обновлении статуса.
         /// Использование:
@@ -49,10 +51,11 @@ namespace DocumentParser.Parsers
         /// Вызывается при обновлении ошибок, содержит массив ошибок за все время жизни.
         /// </summary>
         public ErrorsUpdate ErrorsCallback { get; set; }
-        public List<ParserException> exceptions { get; set; } = new List<ParserException>();
-        public List<string> statuses { get; set; } = new List<string>();
+        List<ParserException> exceptions { get; set; } = new List<ParserException>();
+        List<string> statuses { get; set; } = new List<string>();
         public bool HasError => exceptions.Count > 0;
         public bool HasFatalError => exceptions.Any(a=>a.ErrorType == ErrorType.Fatal);
+        public List<ParserException> GetExceptions() => exceptions;
         /// <summary>
         /// Добавить статус
         /// </summary>
@@ -80,7 +83,6 @@ namespace DocumentParser.Parsers
        
         void UpdateStatuses()
         {
-           
             if(this.StatusesUpdateCallback != null)
                 Task.Factory.StartNew(()=> this.StatusesUpdateCallback?.Invoke(statuses));
         }
@@ -100,53 +102,33 @@ namespace DocumentParser.Parsers
         /// <summary>
         /// Добавляет ошибку в список ошибок
         /// </summary>
-        /// <param name="pe">Ошибка парсера</param>
+        /// <param name="message">Ошибка парсера</param>
         /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
-        protected bool AddError(string message,  TokenException tokenException, ErrorType errorType = ErrorType.Fatal)
-        {
-            ParserException  exception = new ParserException($"{message}. TokenError: {tokenException.Message}", errorType);
-            exceptions.Add(exception);
-            UpdateError(exception);
-            UpdateErrors();
-            if(exception.ErrorType == ErrorType.Fatal)
-                return false;
-            else return true;
-        }
-        /// <summary>
-        /// Добавляет ошибку в список ошибок
-        /// </summary>
-        /// <param name="pe">Ошибка парсера</param>
-        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
-        protected bool AddError(IError error)
-        {
-            ParserException exception = new ParserException(error.Message);
-            exceptions.Add(exception);
-            UpdateError(exception);
-            UpdateErrors();
-            return false;
-        }
-        /// <summary>
-        /// Добавляет ошибку в список ошибок
-        /// </summary>
-        /// <param name="pe">Ошибка парсера</param>
-        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
-        protected bool AddError(string message, ErrorType errorType = ErrorType.Fatal)
-        {
-            ParserException exception = new ParserException($"{message}", errorType);
-            exceptions.Add(exception);
-            UpdateError(exception);
-            UpdateErrors();
-            if(exception.ErrorType == ErrorType.Fatal)
-                return false;
-            else return true;
-        }
+        protected bool AddError(string message,  TokenException tokenException, ErrorType errorType = ErrorType.Fatal, [CallerMemberName]string callerMemberName = null) =>
+           AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {message}. \n TokenError: {tokenException?.Message}", errorType));
 
         /// <summary>
         /// Добавляет ошибку в список ошибок
         /// </summary>
-        /// <param name="pe">Ошибка парсера</param>
+        /// <param name="error">Ошибка парсера</param>
+        /// <returns>Всегда возвращает false!</returns>
+        protected bool AddError(IError error, [CallerMemberName]string callerMemberName = null) =>
+            AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {error.Message}"));
+
+        /// <summary>
+        /// Добавляет ошибку в список ошибок
+        /// </summary>
+        /// <param name="message">Ошибка парсера</param>
         /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
-        protected bool AddError(ParserException exception)
+        protected bool AddError(string message, ErrorType errorType = ErrorType.Fatal, [CallerMemberName]string callerMemberName = null) =>
+            AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {message}"));
+
+        /// <summary>
+        /// Добавляет ошибку в список ошибок
+        /// </summary>
+        /// <param name="exception">Ошибка парсера</param>
+        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
+        bool AddError(ParserException exception)
         {
             exceptions.Add(exception);
             UpdateError(exception);
@@ -155,6 +137,39 @@ namespace DocumentParser.Parsers
                 return false;
             else return true;
         }
+        /// <summary>
+        /// Добавляет ошибку в список ошибок
+        /// </summary>
+        /// <param name="exception">Ошибка парсера</param>
+        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
+        protected bool AddError(Exception exception, [CallerMemberName]string callerMemberName = null) =>
+            AddError(new ParserException($"Метод: \"{callerMemberName}\" \n Системное исключение: {exception.Message} \n StackTrace: {exception.StackTrace}"));
+        /// <summary>
+        /// Добавляет ошибку в список ошибок
+        /// </summary>
+        /// <param name="exceptions">Ошибки парсера</param>
+        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
+        protected bool AddError(IEnumerable<ParserException> exceptions, [CallerMemberName]string callerMemberName = null)
+        {
+            var fatal = exceptions.Any(a=>a.ErrorType == ErrorType.Fatal);
+            foreach(var e in exceptions)
+                AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {e.Message}"));
+            return !fatal;
+        }
+        /// <summary>
+        /// Добавляет ошибку в список ошибок
+        /// </summary>
+        /// <param name="exceptions">Ошибки парсера</param>
+        /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
+        protected bool AddError(ParserBase p, [CallerMemberName]string callerMemberName = null)
+        {
+            var exceptions = p.GetExceptions();
+            var fatal = exceptions.Any(a=>a.ErrorType == ErrorType.Fatal);
+            foreach(var e in exceptions)
+                AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {e.Message}"));
+            return !fatal;
+        }
+       
         
       
         int getPercentage(int all, int current)

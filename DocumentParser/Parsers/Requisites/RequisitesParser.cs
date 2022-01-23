@@ -17,15 +17,13 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     RequisiteTokensModel tokensRequisiteModel {get;} = new RequisiteTokensModel();
     DocumentElements.Document doc {get;}
     public ElementStructure BeforeBodyElement {get;set;}
-    public bool HasErrors => exceptions.Any(a=>a.ErrorType == ErrorType.Fatal);
-    public bool HasWarnings => exceptions.Any(a=>a.ErrorType == ErrorType.Warning);
-    ISettings rules {get;}
+    
     public RequisitesParser(WordProcessing extractor, DocumentElements.Document doc)
     {
         this.extractor = extractor;
         this.doc = doc;
-        rules = extractor.Settings;
-        Tokenize(extractor.FullText, new RequisitesTokensDefinition(rules.TokensDefinitions.RequisitesTokenDefinition.TokenDefinitionSettings));
+        settings = extractor.Settings;
+        Tokenize(extractor.FullText, new RequisitesTokensDefinition(settings.TokensDefinitions.RequisitesTokenDefinition.TokenDefinitionSettings));
     }
 
     Predicate<Token<RequisitesTokenType>> IsOrgan = d => 
@@ -40,16 +38,16 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     {
         UpdateStatus("Определение реквизитов документа...");
         if(!TypeBlock())
-            return HasErrors;
+            return HasFatalError;
         if(!OrganBlock())
-            return HasErrors;
+            return HasFatalError;
         if(!NameBlock())
-            return HasErrors;
+            return HasFatalError;
         if(!GDSFBlock())
-            return HasErrors;
+            return HasFatalError;
         if(!SignDateNumberExecutorBlock())
-            return HasErrors;
-        return HasErrors;
+            return HasFatalError;
+        return HasFatalError;
     }
 
     bool TypeBlock()
@@ -57,7 +55,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         if(tokens.Count == 0)
             return AddError("Не найдено ни одного токена, поиск реквизитов невозможен");
         var first = tokens[0];
-        var typeToken = first.FindForward(f=>f.TokenType == RequisitesTokenType.Вид, rules.DefaultRules.RequisiteRule.TypeSearchMaxDeep, true);
+        var typeToken = first.FindForward(f=>f.TokenType == RequisitesTokenType.Вид, settings.DefaultRules.RequisiteRule.TypeSearchMaxDeep, true);
         if(typeToken.IsError)
             return AddError("Не удалось определить вид документа: ", typeToken.Error);
         var stringType = extractor.GetUnicodeString(typeToken.Value);
@@ -72,9 +70,9 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     }
     bool OrganBlock ()
     {
-        if(rules.DefaultRules.RequisiteRule.CustomOrganName != "")
+        if(settings.DefaultRules.RequisiteRule.CustomOrganName != "")
         {
-            doc.Organs.Add(new Organ(rules.DefaultRules.RequisiteRule.CustomOrganName));
+            doc.Organs.Add(new Organ(settings.DefaultRules.RequisiteRule.CustomOrganName));
             return true;
         }
         var before = tokensRequisiteModel.typeToken.FindBackwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
@@ -104,25 +102,25 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     private void loadCustomRules()
     {
         var findedRules = new List<CustomRule<AllRules>>();
-        for(int c = 0; c < rules.CustomRules.Count; c++)
+        for(int c = 0; c < settings.CustomRules.Count; c++)
         {
             //Если регекс органа - любой, то не ищем по органам вообще а ищем только по видам
-            if(rules.CustomRules[c].Organ == ".+")
+            if(settings.CustomRules[c].Organ == ".+")
             {
-                if(rules.CustomRules[c].TypeRX().IsMatch(tokensRequisiteModel.typeToken.Value))
+                if(settings.CustomRules[c].TypeRX().IsMatch(tokensRequisiteModel.typeToken.Value))
                 {
-                    findedRules.Add(rules.CustomRules[c]);
+                    findedRules.Add(settings.CustomRules[c]);
                 }   
             }
             else
             {
                 for(int o = 0; o < tokensRequisiteModel.organsTokens.Count; o++)
                 {
-                    if(rules.CustomRules[c].OrganRX().IsMatch(tokensRequisiteModel.organsTokens[o].Value))
+                    if(settings.CustomRules[c].OrganRX().IsMatch(tokensRequisiteModel.organsTokens[o].Value))
                     {
-                        if(rules.CustomRules[c].TypeRX().IsMatch(tokensRequisiteModel.typeToken.Value))
+                        if(settings.CustomRules[c].TypeRX().IsMatch(tokensRequisiteModel.typeToken.Value))
                         {
-                            findedRules.Add(rules.CustomRules[c]);
+                            findedRules.Add(settings.CustomRules[c]);
                         }   
                     }     
                 }
@@ -133,7 +131,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         var def = findedRules.OrderBy(o=>o.Weight).Count() > 0;
         if(def)
         {
-            rules.DefaultRules = findedRules[0].Rules;
+            settings.DefaultRules = findedRules[0].Rules;
             UpdateStatus($"Установлены правила разбора для {findedRules[0].Organ} {findedRules[0].Type}");
         }
     }
@@ -141,7 +139,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     
     bool SignDateNumberExecutorBlock()
     {
-        if(!rules.DefaultRules.RequisiteRule.NoExecutor)
+        if(!settings.DefaultRules.RequisiteRule.NoExecutor)
         {
             var posts = tokens.FindAll(f=>f.TokenType == RequisitesTokenType.Должность);
             if(posts.Count == 0)
@@ -171,7 +169,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         //Дату не находим, заканчиваем метод
         if(!getSignDate())
             return false;
-        if(!rules.DefaultRules.RequisiteRule.NoNumber)
+        if(!settings.DefaultRules.RequisiteRule.NoNumber)
         {
             var number =  tokensRequisiteModel.signDateToken.Next(RequisitesTokenType.Номер);
             if(number.IsError)
@@ -187,7 +185,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     private bool getSignDate()
     {
         bool ok = false;
-        if(rules.DefaultRules.RequisiteRule.SignDateAfterCustomToken)
+        if(settings.DefaultRules.RequisiteRule.SignDateAfterCustomToken)
         {
             var custom = tokens.GetFirst(f=>f.TokenType == RequisitesTokenType.ПередДатойПодписания);
             if(custom.IsOk)
@@ -202,9 +200,9 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         }
         else
         {
-            if(rules.DefaultRules.RequisiteRule.SignDateAfterType)
+            if(settings.DefaultRules.RequisiteRule.SignDateAfterType)
             {   
-                var signD = tokensRequisiteModel.typeToken.FindForward(RequisitesTokenType.ДлиннаяДата, rules.DefaultRules.RequisiteRule.SignDateSearchMaxDeep);
+                var signD = tokensRequisiteModel.typeToken.FindForward(RequisitesTokenType.ДлиннаяДата, settings.DefaultRules.RequisiteRule.SignDateSearchMaxDeep);
                 if(signD.IsOk)
                 {
                     ok = true;
@@ -214,7 +212,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
             }
             else
             {
-                var signD = tokensRequisiteModel.personToken.Last().executorToken.FindForward(RequisitesTokenType.ДлиннаяДата, rules.DefaultRules.RequisiteRule.SignDateSearchMaxDeep);
+                var signD = tokensRequisiteModel.personToken.Last().executorToken.FindForward(RequisitesTokenType.ДлиннаяДата, settings.DefaultRules.RequisiteRule.SignDateSearchMaxDeep);
                 if(signD.IsOk)
                 {
                     ok =  true;
@@ -245,7 +243,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     bool GDSFBlock()
     {
         //Парсить данные совфеда и госдумы ненадо, возвращаем true
-        if (!rules.DefaultRules.RequisiteRule.ParseGDSFAttributes)
+        if (!settings.DefaultRules.RequisiteRule.ParseGDSFAttributes)
             return true;
         //не всешда присутствует дата принятия совфедом!!!
         var gd = tokens.GetFirst(f=>f.TokenType == RequisitesTokenType.ПринятГД);
@@ -284,7 +282,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     /// </summary>
     bool NameBlock()
     {
-        if(rules.DefaultRules.RequisiteRule.NameInTypeString)
+        if(settings.DefaultRules.RequisiteRule.NameInTypeString)
         {
             var nameToken = extractor.GetSingleElement(tokensRequisiteModel.typeToken);
             if(nameToken.IsError)
@@ -307,7 +305,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
             ? tokensRequisiteModel.typeToken 
             : tokensRequisiteModel.organsTokens.Last();
 
-        // if(rules.DefaultRules.RequisiteRule.SignDateAfterType)
+        // if(settings.DefaultRules.RequisiteRule.SignDateAfterType)
         // {
         //     var dateField = lastToken.Next();
         //     if(dateField.IsOk)
@@ -315,14 +313,14 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         // }
 
         var beforeNameElement = extractor.GetSingleElement(lastToken);
-        var mayBeName = beforeNameElement.Value.Next(rules.DefaultRules.RequisiteRule.NamePositionAfterTypeCorrection);
+        var mayBeName = beforeNameElement.Value.Next(settings.DefaultRules.RequisiteRule.NamePositionAfterTypeCorrection);
         if(mayBeName.IsError)
             return AddError("Наименование документа не найдено");
         var name = mayBeName.Value;
         var nameIsBold = extractor.Properties.IsBold(name);
-        if(rules.DefaultRules.RequisiteRule.RequiredName && !nameIsBold)
+        if(settings.DefaultRules.RequisiteRule.RequiredName && !nameIsBold)
             return AddError("Не найдено наименование выделеное жирным шрифтом, при установленом флаге RequiredName=true это является критической ошибкой");
-        if(!rules.DefaultRules.RequisiteRule.RequiredName && !nameIsBold)
+        if(!settings.DefaultRules.RequisiteRule.RequiredName && !nameIsBold)
         {
             extractor.SetElementNode(beforeNameElement.Value, NodeType.stop);
             BeforeBodyElement = beforeNameElement.Value;

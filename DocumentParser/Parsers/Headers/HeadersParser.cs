@@ -29,7 +29,6 @@ namespace DocumentParser.Parsers.Headers
     {
         AnnexParser annexParser {get;}
         RequisitesParser requisitesParser {get;}
-        ISettings settings {get;}
         public List<HeaderParserModel> Headers {get;} = new List<HeaderParserModel>();
 
         /// <summary>

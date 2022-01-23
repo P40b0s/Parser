@@ -26,7 +26,6 @@ namespace DocumentParser.Parsers
     }
     public class FootNoteParser : LexerBase<FootNoteTokenType>
     {
-        ISettings settings {get;}
         public FootNoteParser(WordProcessing extractor)
         {
             this.extractor = extractor;
@@ -109,7 +108,7 @@ namespace DocumentParser.Parsers
                 var links = allLinks.Where(w=>parse(w) == foo.Foot.Number);
                 if(links.Count() == 0)
                 {
-                    addException(foo.First);
+                    notFoundException(foo.First);
                     continue;
                 }
                 foo.First.FootNoteInfo = foo.Foot;
@@ -233,18 +232,18 @@ namespace DocumentParser.Parsers
                 int.TryParse(token.CustomGroups[0].Value, out result);
             }
             if(result == -1)
-                exceptions.Add(new ParserException($"Не могу преобразовать значение \"{token.CustomGroups[0].Value}\" в числовой формат"));
+                AddError($"Не могу преобразовать значение \"{token.CustomGroups[0].Value}\" в числовой формат");
             return result;
         }
 
-        private void addException(Token<FootNoteTokenType> token)
+        private void notFoundException(Token<FootNoteTokenType> token)
         {
             var par = extractor.GetElements(token).FirstOrDefault();
-            exceptions.Add(new ParserException($"Не найдена ссылка на: {par.WordElement.Text}"));
+            AddError($"Не найдена ссылка на: {par.WordElement.Text}");
         }
-        private void addException(ElementStructure par)
+        private void notFoundException(ElementStructure par)
         {
-            exceptions.Add(new ParserException($"Не найдена ссылка на: {par.WordElement.Text}"));
+            AddError($"Не найдена ссылка на: {par.WordElement.Text}");
         }
 
         

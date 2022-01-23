@@ -17,11 +17,7 @@ using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 
 namespace DocumentParser.Workers
 {
-
-    
-
-    
-    public class WordProcessing : WorkerBase, IDisposable
+    public class WordProcessing : Parsers.ParserBase, IDisposable
     {
         List<ElementStructure> ElementsList { get; } = new List<ElementStructure>();
         List<CommentWrapper> comments {get;}= new List<CommentWrapper>();
@@ -61,21 +57,8 @@ namespace DocumentParser.Workers
             try
             {
                 _docxPath = documentPath;
-                // var NumberOfRetries = 20;
-                // for (int i=1; i <= NumberOfRetries; ++i) 
-                // {
-                //     try 
-                //     {
                 file = File.Open(_docxPath, FileMode.Open);
-                //         break; 
-                //     }
-                //     catch (IOException e) when (i <= NumberOfRetries) 
-                //     {
-                //         Thread.Sleep(200);
-                //     }
-                // }
                 Document = WordprocessingDocument.Open(file, true);
-                //FullText =  Document.MainDocumentPart.Document.Body.GetFullText();
                 StylePart = Document.MainDocumentPart.StyleDefinitionsPart.Styles;
                 Body = Document.MainDocumentPart.Document.Body;
                 DataExtractor = new DataExtractor(Document.MainDocumentPart, Settings);
@@ -86,7 +69,7 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
             }
         }
         public List<ElementStructure> GetParagrapsByComment(string comment) => ElementsList.Where(w=>w.Comment != null && w.Comment.Values.Contains(comment)).ToList();
@@ -237,15 +220,15 @@ namespace DocumentParser.Workers
                             }
                         }
                         currentElement++;
-                        Percentage("Предобработка текста", elements.Count(), currentElement);
+                        UpdateStatus("Предобработка текста", elements.Count(), currentElement);
                     }
                     ProcessComments();
-                    Errors.AddRange(DataExtractor.Errors);
-                    Errors.AddRange(Properties.Errors);
+                    AddError(DataExtractor);
+                    AddError(Properties);
                 }
                 catch (Exception ex)
                 {
-                    Errors.Add(ex);
+                    AddError(ex);
                 }
             });
         }
@@ -254,7 +237,7 @@ namespace DocumentParser.Workers
         {
             var com = ElementsList.SelectMany(w=>w.WordElement.RunWrapper.Comments).Distinct();
             if(com.Count() > 0)
-                Status($"Обработка коментариев: {com.Count()} шт.");
+                UpdateStatus($"Обработка коментариев: {com.Count()} шт.");
             foreach(var c in com)
             {
                 var items = ElementsList.Where(w=>w.WordElement.RunWrapper.Comments.Contains(c) || w.WordElement.CommentId == c);
@@ -465,7 +448,7 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return "";
             }
         }
@@ -480,7 +463,7 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return "";
             }
         }
@@ -514,7 +497,7 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return "";
             }
         }

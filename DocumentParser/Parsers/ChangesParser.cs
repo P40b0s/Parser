@@ -9,7 +9,6 @@ namespace DocumentParser.Parsers
 {
     public class ChangesParser : LexerBase<ChangesTokenType>
     {
-        ISettings settings {get;}
         public ChangesParser(WordProcessing extractor)
         {
             this.extractor = extractor;

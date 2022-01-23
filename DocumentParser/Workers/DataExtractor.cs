@@ -3,7 +3,6 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Vml;
 using DocumentFormat.OpenXml.Wordprocessing;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -28,16 +27,14 @@ namespace DocumentParser.Workers
         public string MathMlFormat { get; set; }
     }
     
-    public class DataExtractor
+    public class DataExtractor : Parsers.ParserBase
     {
-        public List<Exception> Errors { get; set; } = new List<Exception>();
         const string MATHML = @"OMML2MML.XSL";
         const string LATEX = @"mmltex.xsl";
         private string DocumentsDir { get; }
         private string FilesRootDirectory { get; }
         private string RootDirectory { get; }
         private MainDocumentPart part {get;}
-        ISettings settings {get;}
         int thumbSizeX {get;}
         int thumbSizeY {get;}
         
@@ -68,40 +65,35 @@ namespace DocumentParser.Workers
                         {
                             var nopicprops = nopic.ChildElements.OfType<DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties>().FirstOrDefault();
                             if(nopicprops != null)
-                                return new Result<Image, ParserException>(new ParserException($"Изображение {nopicprops.Name.Value} по адресу {nopicprops.Description.Value} не найдено"));
+                            {
+                                var error0 = $"Изображение {nopicprops.Name.Value} по адресу {nopicprops.Description.Value} не найдено";
+                                AddError(error0);
+                                return new Result<Image, ParserException>(new ParserException(error0));
+                            }
                             else
-                                return new Result<Image, ParserException>(new ParserException($"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}"));
+                            {
+                                var error0 = $"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}";
+                                AddError(error0);
+                                return new Result<Image, ParserException>(new ParserException(error0));
+                            }
                         }   
                         else
-                            return new Result<Image, ParserException>(new ParserException($"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}"));
+                        {
+                            var error0 = $"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}";
+                            AddError(error0);
+                            return new Result<Image, ParserException>(new ParserException(error0));
+                        }
                     }
                     var extent = drawing.Inline.GetFirstChild<Extent>();
-                    long x = 0;
-                    long y = 0;
-                    
-                    if (extent != null)
+                    if (extent == null)
                     {
-
-                        x = DataConverter.EmuToPixels((double)extent.Cx);
-                        y = DataConverter.EmuToPixels((double)extent.Cy);
+                        var error1 = $"wp:extent не обнаружен, не могу извлечь изображение";
+                        AddError(error1);
+                        return new Result<Image, ParserException>(new ParserException(error1));
                     }
-                    //string folder = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                    ImagePart img = (ImagePart)part.GetPartById(blip);
-                    //string imageFileName = string.Empty;
-                    //the image is stored in a zip file code behind, so it must be extracted
-                    // byte[] buffer = new byte[16 * 1024];
-                    using (Stream s = img.GetStream())
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        byte[] buffer = new byte[s.Length];
-                        int read;
-                        while ((read = s.Read(buffer, 0, buffer.Length)) > 0)
-                        {
-                            ms.Write(buffer, 0, read);
-                        }
-                        var th = GetReducedImage(thumbSizeX, thumbSizeY, ms);
-                        return new Result<Image, ParserException>(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
-                    }
+                    long x = DataConverter.EmuToPixels((double)extent.Cx);
+                    long y = DataConverter.EmuToPixels((double)extent.Cy);
+                    return unzipImage(x, y, blip);
                 }
                 if(drawing.Anchor != null)
                 {
@@ -111,40 +103,46 @@ namespace DocumentParser.Workers
                         var imageFirst = graph.GraphicData.Descendants<DocumentFormat.OpenXml.Drawing.Pictures.Picture>().FirstOrDefault();
                         var blip = imageFirst.BlipFill.Blip.Embed.Value;
                         var extent = drawing.Anchor.GetFirstChild<Extent>();
-                        long x = 0;
-                        long y = 0;
-                        
-                        if (extent != null)
+                        if (extent == null)
                         {
-
-                            x = DataConverter.EmuToPixels((double)extent.Cx);
-                            y = DataConverter.EmuToPixels((double)extent.Cy);
+                            var error1 = $"wp:extent не обнаружен, не могу извлечь изображение";
+                            AddError(error1);
+                            return new Result<Image, ParserException>(new ParserException(error1));
                         }
-                        //string folder = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
-                        ImagePart img = (ImagePart)part.GetPartById(blip);
-                        //string imageFileName = string.Empty;
-                        //the image is stored in a zip file code behind, so it must be extracted
-                        // byte[] buffer = new byte[16 * 1024];
-                        using (Stream s = img.GetStream())
-                        using (MemoryStream ms = new MemoryStream())
-                        {
-                            byte[] buffer = new byte[s.Length];
-                            int read;
-                            while ((read = s.Read(buffer, 0, buffer.Length)) > 0)
-                            {
-                                ms.Write(buffer, 0, read);
-                            }
-                            var th = GetReducedImage(thumbSizeX, thumbSizeY, ms);
-                            return new Result<Image, ParserException>(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
-                        }
+                        long x = DataConverter.EmuToPixels((double)extent.Cx);
+                        long y = DataConverter.EmuToPixels((double)extent.Cy);
+                        return unzipImage(x, y, blip);
                     }
                 }
-                throw new Exception("Какая то ошибка связанная с извлечением изображения");
+                var error = $"Возможно изображение не подходит под текущую логику (Drawing.Inline, Drawing.Anchor) извлечения и не может быть извлечено";
+                AddError(error);
+                return new Result<Image, ParserException>(new ParserException(error));
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return new Result<Image, ParserException>(new ParserException(ex.Message));
+            }
+        }
+
+        private Result<Image, ParserException> unzipImage(long x, long y, string id)
+        {
+            //string folder = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            var img = part.GetPartById(id);
+            //string imageFileName = string.Empty;
+            //the image is stored in a zip file code behind, so it must be extracted
+            // byte[] buffer = new byte[16 * 1024];
+            using (Stream s = img.GetStream())
+            using (MemoryStream ms = new MemoryStream())
+            {
+                byte[] buffer = new byte[s.Length];
+                int read;
+                while ((read = s.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                var th = GetReducedImage(thumbSizeX, thumbSizeY, ms);
+                return new Result<Image, ParserException>(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
             }
         }
         public Result<DocumentParser.DocumentElements.Image, ParserException> GetImage(Picture pic)
@@ -165,28 +163,16 @@ namespace DocumentParser.Workers
                 if (hMatch.Success)
                     h = double.Parse(hMatch.Groups["val"].Value, NumberStyles.Any, ci);
                 var imagedata = sh.OfType<ImageData>().FirstOrDefault();
-                var r = imagedata.RelationshipId.Value;
+                var id = imagedata.RelationshipId.Value;
                 //var r = imagedata.GetAttribute("id", "http://schemas.openxmlformats.org/officeDocument/2006/relationships");
                 var images = part.ImageParts;
-                var img = part.GetPartById(r);
                 long x = DataConverter.PtToPixels(w);
                 long y = DataConverter.PtToPixels(h);
-                using (Stream s = img.GetStream())
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    byte[] buffer = new byte[s.Length];
-                    int read;
-                    while ((read = s.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        ms.Write(buffer, 0, read);
-                    }
-                    var th = GetReducedImage(thumbSizeX, thumbSizeY, ms);
-                    return new Result<Image, ParserException>(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
-                }
+                return unzipImage(x, y, id);
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return new Result<Image, ParserException>(new ParserException(ex.Message));
             }
         }
@@ -202,25 +188,24 @@ namespace DocumentParser.Workers
             }
         }
 
-        // public bool SaveImage(DocumentParser.DocumentElements.Image img, Guid docId, Guid runId)
-        // {
-        //     try
-        //     {
-        //         var pic = JsonConvert.SerializeObject(img);
-        //         using (FileStream fs = new FileStream(System.IO.Path.Combine(FilesRootDirectory, DocumentsDir, docId.ToString(), runId.ToString() + ".img"), FileMode.Create))
-        //         using (StreamWriter sw = new StreamWriter(fs))
-        //         {
-        //             sw.Write(pic);
-        //         }
-        //         return true;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         Errors.Add(ex);
-        //         return false;
-        //     }
+        public bool SaveImage(DocumentParser.DocumentElements.Image img, Guid docId, Guid runId)
+        {
+            try
+            {
+                var pic = System.Text.Json.JsonSerializer.Serialize(img);
+                using (FileStream fs = new FileStream(System.IO.Path.Combine(FilesRootDirectory, DocumentsDir, docId.ToString(), runId.ToString() + ".img"), FileMode.Create))
+                using (StreamWriter sw = new StreamWriter(fs))
+                {
+                    sw.Write(pic);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return AddError(ex);
+            }
            
-        // }
+        }
        
         public FormulaResult ExtractMathOffice(string folmulaOuterXml)
         {
@@ -297,11 +282,9 @@ namespace DocumentParser.Workers
             }
             catch (Exception ex)
             {
-                Errors.Add(ex);
+                AddError(ex);
                 return new FormulaResult("ОШИБКА ПРЕОБРАЗОВАНИЯ ФОРМУЛЫ", "ОШИБКА ПРЕОБРАЗОВАНИЯ ФОРМУЛЫ");
-            }
-            
-               
+            }   
         }
 
     }

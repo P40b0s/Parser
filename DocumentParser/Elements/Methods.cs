@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Lexer;
 using Utils;
+using Utils.Extensions;
 
 namespace DocumentParser.Elements;
 
@@ -178,5 +179,22 @@ public partial class ElementStructure
     /// </summary>
     private Predicate<ElementStructure> isStopOrAnnex = s => s.NodeType == NodeType.stop || s.NodeType == NodeType.Приложение;
 
-    
+    public DocumentElements.Indent ToIndent()
+    {
+        var ind = new DocumentElements.Indent(
+        this.ParagraphProperties,
+        this.ElementIndex,
+        this.WordElement.Text.GetHash(),
+        this.WordElement.RunWrapper.GetCustRuns(),
+        this.MetaInfo,
+        this.HyperTextInfo,
+        this.Comment,
+        this.FootNoteInfo,
+        null, //Почему не ищем таблицу?
+        this.IsChange,
+        0,
+        NodeType.Абзац
+        );
+        return ind;
+    }
 }
