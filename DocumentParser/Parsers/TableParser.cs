@@ -16,7 +16,18 @@ namespace DocumentParser.Parsers
             settings = extractor.Settings;
         }
         private WordProcessing extractor {get;}
+
         public bool Parse(Parsers.Headers.HeadersParser hParser)
+        {
+            var p = Parse();
+            if(hParser != null)
+            {
+                hParser.GetTables();
+                hParser.GetFootNotes();
+            }
+            return p;
+        } 
+        public bool Parse()
         {
             UpdateStatus("Обработка таблиц...");
             var percentage = 0;
@@ -27,11 +38,6 @@ namespace DocumentParser.Parsers
                 item.Table = parseTable(item);
                 percentage++;
                 UpdateStatus("Обработка таблиц...", count, percentage);
-            }
-            if(hParser != null)
-            {
-                hParser.GetTables();
-                hParser.GetFootNotes();
             }
             return true;
         } 
