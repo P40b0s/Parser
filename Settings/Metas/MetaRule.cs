@@ -1,5 +1,6 @@
 namespace SettingsWorker.Metas;
-public class MetaRule
+[PropertyAttribute(about: "Правила для разбора мета информации (в редакци.... итд.)")]
+public class MetaRule : RuleBase
 {
     
 

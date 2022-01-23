@@ -14,7 +14,8 @@ public class SettingsTests
     {
         var s = new SettingsWorker.Settings();
         var load = await s.Load();
-        Assert.IsTrue(load);
+        var s1 = s.DefaultRules.RequisiteRule.ToString();
+        //Assert.IsTrue(load);
     }
 
     [Test]

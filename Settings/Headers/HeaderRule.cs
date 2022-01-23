@@ -2,7 +2,8 @@ namespace SettingsWorker.Headers;
 /// <summary>
 /// Пока нет правил
 /// </summary>
-public class HeaderRule
+[PropertyAttribute(about: "Правила для разбора заголовков - статьи главы итд.")]
+public class HeaderRule : RuleBase
 {
     
 }

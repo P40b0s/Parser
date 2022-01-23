@@ -1,5 +1,5 @@
 namespace SettingsWorker.Annexes;
-public class AnnexRule
+public class AnnexRule : RuleBase
 {
     
 

@@ -2,7 +2,8 @@ namespace SettingsWorker.Items;
 /// <summary>
 /// Пока нет правил
 /// </summary>
-public class ItemRule
+[PropertyAttribute(about: "Правила для разбора пунктов, подпунктов итд. (1. Пункт начало....)")]
+public class ItemRule : RuleBase
 {
     
 }

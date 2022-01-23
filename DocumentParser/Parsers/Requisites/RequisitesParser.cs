@@ -78,19 +78,16 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
             return true;
         }
         var before = tokensRequisiteModel.typeToken.FindBackwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
-        var next = tokensRequisiteModel.typeToken.FindForwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
-        if(before.Count == 0 && next.Count == 0)
-            return AddError("Не найдено ни однго принявшего органа!");
-        if(before.Count > 0)
+        foreach(var o in before)
+            tokensRequisiteModel.organsTokens.Add(o);
+        if(before.Count == 0)
         {
-            foreach(var o in before)
-                tokensRequisiteModel.organsTokens.Add(o);
-        }
-        else if(next.Count > 0)
-        {
+            var next = tokensRequisiteModel.typeToken.FindForwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
             foreach(var o in next)
                 tokensRequisiteModel.organsTokens.Add(o);
         }
+        if(tokensRequisiteModel.organsTokens.Count == 0)
+            return AddError("Не найдено ни однго принявшего органа!");
         foreach(var o in tokensRequisiteModel.organsTokens)
         {
             var organ = new Organ(extractor.GetUnicodeString(o).NormalizeWhiteSpaces().NormalizeCase());
@@ -100,13 +97,16 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         return true;
     }
 
+    /// <summary>
+    /// Проверяем кастомные правила для данного органа\типа документа, если они находятся то заменяем дефолтные на эти
+    /// На будущее можно добавить еще какие то особенности и отсюда переопределять дефолтные правила
+    /// </summary>
     private void loadCustomRules()
     {
-        //Проверяем кастомные правила для данного органа\типа документа, если они находятся то заменяем дефолтные на эти
-        //На будущее можно добавить еще какие то особенности и отсюда переопределять дефолтные правила
         var findedRules = new List<CustomRule<AllRules>>();
         for(int c = 0; c < rules.CustomRules.Count; c++)
         {
+            //Если регекс органа - любой, то не ищем по органам вообще а ищем только по видам
             if(rules.CustomRules[c].Organ == ".+")
             {
                 if(rules.CustomRules[c].TypeRX().IsMatch(tokensRequisiteModel.typeToken.Value))
@@ -129,6 +129,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
             }
            
         }
+        //Сортируем по весу и выбираем с наименьшим
         var def = findedRules.OrderBy(o=>o.Weight).Count() > 0;
         if(def)
         {
@@ -166,7 +167,6 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
                 extractor.SetElementNode(e.postToken, NodeType.stop);
                 extractor.SetElementNode(e.executorToken, NodeType.stop);
             }
-           
         }
         //Дату не находим, заканчиваем метод
         if(!getSignDate())
@@ -223,7 +223,6 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
                 }
             }
         }
-        
         if(!ok)
             return AddError("Не удалось найти дату подписания");
         var signDate = tokensRequisiteModel.signDateToken.GetDate();
