@@ -20,15 +20,10 @@ namespace DocumentParser.Parsers.Headers
         public List<Indent> Indents {get;} = new List<Indent>();
     }
     /// <summary>
-    /// Находим все хедеры, после этого перемещаем все итемы в приложениях в их найденые хедеры
-    /// а потом все что не вошло в хедеры добавляем в итемы боди документа
-    /// итого у нас есть просто хедеры, хедеры приложений и рутовые итемы тела документа.
-    /// Таблицы тоже добавляются к хедерам если они есть
+    /// Находим все хедеры, остальное добавляем в BodyRootElements
     /// </summary>
     public class HeadersParser : LexerBase<HeaderTokenType>
     {
-        AnnexParser annexParser {get;}
-        RequisitesParser requisitesParser {get;}
         public List<HeaderParserModel> Headers {get;} = new List<HeaderParserModel>();
 
         /// <summary>
@@ -39,12 +34,12 @@ namespace DocumentParser.Parsers.Headers
         public List<Item> BodyItems {get;set;} = new List<Item>();
         public List<FootNoteInfo> BodyFootNotes {get;set;} = new List<FootNoteInfo>();
         public List<ElementStructure> BodyNoteElements {get;} = new List<ElementStructure>();
-        public HeadersParser(WordProcessing extractor, AnnexParser aParser, RequisitesParser req)
+        ElementStructure bodyStartAfterThisElemet {get;}
+        public HeadersParser(WordProcessing extractor, ElementStructure lastHeadElement)
         {
             this.extractor = extractor;
             settings = extractor.Settings;
-            annexParser = aParser;
-            requisitesParser = req;
+            bodyStartAfterThisElemet = lastHeadElement;
         }
         public int Count {get;set;}
         private WordProcessing extractor {get;}
@@ -70,64 +65,71 @@ namespace DocumentParser.Parsers.Headers
                 h.RootElements.AddRange(items);
             }
             
-            getAnnexHeaders(annexParser);
+            //getAnnexHeaders(annexParser);
              //Берем все итемы в теле документа которые не вошли в хедеры
-            BodyRootElements.AddRange(requisitesParser.BeforeBodyElement.TakeTo(t=>t.NodeType == NodeType.Заголовок));
+            BodyRootElements.AddRange(bodyStartAfterThisElemet.TakeTo(t=>t.NodeType == NodeType.Заголовок));
+            getTables();
             return !HasFatalError;
         }
         /// <summary>
         /// Добавляем таблицу к хедерам и к приложениям но только после поиска таблиц!
         /// </summary>
-        public void GetTables()
+        void getTables()
         {
             //Добавляем к хедеру таблицу если она там есть
-            foreach (var h in Headers)
+            for(int h = 0; h < Headers.Count; h++)
+            //foreach (var h in Headers)
             {
-                var firstItem = h.RootElements.FirstOrDefault();
+                var firstItem = Headers[h].RootElements.FirstOrDefault();
                 if(firstItem != null)
                 {
                     if(firstItem.NodeType == NodeType.Таблица)
                     {
-                        h.Header.Table = firstItem.Table;
-                        h.RootElements.Remove(firstItem);
+                        Headers[h].Header.Table = firstItem.Table;
+                        Headers[h].RootElements.Remove(firstItem);
                     } 
                     else
                     {
                         var table = firstItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
                         if(table.IsOk)
                         {
-                            h.Header.Table = table.Value.Table;
-                            h.RootElements.Remove(table.Value);
+                            Headers[h].Header.Table = table.Value.Table;
+                            Headers[h].RootElements.Remove(table.Value);
                         }
                     }
                 }
             }
+            //foreach (var h in Headers)
+            // {
+            //     var firstItem = h.RootElements.FirstOrDefault();
+            //     if(firstItem != null)
+            //     {
+            //         if(firstItem.NodeType == NodeType.Таблица)
+            //         {
+            //             h.Header.Table = firstItem.Table;
+            //             h.RootElements.Remove(firstItem);
+            //         } 
+            //         else
+            //         {
+            //             var table = firstItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
+            //             if(table.IsOk)
+            //             {
+            //                 h.Header.Table = table.Value.Table;
+            //                 h.RootElements.Remove(table.Value);
+            //             }
+            //         }
+            //     }
+            // }
 
             //Добавляем к приложению таблицу если она там есть
-            foreach(var a in annexParser.Annexes)
-            {
-                var firstRootItem = a.RootElements.FirstOrDefault();
-                if(firstRootItem != null)
-                {
-                    if(firstRootItem.NodeType == NodeType.Таблица)
-                    {
-                        a.Annex.Table = firstRootItem.Table;
-                        a.RootElements.Remove(firstRootItem);
-                    }
-                    else
-                    {
-                        var table = firstRootItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
-                        if(table.IsOk)
-                        {
-                            a.Annex.Table = table.Value.Table;
-                            a.RootElements.Remove(table.Value);
-                        }
-                    }
-                }
-            }
+           
         }
-
-        public void GetFootNotes()
+        /// <summary>
+        /// Извлкечение футнотов возможно только после их поиска поэтому требует футнотпарсер
+        /// но по сути он не используется
+        /// </summary>
+        /// <param name="foot"></param>
+        public void ExtractFootNotes(FootNoteParser foot)
         {
             //Добавляем к хедеру футноты
             foreach (var h in Headers)
@@ -142,20 +144,7 @@ namespace DocumentParser.Parsers.Headers
                 }
                 h.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
             }
-
-            //Добавляем к приложению футноты
-            foreach(var a in annexParser.Annexes)
-            {
-                var foots = a.RootElements.Where(w=>w.NodeType == NodeType.Сноска);
-                var footsPars = a.RootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
-                foreach(var f in foots)
-                {
-                    if(a.Annex.FootNotes == null)
-                        a.Annex.FootNotes = new List<FootNoteInfo>();
-                    a.Annex.FootNotes.Add(f.FootNoteInfo);
-                }
-                a.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
-            }
+            
             //Добавляем к боди документа футноты
             var foots0 = BodyRootElements.Where(w=>w.NodeType == NodeType.Сноска);
             var footsPars0 = BodyRootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
@@ -166,34 +155,34 @@ namespace DocumentParser.Parsers.Headers
             BodyRootElements.RemoveAll(r=>foots0.Contains(r) || footsPars0.Contains(r));
         }
 
-         /// <summary>
-        /// Перемещаем все итемы из рута в хедеры если они в хедерах
-        /// удаляем все хедеры которые были задействованы в приложениях
-        /// теперь в HeadersParser лежат только хедеры боди документа
-        /// а здесь лежат только хедеры приложений
-        /// </summary>
-        /// <param name="headers"></param>
-        void getAnnexHeaders(AnnexParser ann)
-        {
-            var headersForRemove = new List<HeaderParserModel>();
-            foreach(var a in ann.Annexes)
-            {
+        //  /// <summary>
+        // /// Перемещаем все итемы из рута в хедеры если они в хедерах
+        // /// удаляем все хедеры которые были задействованы в приложениях
+        // /// теперь в HeadersParser лежат только хедеры боди документа
+        // /// а здесь лежат только хедеры приложений
+        // /// </summary>
+        // /// <param name="headers"></param>
+        // void getAnnexHeaders(AnnexParser ann)
+        // {
+        //     var headersForRemove = new List<HeaderParserModel>();
+        //     foreach(var a in ann.Annexes)
+        //     {
                 
-                foreach(var h in Headers)
-                {
-                    if(a.StartIndex <= h.StartIndex && a.EndIndex >= h.EndIndex)
-                    {
-                        a.Headers.Add(h);
-                        if(a.Annex.Headers == null)
-                            a.Annex.Headers = new List<Header>();
-                        a.Annex.Headers.Add(h.Header);
-                        headersForRemove.Add(h);
-                        a.RootElements.RemoveAll(r=>h.RootElements.Contains(r) || h.Header.ElementIndex == r.ElementIndex);
-                    }
-                }
-            }
-            Headers.RemoveAll(r=> headersForRemove.Contains(r));            
-        }
+        //         foreach(var h in Headers)
+        //         {
+        //             if(a.StartIndex <= h.StartIndex && a.EndIndex >= h.EndIndex)
+        //             {
+        //                 a.Headers.Add(h);
+        //                 if(a.Annex.Headers == null)
+        //                     a.Annex.Headers = new List<Header>();
+        //                 a.Annex.Headers.Add(h.Header);
+        //                 headersForRemove.Add(h);
+        //                 a.RootElements.RemoveAll(r=>h.RootElements.Contains(r) || h.Header.ElementIndex == r.ElementIndex);
+        //             }
+        //         }
+        //     }
+        //     Headers.RemoveAll(r=> headersForRemove.Contains(r));            
+        // }
 
         private bool parseHeaders(Token<HeaderTokenType> token)
         {

@@ -69,10 +69,11 @@ namespace DocumentParser.Parsers
             annexParser.ErrorCallback+= e => AddError(e);
             annexParser.Parse();
            
-            var headersParser = new HeadersParser(word, annexParser, requisites);
+            var headersParser = new HeadersParser(word, requisites.BeforeBodyElement);
             headersParser.UpdateCallback+= c => UpdateStatus(c);
             headersParser.ErrorCallback+= e => AddError(e);
             headersParser.Parse();
+            annexParser.ExtractAnnexHeaders(headersParser.Headers);
             
             //
             //FIXME проблемы с выборкой итемов из примечаний и сносок
@@ -82,6 +83,7 @@ namespace DocumentParser.Parsers
             footNodeParser.ErrorCallback+= e => AddError(e);
             footNodeParser.Parse();
             AddError(footNodeParser);
+            headersParser.ExtractFootNotes(footNodeParser);
             //Таблицу ищем после футнотов а футноты после хедеров и приложений...
             //замкнутый круг
             var tableParser = new TableParser(word);

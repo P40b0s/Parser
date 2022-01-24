@@ -16,6 +16,10 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     WordProcessing extractor {get;}
     RequisiteTokensModel tokensRequisiteModel {get;} = new RequisiteTokensModel();
     DocumentElements.Document doc {get;}
+    /// <summary>
+    /// Последний идентифицированный элемент в шапке документа
+    /// </summary>
+    /// <value></value>
     public ElementStructure BeforeBodyElement {get;set;}
     
     public RequisitesParser(WordProcessing extractor, DocumentElements.Document doc)

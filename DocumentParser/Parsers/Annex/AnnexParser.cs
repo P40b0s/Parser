@@ -7,6 +7,8 @@ using Utils.Extensions;
 using SettingsWorker;
 using SettingsWorker.Annexes;
 using Utils;
+using DocumentParser.Parsers.Headers;
+using DocumentParser.DocumentElements.FootNotes;
 
 namespace DocumentParser.Parsers.Annex
 {
@@ -65,8 +67,89 @@ namespace DocumentParser.Parsers.Annex
                     a.EndIndex = last.ElementIndex;
                 a.RootElements.AddRange(items);
             }
+            getTables();
             return !HasFatalError;
         }
+
+        private void getTables()
+        {
+            for(int a = 0; a < Annexes.Count; a++)
+            {
+                var firstRootItem = Annexes[a].RootElements.FirstOrDefault();
+                if(firstRootItem != null)
+                {
+                    if(firstRootItem.NodeType == NodeType.Таблица)
+                    {
+                        Annexes[a].Annex.Table = firstRootItem.Table;
+                        Annexes[a].RootElements.Remove(firstRootItem);
+                    }
+                    else
+                    {
+                        var table = firstRootItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
+                        if(table.IsOk)
+                        {
+                            Annexes[a].Annex.Table = table.Value.Table;
+                            Annexes[a].RootElements.Remove(table.Value);
+                        }
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// Извлкечение футнотов возможно только после их поиска поэтому требует футнотпарсер
+        /// но по сути он не используется
+        /// </summary>
+        /// <param name="foot"></param>
+        public void ExtractFootNotes(FootNoteParser foot)
+        {
+            //Добавляем к приложению футноты
+            foreach(var a in Annexes)
+            {
+                var foots = a.RootElements.Where(w=>w.NodeType == NodeType.Сноска);
+                var footsPars = a.RootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
+                foreach(var f in foots)
+                {
+                    if(a.Annex.FootNotes == null)
+                        a.Annex.FootNotes = new List<FootNoteInfo>();
+                    a.Annex.FootNotes.Add(f.FootNoteInfo);
+                }
+                a.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
+            }
+        }
+
+
+        /// <summary>
+        /// Забираем все хедеры которые относятся к приложения из парсера хедеров
+        /// добавляем их в хедеры приложений а из парсера хедеров удаляем
+        /// </summary>
+        /// <param name="headers">массив хедеров из парсера хедеров</param>
+        public void ExtractAnnexHeaders(List<HeaderParserModel> headers)
+        {
+            for(int a = 0; a < Annexes.Count; a++)
+            {
+                for(int h = headers.Count -1; h >= 0; h--)
+                {
+                    if(Annexes[a].StartIndex <= headers[h].StartIndex && Annexes[a].EndIndex >= headers[h].EndIndex)
+                    {
+                        Annexes[a].Headers.Insert(0, headers[h]);
+                        if(Annexes[a].Annex.Headers == null)
+                            Annexes[a].Annex.Headers = new List<Header>();
+                        Annexes[a].Annex.Headers.Insert(0, headers[h].Header);
+                        for(int r = Annexes[a].RootElements.Count -1; r >=0; r--)
+                        {
+                            if(headers[h].RootElements.Contains(Annexes[a].RootElements[r])
+                                || headers[h].Header.ElementIndex == Annexes[a].RootElements[r].ElementIndex)
+                                {
+                                    Annexes[a].RootElements.RemoveAt(r);  
+                                }
+                        }
+                        headers.RemoveAt(h);
+                    }
+                }
+            }
+            //Headers.RemoveAll(r=> headersForRemove.Contains(r));            
+        }
+
         // /// <summary>
         // /// Перемещаем все итемы из рута в хедеры если они в хедерах
         // /// удаляем все хедеры которые были задействованы в приложениях

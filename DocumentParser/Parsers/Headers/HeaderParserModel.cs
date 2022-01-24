@@ -16,6 +16,8 @@ namespace DocumentParser.Parsers.Headers
         public DocumentElements.Header Header {get;} = new DocumentElements.Header();
         /// <summary>
         /// все элементы находящиеся в корне хедера
+        /// так ккак хедерпарсер вызывается после поиска приложений
+        /// тут у нас лежат все элементы что находятся между хедерами в том числе таблицы
         /// </summary>
         /// <typeparam name="ElementStructure"></typeparam>
         /// <returns></returns>
