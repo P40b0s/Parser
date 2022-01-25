@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using SettingsWorker.Annexes;
 using SettingsWorker.Requisites;
 using SettingsWorker.Regexes;
+using Settings.Requisites;
+
 namespace SettingsWorker;
 
 
@@ -14,6 +16,7 @@ public interface ISettings
     AllRules DefaultRules {get;set;}
     AllTokensDefinitions TokensDefinitions {get;set;}
     List<CustomRule<AllRules>> CustomRules {get;set;}
+    RequisiteChangers RequisiteChangers {get;set;}
     Paths Paths {get;}
     ValueTask<bool> Load();
     void Save();
@@ -41,20 +44,6 @@ public partial class Settings : ISettings
                 ParseGDSFAttributes = true,
             },
         }},
-        // new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"федеральный{Templates.WsOrBr}закон", Rules = new AllRules() 
-        // {
-        //     RequisiteRule = new RequisiteRule()
-        //     {
-        //         ParseGDSFAttributes = true,
-        //     },
-        // }},
-        // new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"закон{Templates.WsOrBr}российской{Templates.WsOrBr}федерации{Templates.WsOrBr}о{Templates.WsOrBr}поправке{Templates.WsOrBr}к{Templates.WsOrBr}конституции{Templates.WsOrBr}российской{Templates.WsOrBr}федерации", Rules = new AllRules() 
-        // {
-        //     RequisiteRule = new RequisiteRule()
-        //     {
-        //         ParseGDSFAttributes = true,
-        //     },
-        // }},
         new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = "закон", Rules = new AllRules() 
         {
             RequisiteRule = new RequisiteRule()
@@ -62,13 +51,6 @@ public partial class Settings : ISettings
                 ParseGDSFAttributes = true,
             },
         },Weight = 1},
-        // new CustomRule<AllRules>(){Organ = $"российская{Templates.WsOrBr}федерация", Type = $"федеральный{Templates.WsOrBr}конституционный{Templates.WsOrBr}закон", Rules = new AllRules() 
-        // {
-        //     RequisiteRule = new RequisiteRule()
-        //     {
-        //         ParseGDSFAttributes = true,
-        //     },
-        // }},
         new CustomRule<AllRules>(){Organ = $"правительство{Templates.WsOrBr}российской{Templates.WsOrBr}федерации", Type = "распоряжение", Rules = new AllRules() 
         {
             RequisiteRule = new RequisiteRule()
@@ -101,10 +83,29 @@ public partial class Settings : ISettings
                 NoExecutor = true,
                 NoNumber = true,
                 SignDateAfterCustomToken = true,
-                CustomOrganName = "Российская Федерация"
             },
         }},
-    }; 
+    };
+    public RequisiteChangers RequisiteChangers {get;set;} = new RequisiteChangers()
+    {
+        OrganToOrgan  = new List<Changer>()
+    {
+        new Changer()
+        {
+            From = $"^российской{Templates.WsOrBr}федерации",
+            To = "Российская Фдерация"
+        }
+    },
+        TypeToOrgan = new List<Changer>()
+        {
+            new Changer()
+            {
+                From = $"^соглашение",
+                To = "Российская Фдерация"
+            }
+        },
+        OrganToType = new List<Changer>()
+    };
 
     [System.Text.Json.Serialization.JsonIgnore]
     public Paths Paths {get;} = new Paths();

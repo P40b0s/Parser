@@ -66,19 +66,19 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         if(stringType == null)
             return AddError($"Параграф вида документа \"{typeToken.Value.Value}\" не найден");
         stringType = stringType.NormalizeWhiteSpaces().NormalizeCase().Trim();
+        //TODO ТЕСТ! еще не тестил
+        settings.RequisiteChangers.Change(Settings.Requisites.ChangeType.TypeToOrgan, stringType);
         doc.Type = stringType;
         tokensRequisiteModel.typeToken = typeToken.Value;
-        //Первую раз делаем для доков у которых орган не играет значения
-        loadCustomRules();
         return true;
     }
     bool OrganBlock ()
     {
-        if(settings.DefaultRules.RequisiteRule.CustomOrganName != "")
-        {
-            doc.Organs.Add(new Organ(settings.DefaultRules.RequisiteRule.CustomOrganName));
-            return true;
-        }
+        // if(settings.DefaultRules.RequisiteRule.CustomOrganName != "")
+        // {
+        //     doc.Organs.Add(new Organ(settings.DefaultRules.RequisiteRule.CustomOrganName));
+        //     return true;
+        // }
         var before = tokensRequisiteModel.typeToken.FindBackwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
         foreach(var o in before)
             tokensRequisiteModel.organsTokens.Add(o);

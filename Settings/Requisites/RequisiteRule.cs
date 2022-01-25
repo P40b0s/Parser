@@ -69,14 +69,4 @@ public class RequisiteRule : RuleBase
     /// <value></value>
     [PropertyAttribute(about: "Отсутсвует подписант")]
     public bool NoExecutor {get;set;} = false;
-    /// <summary>
-    /// Если в документе нельзы определить орган, его можно добавить вручную
-    /// </summary>
-    /// <value></value>
-    [PropertyAttribute(about: "Если в документе нельзя определить орган, его можно добавить вручную")]
-    public string CustomOrganName {get;set;} = "";
-
-
-    
-
 }

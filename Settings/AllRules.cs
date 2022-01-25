@@ -2,6 +2,7 @@ using SettingsWorker.Requisites;
 using SettingsWorker.Changes;
 using SettingsWorker.Annexes;
 namespace SettingsWorker;
+
 /// <summary>
 /// Здесь содержатся все настройки парсера документов
 /// </summary>
