@@ -17,17 +17,7 @@ namespace DocumentParser.Parsers
         }
         private WordProcessing extractor {get;}
 
-        public bool Parse(Parsers.Headers.HeadersParser hParser)
-        {
-            var p = Parse();
-            if(hParser != null)
-            {
-                hParser.GetTables();
-                hParser.GetFootNotes();
-            }
-            return p;
-        } 
-        public bool Parse()
+        public void Parse()
         {
             UpdateStatus("Обработка таблиц...");
             var percentage = 0;
@@ -39,7 +29,6 @@ namespace DocumentParser.Parsers
                 percentage++;
                 UpdateStatus("Обработка таблиц...", count, percentage);
             }
-            return true;
         } 
 
 

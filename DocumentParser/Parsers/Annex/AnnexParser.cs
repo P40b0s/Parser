@@ -16,6 +16,7 @@ namespace DocumentParser.Parsers.Annex
     public class AnnexParser : LexerBase<AnnexTokenType>
     {
         public List<AnnexParserModel> Annexes {get;} = new List<AnnexParserModel>();
+        MetaParser metaParser {get;set;}
         public AnnexParser(WordProcessing extractor)
         {
             this.extractor = extractor;
@@ -67,11 +68,15 @@ namespace DocumentParser.Parsers.Annex
                     a.EndIndex = last.ElementIndex;
                 a.RootElements.AddRange(items);
             }
-            getTables();
             return !HasFatalError;
         }
+        public AnnexParser WithMetaNodes(MetaParser meta)
+        {
+            this.metaParser = meta;
+            return this;
+        }
 
-        private void getTables()
+        public void GetTables()
         {
             for(int a = 0; a < Annexes.Count; a++)
             {
@@ -100,7 +105,7 @@ namespace DocumentParser.Parsers.Annex
         /// но по сути он не используется
         /// </summary>
         /// <param name="foot"></param>
-        public void ExtractFootNotes(FootNoteParser foot)
+        public AnnexParser ExtractFootNotes(FootNoteParser foot)
         {
             //Добавляем к приложению футноты
             foreach(var a in Annexes)
@@ -115,40 +120,11 @@ namespace DocumentParser.Parsers.Annex
                 }
                 a.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
             }
+            return this;
         }
 
 
-        /// <summary>
-        /// Забираем все хедеры которые относятся к приложения из парсера хедеров
-        /// добавляем их в хедеры приложений а из парсера хедеров удаляем
-        /// </summary>
-        /// <param name="headers">массив хедеров из парсера хедеров</param>
-        public void ExtractAnnexHeaders(List<HeaderParserModel> headers)
-        {
-            for(int a = 0; a < Annexes.Count; a++)
-            {
-                for(int h = headers.Count -1; h >= 0; h--)
-                {
-                    if(Annexes[a].StartIndex <= headers[h].StartIndex && Annexes[a].EndIndex >= headers[h].EndIndex)
-                    {
-                        Annexes[a].Headers.Insert(0, headers[h]);
-                        if(Annexes[a].Annex.Headers == null)
-                            Annexes[a].Annex.Headers = new List<Header>();
-                        Annexes[a].Annex.Headers.Insert(0, headers[h].Header);
-                        for(int r = Annexes[a].RootElements.Count -1; r >=0; r--)
-                        {
-                            if(headers[h].RootElements.Contains(Annexes[a].RootElements[r])
-                                || headers[h].Header.ElementIndex == Annexes[a].RootElements[r].ElementIndex)
-                                {
-                                    Annexes[a].RootElements.RemoveAt(r);  
-                                }
-                        }
-                        headers.RemoveAt(h);
-                    }
-                }
-            }
-            //Headers.RemoveAll(r=> headersForRemove.Contains(r));            
-        }
+        
 
         // /// <summary>
         // /// Перемещаем все итемы из рута в хедеры если они в хедерах
@@ -311,8 +287,9 @@ namespace DocumentParser.Parsers.Annex
             annex.LastElement = nameElement;
             annex.StartIndex = nameElement.ElementIndex + 1;
             //Поиск мета информации
+            
             var meta = nameElement.Next();
-            if(meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
+            if(metaParser != null && meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
             {
                 annex.Annex.Meta = meta.Value.MetaInfo;
                 annex.LastElement = meta.Value;

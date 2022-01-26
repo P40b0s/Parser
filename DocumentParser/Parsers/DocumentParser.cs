@@ -63,17 +63,24 @@ namespace DocumentParser.Parsers
             metaParser.UpdateCallback+= c => UpdateStatus(c);
             metaParser.ErrorCallback+= e => AddError(e);
             metaParser.Parse();
+            //БЕз парсера реквизитов мы не узнаем где еачало  конец тела документа
+            //без парсера изменений мы не узнаем является ли заголовок частью изменения 
+            //или это заголовок самого документа
+            //без парсера мета информации мы не найдем системовские комментарии и не сможем их привязать к нашим
+            //абзацам или зашоловкам
+
             AddError(metaParser);
             var annexParser = new AnnexParser(word);
             annexParser.UpdateCallback+= c => UpdateStatus(c);
             annexParser.ErrorCallback+= e => AddError(e);
-            annexParser.Parse();
+            annexParser.WithMetaNodes(metaParser).Parse();
            
             var headersParser = new HeadersParser(word, requisites.BeforeBodyElement);
             headersParser.UpdateCallback+= c => UpdateStatus(c);
             headersParser.ErrorCallback+= e => AddError(e);
-            headersParser.Parse();
-            annexParser.ExtractAnnexHeaders(headersParser.Headers);
+            //без поиска заголовков мы не сможем их извечь 
+            headersParser.WithMetaNodes(metaParser).WithAnnexes(annexParser).Parse();
+            
             
             //
             //FIXME проблемы с выборкой итемов из примечаний и сносок
@@ -83,12 +90,12 @@ namespace DocumentParser.Parsers
             footNodeParser.ErrorCallback+= e => AddError(e);
             footNodeParser.Parse();
             AddError(footNodeParser);
-            headersParser.ExtractFootNotes(footNodeParser);
+            headersParser.GetFootNotes(footNodeParser);
             //Таблицу ищем после футнотов а футноты после хедеров и приложений...
             //замкнутый круг
             var tableParser = new TableParser(word);
             //Передаем, чтоб можно было вызвать пару методов headerParser после поиска таблиц
-            tableParser.Parse(headersParser);
+            tableParser.Parse(headersParser, annexParser);
             var itemsParser = new ItemsParser(word);
             itemsParser.Parse(headersParser, annexParser);
             

@@ -34,7 +34,18 @@ namespace DocumentParser.Parsers.Headers
         public List<Item> BodyItems {get;set;} = new List<Item>();
         public List<FootNoteInfo> BodyFootNotes {get;set;} = new List<FootNoteInfo>();
         public List<ElementStructure> BodyNoteElements {get;} = new List<ElementStructure>();
+        MetaParser metaParser {get; set;}
+        TableParser tableParser {get;set;}
+        AnnexParser annexParser {get;set;}
         ElementStructure bodyStartAfterThisElemet {get;}
+        /// <summary>
+        /// Для корректтного парсинкга хедеров нам нужен последний абзац заголовка, это мы узнаем только после рпоиска реквизитов
+        /// и информация от парсера мета информации чтоб эту информацию сразу добавить в заголовки
+        /// если мета парсер не передавать то мета информация не будет добавлятся в заголовки
+        /// </summary>
+        /// <param name="extractor"></param>
+        /// <param name="lastHeadElement"></param>
+        /// <param name="meta"></param>
         public HeadersParser(WordProcessing extractor, ElementStructure lastHeadElement)
         {
             this.extractor = extractor;
@@ -43,7 +54,23 @@ namespace DocumentParser.Parsers.Headers
         }
         public int Count {get;set;}
         private WordProcessing extractor {get;}
-        public bool Parse()
+        public HeadersParser WithMetaNodes(MetaParser meta)
+        {
+            this.metaParser = meta;
+            return this;
+        }
+        public HeadersParser WithAnnexes(AnnexParser aParser)
+        {
+            this.annexParser = aParser;
+            return this;
+        }
+        public HeadersParser GetTables(TableParser table)
+        {
+            this.tableParser = table;
+            GetTables();
+            return this;
+        }
+        public HeadersParser Parse()
         {
             UpdateStatus("Поиск заголовков");
             var percentage = 0;
@@ -68,13 +95,15 @@ namespace DocumentParser.Parsers.Headers
             //getAnnexHeaders(annexParser);
              //Берем все итемы в теле документа которые не вошли в хедеры
             BodyRootElements.AddRange(bodyStartAfterThisElemet.TakeTo(t=>t.NodeType == NodeType.Заголовок));
-            getTables();
-            return !HasFatalError;
+            if(annexParser != null)
+                extractAnnexHeaders(Headers);
+            return this;
         }
         /// <summary>
         /// Добавляем таблицу к хедерам и к приложениям но только после поиска таблиц!
+        /// Метка что нода является таблицей уже есть а сама таблица еще не парсилась!
         /// </summary>
-        void getTables()
+        public void GetTables()
         {
             //Добавляем к хедеру таблицу если она там есть
             for(int h = 0; h < Headers.Count; h++)
@@ -129,7 +158,7 @@ namespace DocumentParser.Parsers.Headers
         /// но по сути он не используется
         /// </summary>
         /// <param name="foot"></param>
-        public void ExtractFootNotes(FootNoteParser foot)
+        public HeadersParser GetFootNotes(FootNoteParser foot)
         {
             //Добавляем к хедеру футноты
             foreach (var h in Headers)
@@ -153,6 +182,7 @@ namespace DocumentParser.Parsers.Headers
                 BodyFootNotes.Add(f.FootNoteInfo);
             }
             BodyRootElements.RemoveAll(r=>foots0.Contains(r) || footsPars0.Contains(r));
+            return this;
         }
 
         //  /// <summary>
@@ -210,10 +240,11 @@ namespace DocumentParser.Parsers.Headers
             var name = extractor.GetUnicodeString(headerPar, new TextIndex(token.Length, headerPar.Length - token.Length));
             header.Header.Name = name;
             header.Header.ElementIndex = headerPar.ElementIndex;
-            var meta = headerPar.Next();
+           
             header.LastElement = headerPar;
             header.StartIndex = headerPar.ElementIndex +1;
-            if(meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
+            var meta = headerPar.Next();
+            if(metaParser != null && meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
             {
                 header.Header.Meta = meta.Value.MetaInfo;
                 header.LastElement = meta.Value;
@@ -222,6 +253,38 @@ namespace DocumentParser.Parsers.Headers
             Headers.Add(header);
             Count++;
             return true;
-        } 
+        }
+
+        /// <summary>
+        /// Забираем все хедеры которые относятся к приложения из парсера хедеров
+        /// добавляем их в хедеры приложений а из парсера хедеров удаляем
+        /// </summary>
+        /// <param name="headers">массив хедеров из парсера хедеров</param>
+        void extractAnnexHeaders(List<HeaderParserModel> headers)
+        {
+            for(int a = 0; a < annexParser.Annexes.Count; a++)
+            {
+                for(int h = headers.Count -1; h >= 0; h--)
+                {
+                    if(annexParser.Annexes[a].StartIndex <= headers[h].StartIndex && annexParser.Annexes[a].EndIndex >= headers[h].EndIndex)
+                    {
+                        annexParser.Annexes[a].Headers.Insert(0, headers[h]);
+                        if(annexParser.Annexes[a].Annex.Headers == null)
+                            annexParser.Annexes[a].Annex.Headers = new List<Header>();
+                        annexParser.Annexes[a].Annex.Headers.Insert(0, headers[h].Header);
+                        for(int r = annexParser.Annexes[a].RootElements.Count -1; r >=0; r--)
+                        {
+                            if(headers[h].RootElements.Contains(annexParser.Annexes[a].RootElements[r])
+                                || headers[h].Header.ElementIndex == annexParser.Annexes[a].RootElements[r].ElementIndex)
+                                {
+                                    annexParser.Annexes[a].RootElements.RemoveAt(r);  
+                                }
+                        }
+                        headers.RemoveAt(h);
+                    }
+                }
+            }
+            //Headers.RemoveAll(r=> headersForRemove.Contains(r));            
+        }
     }
 }
