@@ -269,7 +269,7 @@ public partial class ItemsParser
         if(aParser != null)
         {
             parseAnnexes(aParser);
-            aParser.MoveAnnexByHierarchy();
+            aParser.SortAnnexByHierarchy();
         }
         else
             AddError("Для извлечения нумерованных элементов AnnexParser не должен иметь значение null");

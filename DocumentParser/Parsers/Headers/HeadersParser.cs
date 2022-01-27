@@ -25,6 +25,9 @@ namespace DocumentParser.Parsers.Headers
     public class HeadersParser : LexerBase<HeaderTokenType>
     {
         public List<HeaderParserModel> Headers {get;} = new List<HeaderParserModel>();
+        bool withMeta {get;set;}
+        bool withChanges {get;set;}
+        bool withTables {get;set;}
 
         /// <summary>
         /// Корневые итемы в теле самого документа
@@ -34,8 +37,6 @@ namespace DocumentParser.Parsers.Headers
         public List<Item> BodyItems {get;set;} = new List<Item>();
         public List<FootNoteInfo> BodyFootNotes {get;set;} = new List<FootNoteInfo>();
         public List<ElementStructure> BodyNoteElements {get;} = new List<ElementStructure>();
-        MetaParser metaParser {get; set;}
-        TableParser tableParser {get;set;}
         AnnexParser annexParser {get;set;}
         ElementStructure bodyStartAfterThisElemet {get;}
         /// <summary>
@@ -54,24 +55,53 @@ namespace DocumentParser.Parsers.Headers
         }
         public int Count {get;set;}
         private WordProcessing extractor {get;}
-        public HeadersParser WithMetaNodes(MetaParser meta)
+        /// <summary>
+        /// Использовать информацию полученнцю от MetaParser и привязать ее к заголовкам
+        /// </summary>
+        /// <returns></returns>
+        public HeadersParser WithMeta()
         {
-            this.metaParser = meta;
+            withMeta = true;
             return this;
         }
-        public HeadersParser WithAnnexes(AnnexParser aParser)
+        /// <summary>
+        /// Использовать информацию полученнцю от ChangesParser для корректного распознавания заголовков
+        /// </summary>
+        /// <returns></returns>
+        public HeadersParser WithChanges()
         {
-            this.annexParser = aParser;
+            withChanges = true;
             return this;
         }
-        public HeadersParser GetTables(TableParser table)
+        /// <summary>
+        /// Использовать информацию полученнцю от TableParser для привязки таблиц к заголовкам
+        /// </summary>
+        /// <returns></returns>
+        public HeadersParser WithTables()
         {
-            this.tableParser = table;
-            GetTables();
+            withTables = true;
+            return this;
+        }
+        /// <summary>
+        /// Использовать AnnexParser, для извлечения заголовков относящихся к приложениям
+        /// </summary>
+        /// <param name="annexParser"></param>
+        /// <returns></returns>
+        public HeadersParser WithAnnexes(AnnexParser annexParser)
+        {
+            this.annexParser = annexParser;
             return this;
         }
         public HeadersParser Parse()
         {
+            if (!withMeta)
+                AddError("Парсер запущен без параметров мата-информации, мета данные не будут добавлены.", ErrorType.Warning);
+            if (!withChanges)
+                AddError("Парсер запущен без параметра поиска изменений, Возможно ошибочное добавление приложений из параграфов с внесением изменения.", ErrorType.Warning);
+            if (!withTables)
+                AddError("Парсер запущен без параметров привязки таблиц. Таблицы не будут добавлены к заголовкам приложений", ErrorType.Warning);
+            if (annexParser == null)
+                AddError("Парсер запущен без параметров ивлечения заголовков приложений. Если в приложенияъх есть загловки, они не будут извлечены", ErrorType.Warning);
             UpdateStatus("Поиск заголовков");
             var percentage = 0;
             Tokenize(extractor.FullText, new HeaderTokensDefinition(settings.TokensDefinitions.HeadersTokenDefinitions.TokenDefinitionSettings));
@@ -97,13 +127,15 @@ namespace DocumentParser.Parsers.Headers
             BodyRootElements.AddRange(bodyStartAfterThisElemet.TakeTo(t=>t.NodeType == NodeType.Заголовок));
             if(annexParser != null)
                 extractAnnexHeaders(Headers);
+            if(withTables)
+                getTables();
             return this;
         }
         /// <summary>
         /// Добавляем таблицу к хедерам и к приложениям но только после поиска таблиц!
         /// Метка что нода является таблицей уже есть а сама таблица еще не парсилась!
         /// </summary>
-        public void GetTables()
+        void getTables()
         {
             //Добавляем к хедеру таблицу если она там есть
             for(int h = 0; h < Headers.Count; h++)
@@ -153,37 +185,7 @@ namespace DocumentParser.Parsers.Headers
             //Добавляем к приложению таблицу если она там есть
            
         }
-        /// <summary>
-        /// Извлкечение футнотов возможно только после их поиска поэтому требует футнотпарсер
-        /// но по сути он не используется
-        /// </summary>
-        /// <param name="foot"></param>
-        public HeadersParser GetFootNotes(FootNoteParser foot)
-        {
-            //Добавляем к хедеру футноты
-            foreach (var h in Headers)
-            {
-                var foots = h.RootElements.Where(w=>w.NodeType == NodeType.Сноска);
-                var footsPars = h.RootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
-                foreach(var f in foots)
-                {
-                    if(h.Header.FootNotes == null)
-                        h.Header.FootNotes = new List<FootNoteInfo>();
-                    h.Header.FootNotes.Add(f.FootNoteInfo);
-                }
-                h.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
-            }
-            
-            //Добавляем к боди документа футноты
-            var foots0 = BodyRootElements.Where(w=>w.NodeType == NodeType.Сноска);
-            var footsPars0 = BodyRootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
-            foreach(var f in foots0)
-            {
-                BodyFootNotes.Add(f.FootNoteInfo);
-            }
-            BodyRootElements.RemoveAll(r=>foots0.Contains(r) || footsPars0.Contains(r));
-            return this;
-        }
+      
 
         //  /// <summary>
         // /// Перемещаем все итемы из рута в хедеры если они в хедерах
@@ -244,7 +246,7 @@ namespace DocumentParser.Parsers.Headers
             header.LastElement = headerPar;
             header.StartIndex = headerPar.ElementIndex +1;
             var meta = headerPar.Next();
-            if(metaParser != null && meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
+            if(withMeta && meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
             {
                 header.Header.Meta = meta.Value.MetaInfo;
                 header.LastElement = meta.Value;

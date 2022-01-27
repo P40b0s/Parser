@@ -48,6 +48,8 @@ namespace DocumentParser.Parsers
             if(!AddError(word))
                 return false;
 
+            
+
             var requisites = new RequisitesParser(word, document);
             requisites.UpdateCallback+= c => UpdateStatus(c);
             requisites.ErrorCallback+= e => AddError(e.Message, null, e.ErrorType);
@@ -59,6 +61,7 @@ namespace DocumentParser.Parsers
             changesParser.ErrorCallback+= e => AddError(e);
             changesParser.Parse();
             AddError(changesParser);
+
             var metaParser = new MetaParser(word);
             metaParser.UpdateCallback+= c => UpdateStatus(c);
             metaParser.ErrorCallback+= e => AddError(e);
@@ -68,34 +71,42 @@ namespace DocumentParser.Parsers
             //или это заголовок самого документа
             //без парсера мета информации мы не найдем системовские комментарии и не сможем их привязать к нашим
             //абзацам или зашоловкам
-
+            //Таблицу ищем после футнотов а футноты после хедеров и приложений...
+            //FIXME ПОЧЕМУ? через 2 масяа уже не ясно
+            //замкнутый круг
+            var tableParser = new TableParser(word);
+            //Передаем, чтоб можно было вызвать пару методов headerParser после поиска таблиц
+            tableParser.Parse();
             AddError(metaParser);
             var annexParser = new AnnexParser(word);
             annexParser.UpdateCallback+= c => UpdateStatus(c);
             annexParser.ErrorCallback+= e => AddError(e);
-            annexParser.WithMetaNodes(metaParser).Parse();
+            annexParser.WithMeta()
+                .WithChanges()
+                .WithTables()
+                .Parse();
            
             var headersParser = new HeadersParser(word, requisites.BeforeBodyElement);
             headersParser.UpdateCallback+= c => UpdateStatus(c);
             headersParser.ErrorCallback+= e => AddError(e);
             //без поиска заголовков мы не сможем их извечь 
-            headersParser.WithMetaNodes(metaParser).WithAnnexes(annexParser).Parse();
+            headersParser.WithMeta()
+                .WithChanges()
+                .WithTables()
+                .WithAnnexes(annexParser)
+                .Parse();
             
             
             //
             //FIXME проблемы с выборкой итемов из примечаний и сносок
+            //и вообще надо это переосмыслить
             //необходимо это делать после поиска заголовков, чтоб проставить конечные точки
             var footNodeParser = new FootNoteParser(word);
             footNodeParser.UpdateCallback+= c => UpdateStatus(c);
             footNodeParser.ErrorCallback+= e => AddError(e);
-            footNodeParser.Parse();
+            footNodeParser.Parse(headersParser, annexParser);
             AddError(footNodeParser);
-            headersParser.GetFootNotes(footNodeParser);
-            //Таблицу ищем после футнотов а футноты после хедеров и приложений...
-            //замкнутый круг
-            var tableParser = new TableParser(word);
-            //Передаем, чтоб можно было вызвать пару методов headerParser после поиска таблиц
-            tableParser.Parse(headersParser, annexParser);
+
             var itemsParser = new ItemsParser(word);
             itemsParser.Parse(headersParser, annexParser);
             
@@ -103,27 +114,7 @@ namespace DocumentParser.Parsers
             AddError(itemsParser);
             AddError(tableParser);
 
-            // List<AnnexParserModel> forRemove = new List<AnnexParserModel>();
-            // var index = -1;
-            // for (int i = 0; i < annexParser.Annexes.Count; i++)
-            // {
-            //     
-            //     //var items = annexParser.Annexes
-            //     if(index >=0)
-            //     {
-            //         if(annexParser.Annexes[index].Hierarchy < annexParser.Annexes[i].Hierarchy)
-            //         {
-            //             if(annexParser.Annexes[index].Annex.Annexes == null)
-            //                 annexParser.Annexes[index].Annex.Annexes = new List<Core.DocumentElements.Annex>();
-            //             annexParser.Annexes[index].Annex.Annexes.Add(annexParser.Annexes[i].Annex);
-            //             forRemove.Add(annexParser.Annexes[i]);
-            //             i++;
-            //             continue;
-            //         }
-            //     }
-            //     index = i-1;
-            // }
-            // annexParser.Annexes.RemoveAll(r=>forRemove.Contains(r));
+           
             //Создаем документ
             UpdateStatus("Формирование документа...");
             document.Body = new DocumentBody(headersParser.Headers.Select(s=>s.Header).ToList(),

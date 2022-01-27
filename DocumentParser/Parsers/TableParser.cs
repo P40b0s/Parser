@@ -10,6 +10,10 @@ namespace DocumentParser.Parsers
 {
     public class TableParser : ParserBase
     {
+        /// <summary>
+        /// Для парсинга таблиц, надо чтоб отработали парсер реквизитов и парсер изменений!
+        /// </summary>
+        /// <param name="extractor"></param>
         public TableParser(WordProcessing extractor)
         {
             this.extractor = extractor;

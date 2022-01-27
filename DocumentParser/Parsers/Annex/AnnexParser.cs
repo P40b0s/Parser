@@ -16,7 +16,9 @@ namespace DocumentParser.Parsers.Annex
     public class AnnexParser : LexerBase<AnnexTokenType>
     {
         public List<AnnexParserModel> Annexes {get;} = new List<AnnexParserModel>();
-        MetaParser metaParser {get;set;}
+        bool withMeta {get;set;}
+        bool withChanges {get;set;}
+        bool withTables {get;set;}
         public AnnexParser(WordProcessing extractor)
         {
             this.extractor = extractor;
@@ -42,6 +44,12 @@ namespace DocumentParser.Parsers.Annex
         // к качеству коммунальных услуг
         public bool Parse()
         {
+            if (!withMeta)
+                AddError("Парсер запущен без параметров мата-информации, мета данные не будут добавлены.", ErrorType.Warning);
+            if (!withChanges)
+                AddError("Парсер запущен без параметра поиска изменений. Возможно ошибочное добавление приложений из параграфов с внесением изменения.", ErrorType.Warning);
+            if (!withTables)
+                AddError("Парсер запущен без параметров привязки таблиц. Таблицы не будут добавлены к заголовкам приложений", ErrorType.Warning);
             UpdateStatus("Поиск приложений");
             var percentage = 0;
             Tokenize(extractor.FullText, new AnnexTokensDefinition(settings.TokensDefinitions.AnnexTokenDefinitions.TokenDefinitionSettings));
@@ -68,15 +76,38 @@ namespace DocumentParser.Parsers.Annex
                     a.EndIndex = last.ElementIndex;
                 a.RootElements.AddRange(items);
             }
+            if(withTables)
+                getTables();
             return !HasFatalError;
         }
-        public AnnexParser WithMetaNodes(MetaParser meta)
+                /// <summary>
+        /// Использовать информацию полученнцю от MetaParser и привязать ее к заголовкам
+        /// </summary>
+        /// <returns></returns>
+        public AnnexParser WithMeta()
         {
-            this.metaParser = meta;
+            withMeta = true;
             return this;
         }
-
-        public void GetTables()
+        /// <summary>
+        /// Использовать информацию полученнцю от ChangesParser для корректного распознавания заголовков
+        /// </summary>
+        /// <returns></returns>
+        public AnnexParser WithChanges()
+        {
+            withChanges = true;
+            return this;
+        }
+        /// <summary>
+        /// Использовать информацию полученнцю от TableParser для привязки таблиц к заголовкам
+        /// </summary>
+        /// <returns></returns>
+        public AnnexParser WithTables()
+        {
+            withTables = true;
+            return this;
+        }
+        void getTables()
         {
             for(int a = 0; a < Annexes.Count; a++)
             {
@@ -100,28 +131,7 @@ namespace DocumentParser.Parsers.Annex
                 }
             }
         }
-        /// <summary>
-        /// Извлкечение футнотов возможно только после их поиска поэтому требует футнотпарсер
-        /// но по сути он не используется
-        /// </summary>
-        /// <param name="foot"></param>
-        public AnnexParser ExtractFootNotes(FootNoteParser foot)
-        {
-            //Добавляем к приложению футноты
-            foreach(var a in Annexes)
-            {
-                var foots = a.RootElements.Where(w=>w.NodeType == NodeType.Сноска);
-                var footsPars = a.RootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
-                foreach(var f in foots)
-                {
-                    if(a.Annex.FootNotes == null)
-                        a.Annex.FootNotes = new List<FootNoteInfo>();
-                    a.Annex.FootNotes.Add(f.FootNoteInfo);
-                }
-                a.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
-            }
-            return this;
-        }
+        
 
 
         
@@ -289,7 +299,7 @@ namespace DocumentParser.Parsers.Annex
             //Поиск мета информации
             
             var meta = nameElement.Next();
-            if(metaParser != null && meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
+            if(withMeta && meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
             {
                 annex.Annex.Meta = meta.Value.MetaInfo;
                 annex.LastElement = meta.Value;
@@ -302,8 +312,9 @@ namespace DocumentParser.Parsers.Annex
         /// Перемещение приложений согласно их иерархии (могут быть приложения к приложению)
         /// Этот метод вызывается последним! после заголовков и итемов, а то потом 
         /// появятся вложенные приложения и уже ничего не найдется
+        /// Автоматические вызывается в ItemsParser
         /// </summary>
-        public void MoveAnnexByHierarchy()
+        public void SortAnnexByHierarchy()
         {
              //Рассовываем все приложения согласно иерархии
             List<AnnexParserModel> forRemove = new List<AnnexParserModel>();

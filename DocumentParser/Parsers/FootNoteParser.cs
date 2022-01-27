@@ -9,6 +9,8 @@ using Utils.Extensions;
 using DocumentParser.Elements;
 using SettingsWorker.FootNotes;
 using SettingsWorker;
+using DocumentParser.Parsers.Headers;
+using DocumentParser.Parsers.Annex;
 
 namespace DocumentParser.Parsers
 {
@@ -57,6 +59,83 @@ namespace DocumentParser.Parsers
                 return ParseByComments(footsCommentParagraphs);
             else return ParseByTokens();
         }
+
+    public void Parse(HeadersParser hParser)
+    {
+        if(hParser != null)
+            getHeadersFootNotes(hParser);
+        else
+            AddError("Для извлечения сносок HeaderParser не должен иметь значение null");
+    }
+    public void Parse(AnnexParser aParser)
+    {
+        if(aParser != null)
+        {
+            getAnnexFootNotes(aParser);
+        }
+        else
+            AddError("Для извлечения сносок AnnexParser не должен иметь значение null");
+    }
+    public void Parse(HeadersParser hParser, AnnexParser aParser)
+    {
+        Parse(hParser);
+        Parse(aParser);
+    }
+
+    /// <summary>
+        /// Извлкечение футнотов возможно только после их поиска поэтому требует футнотпарсер
+        /// но по сути он не используется
+        /// </summary>
+        /// <param name="foot"></param>
+        void getAnnexFootNotes(AnnexParser aParser)
+        {
+            //Добавляем к приложению футноты
+            foreach(var a in aParser.Annexes)
+            {
+                var foots = a.RootElements.Where(w=>w.NodeType == NodeType.Сноска);
+                var footsPars = a.RootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
+                foreach(var f in foots)
+                {
+                    if(a.Annex.FootNotes == null)
+                        a.Annex.FootNotes = new List<FootNoteInfo>();
+                    a.Annex.FootNotes.Add(f.FootNoteInfo);
+                }
+                a.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
+            }
+        }
+
+          /// <summary>
+        /// Извлкечение футнотов возможно только после их поиска поэтому требует футнотпарсер
+        /// но по сути он не используется
+        /// </summary>
+        /// <param name="foot"></param>
+        public void getHeadersFootNotes(HeadersParser hParser)
+        {
+            //Добавляем к хедеру футноты
+            foreach (var h in hParser.Headers)
+            {
+                var foots = h.RootElements.Where(w=>w.NodeType == NodeType.Сноска);
+                var footsPars = h.RootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
+                foreach(var f in foots)
+                {
+                    if(h.Header.FootNotes == null)
+                        h.Header.FootNotes = new List<FootNoteInfo>();
+                    h.Header.FootNotes.Add(f.FootNoteInfo);
+                }
+                h.RootElements.RemoveAll(r=>foots.Contains(r) || footsPars.Contains(r));
+            }
+            
+            //Добавляем к боди документа футноты
+            var foots0 = hParser.BodyRootElements.Where(w=>w.NodeType == NodeType.Сноска);
+            var footsPars0 = hParser.BodyRootElements.Where(w=>w.NodeType == NodeType.АбзацСноски);
+            foreach(var f in foots0)
+            {
+                hParser.BodyFootNotes.Add(f.FootNoteInfo);
+            }
+            hParser.BodyRootElements.RemoveAll(r=>foots0.Contains(r) || footsPars0.Contains(r));
+        }
+
+
        
         public bool ParseByTokens()
         {
