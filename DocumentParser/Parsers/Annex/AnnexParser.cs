@@ -25,6 +25,7 @@ namespace DocumentParser.Parsers.Annex
             settings = extractor.Settings;
         }
         public int Count {get;set;}
+        public int AnnexesCount {get;set;}
         private WordProcessing extractor {get;}
         //Пример шапки приложения
         //УТВЕРЖДЕНЫ(токен)
@@ -316,6 +317,7 @@ namespace DocumentParser.Parsers.Annex
         /// </summary>
         public void SortAnnexByHierarchy()
         {
+            AnnexesCount = Annexes.Count;
              //Рассовываем все приложения согласно иерархии
             List<AnnexParserModel> forRemove = new List<AnnexParserModel>();
             List<AnnexParserModel> except = new List<AnnexParserModel>();
