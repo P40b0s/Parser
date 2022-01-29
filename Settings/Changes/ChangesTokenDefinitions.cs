@@ -9,6 +9,7 @@ public class ChangesTokenDefinitions : TokenDefinitionBase<ChangesTokenType>
         addToken(ChangesTokenType.Stop, "(?<=\n\\s*)[а-я0-9]+([).])\\s*(в\\s+)?(част|стать|пункт|подпун|разд|правилах)");
         addToken(ChangesTokenType.Stop, "(?<=\n\\s*)[а-я0-9]+([).])\\s*[(]");
         addToken(ChangesTokenType.Stop, "(?<=\nв?\\s*)(част[ьи]|стать[июе]|пункт[ае]?|подпункт[ае]?|разд[ела]*|правилах)+\\s+\\S+");
+        //Напимер Статья 2
         addToken(ChangesTokenType.Stop, "(?<=\n\\s*)статья\\s+\\d+\\s*\n");
         addToken(ChangesTokenType.Ancor, $"[.]{Templates.RightQuotationMark}[.]");
         addToken(ChangesTokenType.Ancor, $"[;]{Templates.RightQuotationMark}[.]");

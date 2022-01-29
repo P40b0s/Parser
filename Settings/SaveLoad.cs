@@ -24,7 +24,6 @@ public partial class Settings
         };
     }
         
-    
     public void Save()
     {
         if(System.IO.File.Exists(fileName))

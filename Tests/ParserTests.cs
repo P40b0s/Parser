@@ -24,57 +24,81 @@ public class Tests
     WordProcessing word {get;set;}
     private List<Files> files {get;} = new List<Files>()
     {
+        //0
         new Files()
         {
             FilePath = "соглашение.docx",
             Description = "Соглашение МИД"
         },
+        //1
         new Files()
         {
             FilePath = "закон.docx",
             Description = "Старый вид законов"
         },
+        //2
         new Files()
         {
             FilePath = "кодекс.docx",
             Description = "Кодекс"
         },
+        //3
         new Files()
         {
             FilePath = "кодекс_с_частью.docx",
             Description = "Кодекс с частью"
         },
+        //4
         new Files()
         {
             FilePath = "постановлени_приложение.docx",
             Description = "Постановление правительства"
         },
+        //5
         new Files()
         {
             FilePath = "прав_распр_без_назв.docx",
             Description = "Распоряжение без названия"
         },
+        //6
         new Files()
         {
             FilePath = "приказ.docx",
             Description = "Приказ"
         },
+        //7
         new Files()
         {
             FilePath = "указ.docx",
             Description = "указ президента"
         },
+        //8
         new Files()
         {
             FilePath = "фз.docx",
             Description = "федеральный закон"
         },
+        //9
         new Files()
         {
             FilePath = "фз_без_сф.docx",
             Description = "фз без совета федерации"
         },
+        //10
+        new Files()
+        {
+            FilePath = "совместный_приказ_слеш.docx",
+            Description = "Совместный приказ с одним номером-исключением"
+        },
+        //11
+        new Files()
+        {
+            FilePath = "совместный_приказ_материнский_орган.docx",
+            Description = "Приказ с одним материнским органом, на выходе должен быть только один орган"
+        },
+
     };
+    
 
     public Tests()
     {
@@ -95,7 +119,7 @@ public class Tests
         public async ValueTask ParseRequisites()
         {
             var list = new List<(bool, string, Document)>();
-            for(int i = 0; i< files.Count; i++)
+            for(int i = 11; i< files.Count; i++)
             {
                 await settings.Load();
                 document = new Document();

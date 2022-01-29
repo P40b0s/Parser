@@ -61,7 +61,17 @@ namespace SettingsWorker.Regexes
         /// </summary>
         /// <returns></returns>
         public static string WsOrBrPlus => $"(\u0020|{GetUnicodeChar(Templates.BRChar)})+";
+        /// <summary>
+        /// Пробел или мягкий перенос без модификаторов
+        /// </summary>
+        /// <returns></returns>
+        public static string WsBr => $"(\u0020|{GetUnicodeChar(Templates.BRChar)})";
         public static char BRChar => Templates.NewLines.SplitNewLine;
+        /// <summary>
+        ///Пробелом или мягкий пернос (пробел и мягкий перенос не более 3 раз) + слово
+        /// </summary>
+        /// <returns></returns>
+        public static string WsBrWord => $"({WsBr}{{1,3}}\\S+)";
         public static class NewLines
         {
             /// <summary>

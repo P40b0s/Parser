@@ -8,6 +8,8 @@ using DocumentParser.Elements;
 using SettingsWorker.Requisites;
 using SettingsWorker;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Collections;
 
 namespace DocumentParser.Parsers.Requisites;
 
@@ -81,7 +83,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         // }
         var before = tokensRequisiteModel.typeToken.FindBackwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
         foreach(var o in before)
-            tokensRequisiteModel.organsTokens.Add(o);
+            tokensRequisiteModel.organsTokens.Insert(0, o);
         if(before.Count == 0)
         {
             var next = tokensRequisiteModel.typeToken.FindForwardMany(p=> p.TokenType == RequisitesTokenType.Орган);
@@ -180,10 +182,62 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
                 return AddError($"Не удалось определить номер документа ", number.Error);
             tokensRequisiteModel.numberToken = number.Value;
             var n = extractor.GetUnicodeString(tokensRequisiteModel.numberToken.CustomGroups[0]);
-            doc.Numbers.Add(new Number(n));
+            doc.Numbers = coNumberExtractor(n).ToList();
             extractor.SetElementNode(tokensRequisiteModel.numberToken, NodeType.stop);
+            /// Если не вcтретился слеш и несколько органов, то один орган - материнский
+            /// типа министретсва и под ним его подведомственный - какая-нибудь федеральная служба
+            /// нет слеша = оставляем только последний орган
+            if(doc.Numbers.Count == 1 && doc.Organs.Count > 1)
+            for(int o = doc.Organs.Count - 2; o >= 0; o--)
+                doc.Organs.RemoveAt(o);
         }
         return true;  
+    }
+
+    /// <summary>
+    /// Извлечение номеров с возможность разбития их по правым слешам на несколько
+    /// Используются исключения добавленые в настройках программы
+    /// </summary>
+    /// <param name="number"></param>
+    /// <returns></returns>
+    IEnumerable<Number> coNumberExtractor(string number)
+    {
+        var indexes = new Hashtable();
+        var list = settings.DefaultRules.RequisiteRule.RightSlashExceptions.Select(s=>new Regex(s, RegexOptions.IgnoreCase));
+        var matches = list.Select(s=>s.Match(number));
+        foreach(var m in matches)
+        if(m.Success)
+        {
+            indexes.Add(m.Index, m.Length);
+        }
+        string n = "";
+        for (int c = 0; c < number.Length; c++)
+        {
+            //Если встречаем слеш, значит несколько номеров
+            if(number[c] == '/')
+            {
+                yield return new Number(n);
+                n = "";
+                c++;
+            }
+            //Если находим исключение номера то обрабатываем его целиком и переходим дальше
+            if(indexes.ContainsKey(c))
+            {
+                var length = (int)indexes[c];
+                for (int e = 0; e < length; e++)
+                {
+                    n += number[c + e];
+                }
+                yield return new Number(n);
+                n = "";
+                c = c+ length;
+                continue;
+            }
+            n += number[c];
+        }
+        //Если не встетидлось исключений и нет нескольких номеров то просто возвращаем номер
+        if(n.Length > 0)
+            yield return new Number(n);
     }
 
     private bool getSignDate()

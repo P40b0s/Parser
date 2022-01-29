@@ -25,10 +25,6 @@ namespace DocumentParser.Parsers.Headers
     public class HeadersParser : LexerBase<HeaderTokenType>
     {
         public List<HeaderParserModel> Headers {get;} = new List<HeaderParserModel>();
-        bool withMeta {get;set;}
-        bool withChanges {get;set;}
-        bool withTables {get;set;}
-
         /// <summary>
         /// Корневые итемы в теле самого документа
         /// </summary>
@@ -37,6 +33,9 @@ namespace DocumentParser.Parsers.Headers
         public List<Item> BodyItems {get;set;} = new List<Item>();
         public List<FootNoteInfo> BodyFootNotes {get;set;} = new List<FootNoteInfo>();
         public List<ElementStructure> BodyNoteElements {get;} = new List<ElementStructure>();
+        bool withMeta {get;set;}
+        bool withChanges {get;set;}
+        bool withTables {get;set;}
         AnnexParser annexParser {get;set;}
         ElementStructure bodyStartAfterThisElemet {get;}
         /// <summary>
@@ -132,7 +131,7 @@ namespace DocumentParser.Parsers.Headers
             return this;
         }
         /// <summary>
-        /// Добавляем таблицу к хедерам и к приложениям но только после поиска таблиц!
+        /// Добавляем таблицу к хедерам но только после поиска таблиц!
         /// Метка что нода является таблицей уже есть а сама таблица еще не парсилась!
         /// </summary>
         void getTables()
@@ -160,30 +159,6 @@ namespace DocumentParser.Parsers.Headers
                     }
                 }
             }
-            //foreach (var h in Headers)
-            // {
-            //     var firstItem = h.RootElements.FirstOrDefault();
-            //     if(firstItem != null)
-            //     {
-            //         if(firstItem.NodeType == NodeType.Таблица)
-            //         {
-            //             h.Header.Table = firstItem.Table;
-            //             h.RootElements.Remove(firstItem);
-            //         } 
-            //         else
-            //         {
-            //             var table = firstItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
-            //             if(table.IsOk)
-            //             {
-            //                 h.Header.Table = table.Value.Table;
-            //                 h.RootElements.Remove(table.Value);
-            //             }
-            //         }
-            //     }
-            // }
-
-            //Добавляем к приложению таблицу если она там есть
-           
         }
       
 
@@ -194,28 +169,6 @@ namespace DocumentParser.Parsers.Headers
         // /// а здесь лежат только хедеры приложений
         // /// </summary>
         // /// <param name="headers"></param>
-        // void getAnnexHeaders(AnnexParser ann)
-        // {
-        //     var headersForRemove = new List<HeaderParserModel>();
-        //     foreach(var a in ann.Annexes)
-        //     {
-                
-        //         foreach(var h in Headers)
-        //         {
-        //             if(a.StartIndex <= h.StartIndex && a.EndIndex >= h.EndIndex)
-        //             {
-        //                 a.Headers.Add(h);
-        //                 if(a.Annex.Headers == null)
-        //                     a.Annex.Headers = new List<Header>();
-        //                 a.Annex.Headers.Add(h.Header);
-        //                 headersForRemove.Add(h);
-        //                 a.RootElements.RemoveAll(r=>h.RootElements.Contains(r) || h.Header.ElementIndex == r.ElementIndex);
-        //             }
-        //         }
-        //     }
-        //     Headers.RemoveAll(r=> headersForRemove.Contains(r));            
-        // }
-
         private bool parseHeaders(Token<HeaderTokenType> token)
         {
             var headerPar = extractor.GetElements(token).FirstOrDefault();
@@ -258,7 +211,7 @@ namespace DocumentParser.Parsers.Headers
         }
 
         /// <summary>
-        /// Забираем все хедеры которые относятся к приложения из парсера хедеров
+        /// Забираем все хедеры которые относятся к приложениям из парсера хедеров
         /// добавляем их в хедеры приложений а из парсера хедеров удаляем
         /// </summary>
         /// <param name="headers">массив хедеров из парсера хедеров</param>

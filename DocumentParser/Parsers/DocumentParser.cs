@@ -48,8 +48,6 @@ namespace DocumentParser.Parsers
             if(!AddError(word))
                 return false;
 
-            
-
             var requisites = new RequisitesParser(word, document);
             requisites.UpdateCallback+= c => UpdateStatus(c);
             requisites.ErrorCallback+= e => AddError(e.Message, null, e.ErrorType);
@@ -87,8 +85,8 @@ namespace DocumentParser.Parsers
                 .Parse();
            
             var headersParser = new HeadersParser(word, requisites.BeforeBodyElement);
-            headersParser.UpdateCallback+= c => UpdateStatus(c);
-            headersParser.ErrorCallback+= e => AddError(e);
+            headersParser.UpdateCallback += c => UpdateStatus(c);
+            headersParser.ErrorCallback += e => AddError(e);
             //без поиска заголовков мы не сможем их извечь 
             headersParser.WithMeta()
                 .WithChanges()
@@ -130,7 +128,6 @@ namespace DocumentParser.Parsers
             //var items = word.GetElementsExcept(annexParser.Annexes.SelectMany(s=>s.RootItems), headersParser.Headers.SelectMany(s=>s.Items));
             //TEST
             //word.SaveDocument("/home/phobos/Документы/354_hl.docx");
-            
             return !HasFatalError;
         }
     }

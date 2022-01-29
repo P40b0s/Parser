@@ -62,82 +62,13 @@ public partial class ItemsParser
             UpdateStatus("Обработка списочных элементов заголовков...", count, percentage);
         }
         //Перемещаем все неопознаные элементы из рутов хедеров в абзацы хедеров
-        //быстрая версия
         headersMove(headersParser.Headers, p=>  
                 p == NodeType.НеОпределено 
                 || p == NodeType.Абзац 
                 || p == NodeType.МетаАбзац 
                 || p == NodeType.МетаИнформация);
-        // for(int h = 0 - 1; h < headersParser.Headers.Count; h++)
-        // {
-        //     for(int i = headersParser.Headers[h].RootElements.Count - 1; i >=0 ; i--)
-        //     {
-        //         //для элементов определенных как абзац
-        //         //Часть 31 статьи 1 Федерального закона от 26 декабря 2008 года № 294-ФЗ.....
-        //         //дополнить пунктом 24 следующего содержания:
-        //         //элемент имеет флаг IsChange и определен как абзац поэтому добавляем условие для абзаца
-        //         if(headersParser.Headers[h].RootElements[i].NodeType == NodeType.НеОпределено 
-        //         || headersParser.Headers[h].RootElements[i].NodeType == NodeType.Абзац 
-        //         || headersParser.Headers[h].RootElements[i].NodeType == NodeType.МетаАбзац 
-        //         || headersParser.Headers[h].RootElements[i].NodeType == NodeType.МетаИнформация)
-        //         {
-        //             if(headersParser.Headers[h].Header.Indents == null)
-        //                     headersParser.Headers[h].Header.Indents = new List<Indent>();
-        //             headersParser.Headers[h].Header.Indents.Insert(0, headersParser.Headers[h].RootElements[i].ToIndent());
-        //         }
-        //         if(headersParser.Headers[h].RootElements[i].NodeType == NodeType.Таблица)
-        //         {
-        //             var l =  headersParser.Headers[h].Header.Indents.LastOrDefault();
-        //             if(l != null)
-        //                 l.Table = headersParser.Headers[h].RootElements[i].Table;
-        //         }
-        //         headersParser.Headers[h].RootElements.RemoveAt(i);
-        //     }
-        // }
-        //Старая версия
-        // foreach(var h in headersParser.Headers)
-        // {
-        //     foreach(var i in h.RootElements)
-        //     {
-        //         //для элементов определенных как абзац
-        //         //Часть 31 статьи 1 Федерального закона от 26 декабря 2008 года № 294-ФЗ.....
-        //         //дополнить пунктом 24 следующего содержания:
-        //         //элемент имеет флаг IsChange и определен как абзац поэтому добавляем условие для абзаца
-        //         if(i.NodeType == NodeType.НеОпределено || i.NodeType == NodeType.Абзац || i.NodeType == NodeType.МетаАбзац || i.NodeType == NodeType.МетаИнформация)
-        //         {
-        //             if(h.Header.Indents == null)
-        //                     h.Header.Indents = new List<Indent>();
-        //             h.Header.Indents.Add(i.ToIndent());
-        //         }
-        //         if(i.NodeType == NodeType.Таблица)
-        //         {
-        //             var l =  h.Header.Indents.LastOrDefault();
-        //             if(l != null)
-        //             l.Table = i.Table;
-        //         }
-                
-        //     }
-        //     h.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
-        
         //Перемещаем все неопознаные элементы из рута документа В абзацы документа
         elementsMove(headersParser.BodyRootElements, headersParser.BodyIndents, p=> p == NodeType.НеОпределено);
-        // for(int i = headersParser.BodyRootElements.Count - 1; i >=0; i--)
-        // {
-        //     if(headersParser.BodyRootElements[i].NodeType == NodeType.НеОпределено)
-        //     {
-        //         headersParser.BodyIndents.Insert(0, headersParser.BodyRootElements[i].ToIndent());
-        //         //Удаляем элемент из боли документа, так кон относился к заголовку и уже перемещен туда
-        //         headersParser.BodyRootElements.RemoveAt(i);
-        //     }
-                
-        // }
-        //пока закомменчу старую версию
-        // foreach(var i in headersParser.BodyRootElements)
-        // {
-        //     if(i.NodeType == NodeType.НеОпределено)
-        //         headersParser.BodyIndents.Add(i.ToIndent());
-        // }
-        // headersParser.BodyRootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
     }
 
     private void parseAnnexes(AnnexParser annexParser)
@@ -159,102 +90,11 @@ public partial class ItemsParser
         for(int a = 0; a < annexParser.Annexes.Count; a++)
         {
             elementsMove(annexParser.Annexes[a].RootElements, annexParser.Annexes[a].Annex.Indents, p=> p == NodeType.НеОпределено);
-            // for(int i = annexParser.Annexes[a].RootElements.Count - 1; i >=0 ; i--)
-            // {
-            //     //для элементов определенных как абзац
-            //     //Часть 31 статьи 1 Федерального закона от 26 декабря 2008 года № 294-ФЗ.....
-            //     //дополнить пунктом 24 следующего содержания:
-            //     //элемент имеет флаг IsChange и определен как абзац поэтому добавляем условие для абзаца
-            //     if(annexParser.Annexes[a].RootElements[i].NodeType == NodeType.НеОпределено)
-            //     {
-            //        if(annexParser.Annexes[a].Annex.Indents == null)
-            //             annexParser.Annexes[a].Annex.Indents = new List<Indent>();
-            //         annexParser.Annexes[a].Annex.Indents.Insert(0, annexParser.Annexes[a].RootElements[i].ToIndent());
-            //         annexParser.Annexes[a].RootElements.RemoveAt(i);
-            //     }
-            // }
             for(int h = 0; h < annexParser.Annexes[a].Headers.Count; h++)
             {
                 headersMove(annexParser.Annexes[a].Headers, p=> p == NodeType.НеОпределено);
-                // for(var i = annexParser.Annexes[a].Headers[h].RootElements.Count - 1; i >=0; i--)
-                // {
-                //     if(i.NodeType == NodeType.НеОпределено)
-                //     {
-                //         if(h.Header.Indents == null)
-                //                 h.Header.Indents = new List<Indent>();
-                //         var ind = new Indent(i.ParagraphProperties,
-                //                             i.ElementIndex,
-                //                             i.WordElement.Text.GetHash(),
-                //                             i.WordElement.RunWrapper.GetCustRuns(),
-                //                             i.MetaInfo,
-                //                             i.HyperTextInfo,
-                //                             i.Comment,
-                //                             i.FootNoteInfo,
-                //                             null,
-                //                             i.IsChange,
-                //                             0,
-                //                             NodeType.Абзац
-                //                             );
-                //         h.Header.Indents.Add(ind);
-                //     }
-                // }
-                // h.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
             }
         }
-        //СТАРАЯ ВЕРСИЯ
-        // foreach(var a in annexParser.Annexes)
-        // {
-        //     foreach(var i in a.RootElements)
-        //     {
-        //         if(i.NodeType == NodeType.НеОпределено)
-        //         {
-        //             if(a.Annex.Indents == null)
-        //                 a.Annex.Indents = new List<Indent>();
-        //             var ind = new Indent(i.ParagraphProperties,
-        //                                 i.ElementIndex,
-        //                                 i.WordElement.Text.GetHash(),
-        //                                 i.WordElement.RunWrapper.GetCustRuns(),
-        //                                 i.MetaInfo,
-        //                                 i.HyperTextInfo,
-        //                                 i.Comment,
-        //                                 i.FootNoteInfo,
-        //                                 null,
-        //                                 i.IsChange,
-        //                                 0,
-        //                                 NodeType.Абзац
-        //                                 );
-        //             a.Annex.Indents.Add(ind);
-        //         }
-        //     }
-        //     a.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
-
-
-            // foreach(var h in a.Headers)
-            // {
-            //     foreach(var i in h.RootElements)
-            //     {
-            //         if(i.NodeType == NodeType.НеОпределено)
-            //         {
-            //             if(h.Header.Indents == null)
-            //                     h.Header.Indents = new List<Indent>();
-            //             var ind = new Indent(i.ParagraphProperties,
-            //                                 i.ElementIndex,
-            //                                 i.WordElement.Text.GetHash(),
-            //                                 i.WordElement.RunWrapper.GetCustRuns(),
-            //                                 i.MetaInfo,
-            //                                 i.HyperTextInfo,
-            //                                 i.Comment,
-            //                                 i.FootNoteInfo,
-            //                                 null,
-            //                                 i.IsChange,
-            //                                 0,
-            //                                 NodeType.Абзац
-            //                                 );
-            //             h.Header.Indents.Add(ind);
-            //         }
-            //     }
-            //     h.RootElements.RemoveAll(r=>r.NodeType == NodeType.НеОпределено);
-            // }
     }
     
     public void Parse(HeadersParser hParser)
