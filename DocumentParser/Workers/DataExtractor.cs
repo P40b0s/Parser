@@ -67,8 +67,8 @@ namespace DocumentParser.Workers
                             if(nopicprops != null)
                             {
                                 var error0 = $"Изображение {nopicprops.Name.Value} по адресу {nopicprops.Description.Value} не найдено";
-                                AddError(error0);
-                                return new Result<Image, ParserException>(new ParserException(error0));
+                                AddError(error0, ErrorType.Warning);
+                                return new Result<Image, ParserException>(new ParserException(error0, ErrorType.Warning));
                             }
                             else
                             {

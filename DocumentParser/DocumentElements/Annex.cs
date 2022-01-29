@@ -10,6 +10,9 @@ using DocumentParser.Interfaces;
 
 namespace DocumentParser.DocumentElements
 {
+    /// <summary>
+    /// Информация о документе утвердившем приложение
+    /// </summary>
     public class AnnexApprovedPrefix
     {
         /// <summary>
@@ -67,8 +70,13 @@ namespace DocumentParser.DocumentElements
             AnnexType = annexType;
         }
         public Annex() { } 
-       
+        /// <summary>
+        /// Информация о документе утвердившем приложение
+        /// </summary>
         public AnnexApprovedPrefix ApprovedPrefix {get;set;}
+        /// <summary>
+        /// Информация о самом приложении, тип наименование номер итд
+        /// </summary>
         public AnnexPrefix AnnexPrefix {get;set;}
         /// <summary>
         /// Тип приложения если указан - ПРАВИЛА ТРЕБОВАНИЯ итд

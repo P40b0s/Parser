@@ -88,23 +88,31 @@ public partial class Settings : ISettings
     };
     public RequisiteChangers RequisiteChangers {get;set;} = new RequisiteChangers()
     {
+
         OrganToOrgan  = new List<Changer>()
-    {
-        new Changer()
+        
         {
-            From = $"^российской{Templates.WsOrBr}федерации",
-            To = "Российская Фдерация"
-        }
-    },
+            new Changer()
+            {
+                From = $"^российской{Templates.WsOrBr}федерации",
+                To = "Российская Федерация"
+            },
+            new Changer()
+            {
+                From = $"^президента{Templates.WsOrBr}российской{Templates.WsOrBr}федерации",
+                To = "Президент Российской Федерации"
+            }
+        },
         TypeToOrgan = new List<Changer>()
         {
             new Changer()
             {
                 From = $"^соглашение",
-                To = "Российская Фдерация"
+                To = "Российская Федерация"
             }
         },
-        OrganToType = new List<Changer>()
+        OrganToType = new List<Changer>(),
+        TypeToType = new List<Changer>()
     };
 
     [System.Text.Json.Serialization.JsonIgnore]

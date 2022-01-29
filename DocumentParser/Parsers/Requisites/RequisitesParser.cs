@@ -69,8 +69,8 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
             return AddError($"Параграф вида документа \"{typeToken.Value.Value}\" не найден");
         stringType = stringType.NormalizeWhiteSpaces().NormalizeCase().Trim();
         //TODO ТЕСТ! еще не тестил
-        settings.RequisiteChangers.Change(Settings.Requisites.ChangeType.TypeToOrgan, stringType);
-        doc.Type = stringType;
+        var changed = settings.RequisiteChangers.Change(Settings.Requisites.ChangeType.TypeToType, stringType);
+        doc.Type = string.IsNullOrEmpty(changed) ? stringType : changed;
         tokensRequisiteModel.typeToken = typeToken.Value;
         return true;
     }
@@ -95,6 +95,12 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
         foreach(var o in tokensRequisiteModel.organsTokens)
         {
             var organ = new Organ(extractor.GetUnicodeString(o).NormalizeWhiteSpaces().NormalizeCase());
+            var changedOrgan = settings.RequisiteChangers.Change(Settings.Requisites.ChangeType.TypeToOrgan, organ.val);
+            if(changedOrgan != "")
+                organ.val = changedOrgan;
+            changedOrgan = settings.RequisiteChangers.Change(Settings.Requisites.ChangeType.OrganToOrgan, organ.val);
+            if(changedOrgan != "")
+                organ.val = changedOrgan;
             doc.Organs.Add(organ); 
         }
         loadCustomRules();
@@ -147,10 +153,11 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisites.RequisitesTo
     {
         if(!settings.DefaultRules.RequisiteRule.NoExecutor)
         {
-            var posts = tokens.FindAll(f=>f.TokenType == RequisitesTokenType.Должность);
-            if(posts.Count == 0)
+            var firstPost = tokens.GetFirst(f=>f.TokenType == RequisitesTokenType.Должность);
+            if(firstPost.IsError)
                 return AddError("Не удалось определить должность подписанта");
-            //Должностей то несколько
+            var posts = firstPost.Value.FindForwardMany(f=>f.TokenType == RequisitesTokenType.Должность, ig=>ig.TokenType == RequisitesTokenType.Подписант, true);
+            //Должностей то  несколько
             foreach(var p in posts)
             {
                 var executor = p.Next(RequisitesTokenType.Подписант);

@@ -93,8 +93,8 @@ public partial class Token<T>
         {
             if(tokens.Count < i)
                 return new Result<Token<T>, TokenException>(outOfRangeException(i));
-            if(ignore(tokens[index]))
-                return new Result<Token<T>, TokenException>(tokens[index]);    
+            if(ignore(tokens[i]))
+                return new Result<Token<T>, TokenException>(tokens[i]);    
         }
         return new Result<Token<T>, TokenException>(customException("Не найдено ни одного токена"));
     }
@@ -116,11 +116,11 @@ public partial class Token<T>
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
         for (int i = index; i <= maxDeep + index; i++)
         {
-            if(tokens.Count < i)
+            if(tokens.Count <= i)
                 return new Result<Token<T>, TokenException>(outOfRangeException(i));
            
-            if(tokens[index].TokenType.Equals(searchedToken))
-                return new Result<Token<T>, TokenException>(tokens[index]);
+            if(tokens[i].TokenType.Equals(searchedToken))
+                return new Result<Token<T>, TokenException>(tokens[i]);
         }
         return new Result<Token<T>, TokenException>(notFountOnPositionException(index, index + maxDeep, searchedToken));
     }
@@ -145,7 +145,7 @@ public partial class Token<T>
     /// <summary>
     /// Получаем массив искомых токенов, метод прерывается если встречается токен отличный от искомых 
     /// </summary>
-    /// <param name="searchedToken">Искомый токен</param>
+    /// <param name="oneOf">один из искомых токенов</param>
     ///  /// <param name="withSelf">Осуществлять поиск включая искомый токен</param>
     /// <returns></returns>
     public List<Token<T>> FindForwardMany(Predicate<Token<T>> oneOf, bool withSelf = false)
@@ -158,5 +158,21 @@ public partial class Token<T>
             index++;
         }
         return result;
+    }
+     /// <summary>
+    /// Получаем массив искомых токенов, метод прерывается если встречается токен отличный от искомых 
+    /// </summary>
+    /// <param name="oneOf">Список искомых токенов</param>
+    /// <param name="ignore">Какие токены пропускаем</param>
+    /// <param name="withSelf">Осуществлять поиск включая искомый токен</param>
+    /// <returns></returns>
+    public IEnumerable<Token<T>> FindForwardMany(Predicate<Token<T>> oneOf, Predicate<Token<T>> ignore, bool withSelf = false)
+    {
+        var index = withSelf ? Position : Position + 1;
+        while(tokens.Count > index && (oneOf(tokens[index]) || ignore(tokens[index])))
+        {   if(oneOf(tokens[index]))
+                yield return tokens[index];
+            index++;
+        }
     }
 }

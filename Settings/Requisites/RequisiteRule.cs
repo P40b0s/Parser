@@ -80,7 +80,7 @@ public class RequisiteRule : RuleBase
     public List<string> RightSlashExceptions {get;set;} = new List<string>()
     {
         "\\d+[/]пр",
-        "п[/]\\d+",
+        "(?<!\\d+|-)п[/]\\d+",
         "[а-я]+-\\d+-\\d+[/]\\d+@",
         "\\d+[/]\\d{2}"
     };

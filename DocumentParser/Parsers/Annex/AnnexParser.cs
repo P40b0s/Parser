@@ -195,7 +195,7 @@ namespace DocumentParser.Parsers.Annex
             extractor.SetElementNode(approvedElement, NodeType.Приложение);
             newAnnex.Annex.ApprovedPrefix.Number = extractor.GetUnicodeString(approvedNumberToken.Value.CustomGroups[0]);
             var date = approvedDataToken.Value.GetDate();
-            if(!date.IsError)
+            if(date.IsError)
                 return AddError($"В приложении № {Annexes.Count + 1} " + date.Error.Message);
             newAnnex.Annex.ApprovedPrefix.Date = date.Value.Value;
             newAnnex.Annex.ApprovedPrefix.Organ = extractor.GetUnicodeString(approvedElement, new TextIndex(token.Length, (approvedDataToken.Value.StartIndex - token.Length - approvedElement.StartIndex))).Trim();

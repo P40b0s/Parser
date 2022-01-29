@@ -62,9 +62,9 @@ namespace DocumentParser.Parsers
         /// <param name="status">Сообщения для добавления в список статусов</param>
         protected void UpdateStatus(string status)
         {
-            #if DEBUG
-            Console.WriteLine(status);
-            #endif
+            // #if DEBUG
+            //     Console.WriteLine(status);
+            // #endif
             if(this.UpdateCallback != null)
                 Task.Factory.StartNew(()=> this.UpdateCallback?.Invoke(status));
             statuses.Add(status);
@@ -121,7 +121,7 @@ namespace DocumentParser.Parsers
         /// <param name="message">Ошибка парсера</param>
         /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
         protected bool AddError(string message, ErrorType errorType = ErrorType.Fatal, [CallerMemberName]string callerMemberName = null) =>
-            AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {message}"));
+            AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {message}", errorType));
 
         /// <summary>
         /// Добавляет ошибку в список ошибок
@@ -153,7 +153,7 @@ namespace DocumentParser.Parsers
         {
             var fatal = exceptions.Any(a=>a.ErrorType == ErrorType.Fatal);
             foreach(var e in exceptions)
-                AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {e.Message}"));
+                AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {e.Message}", e.ErrorType));
             return !fatal;
         }
         /// <summary>
@@ -166,7 +166,7 @@ namespace DocumentParser.Parsers
             var exceptions = p.GetExceptions();
             var fatal = exceptions.Any(a=>a.ErrorType == ErrorType.Fatal);
             foreach(var e in exceptions)
-                AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {e.Message}"));
+                AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {e.Message}", e.ErrorType));
             return !fatal;
         }
        

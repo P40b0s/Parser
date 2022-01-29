@@ -27,18 +27,20 @@ public struct RequisiteChangers
 {
     public List<Changer> OrganToOrgan {get;set;}
     
-    public List<Changer> OrganToType {get;set;}
+    public List<Changer> OrganToType {get;set;} 
 
-    public List<Changer> TypeToOrgan {get;set;}
+    public List<Changer> TypeToOrgan {get;set;} 
     public List<Changer> TypeToType {get;set;}
 
-    public void Change(ChangeType ct, string from)
+    public string Change(ChangeType ct, string from)
     {
         var changer = SelectChanger(ct);
         for(int i = 0; i < changer.Count; i++)
         {
-            changer[i].FromRx().Replace(from, changer[i].To);
+            if(changer[i].FromRx().IsMatch(from))
+                return changer[i].FromRx().Replace(from, changer[i].To);
         }
+        return "";
     }
 
     private List<Changer> SelectChanger(ChangeType ch) => ch switch 
