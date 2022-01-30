@@ -26,7 +26,7 @@ public class AnnexTests : BaseTest<AnnexParser>
                 "приложение 1-1 - 5 итемов во втором итеме 3 субитема " +
                 "приложение 1-2 6 пунктов" + 
             "приложение 2",
-            DirPath = Paths.AnnexHeadersTestPath,
+            DirPath = Paths.CurrentDir + Paths.AnnexHeadersTestPath,
             PredicateParserTests = new List<PredicateTest<AnnexParser>>()
             {
                 new PredicateTest<AnnexParser>()
@@ -71,7 +71,7 @@ public class AnnexTests : BaseTest<AnnexParser>
         {
             FilePath = "П-1243-17_08_2020.docx",
             Description = "Постановление с приложением требования",
-            DirPath = Paths.AnnexHeadersTestPath,
+            DirPath = Paths.CurrentDir + Paths.AnnexHeadersTestPath,
             PredicateParserTests = new List<PredicateTest<AnnexParser>>()
             {
                 new PredicateTest<AnnexParser>()

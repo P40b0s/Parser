@@ -21,77 +21,77 @@ public class RequisitesParserTests : BaseTest<DocumentParser.Parsers.Requisites.
         {
             FilePath = "соглашение.docx",
             Description = "Соглашение МИД",
-            DirPath = Paths.RequisitesTestPath
+            DirPath =  Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //1
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "закон.docx",
             Description = "Старый вид законов",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //2
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "кодекс.docx",
             Description = "Кодекс",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //3
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "кодекс_с_частью.docx",
             Description = "Кодекс с частью",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //4
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "постановлени_приложение.docx",
             Description = "Постановление правительства",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //5
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "прав_распр_без_назв.docx",
             Description = "Распоряжение без названия",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //6
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "приказ.docx",
             Description = "Приказ",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //7
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "указ.docx",
             Description = "указ президента",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //8
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "фз.docx",
             Description = "федеральный закон",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //9
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "фз_без_сф.docx",
             Description = "фз без совета федерации",
-            DirPath = Paths.RequisitesTestPath
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
         //10
         new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
         {
             FilePath = "совместный_приказ_слеш.docx",
             Description = "Совместный приказ с одним номером-исключением",
-            DirPath = Paths.RequisitesTestPath,
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath,
             PredicateDocumentTests = new List<PredicateTest<Document>>()
             {
                 new PredicateTest<Document>()
@@ -111,7 +111,7 @@ public class RequisitesParserTests : BaseTest<DocumentParser.Parsers.Requisites.
         {
             FilePath = "совместный_приказ_материнский_орган.docx",
             Description = "Приказ с одним материнским органом, на выходе должен быть только один орган",
-            DirPath = Paths.RequisitesTestPath,
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath,
             PredicateDocumentTests = new List<PredicateTest<Document>>()
             {
                 new PredicateTest<Document>()
@@ -126,7 +126,7 @@ public class RequisitesParserTests : BaseTest<DocumentParser.Parsers.Requisites.
         {
             FilePath = "указ1237_тест_приложений_2_вложенных.docx",
             Description = "Указ о прохождении военной службы с 4 приложениями",
-            DirPath = Paths.AnnexHeadersTestPath,
+            DirPath = Paths.CurrentDir + Paths.AnnexHeadersTestPath,
             PredicateDocumentTests = new List<PredicateTest<Document>>()
             {
                 new PredicateTest<Document>()
@@ -144,7 +144,7 @@ public class RequisitesParserTests : BaseTest<DocumentParser.Parsers.Requisites.
         [Test]
         public async ValueTask ParseRequisites()
         {
-            for(int i = 12; i< files.Count; i++)
+            for(int i = 0; i< files.Count; i++)
             {
                 await settings.Load();
                 document = new Document();
