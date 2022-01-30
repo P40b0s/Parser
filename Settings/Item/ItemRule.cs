@@ -1,4 +1,4 @@
-namespace SettingsWorker.Items;
+namespace SettingsWorker.Item;
 /// <summary>
 /// Пока нет правил
 /// </summary>

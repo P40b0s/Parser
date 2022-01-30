@@ -2,7 +2,7 @@ using System.Text.RegularExpressions;
 using SettingsWorker;
 using SettingsWorker.Regexes;
 
-namespace Settings.Requisites;
+namespace SettingsWorker.Requisite;
 
 public struct Changer
 {
@@ -25,6 +25,35 @@ public enum ChangeType
 [PropertyAttribute(about: "Изменение органов или типов документов согласно шаблону")]
 public struct RequisiteChangers
 {
+
+    
+    public RequisiteChangers()
+    {
+        OrganToOrgan  = new List<Changer>()
+        {
+            new Changer()
+            {
+                From = $"^российской{Templates.WsOrBr}федерации",
+                To = "Российская Федерация"
+            },
+            new Changer()
+            {
+                From = $"^президента{Templates.WsOrBr}российской{Templates.WsOrBr}федерации",
+                To = "Президент Российской Федерации"
+            }
+        };
+        TypeToOrgan = new List<Changer>()
+        {
+            new Changer()
+            {
+                From = $"^соглашение",
+                To = "Российская Федерация"
+            }
+        };
+        OrganToType = new List<Changer>();
+        TypeToType = new List<Changer>();
+    }
+    
     public List<Changer> OrganToOrgan {get;set;}
     
     public List<Changer> OrganToType {get;set;} 

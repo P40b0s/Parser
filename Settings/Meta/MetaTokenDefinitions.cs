@@ -1,11 +1,11 @@
 using SettingsWorker.Regexes;
 using SettingsWorker;
-namespace SettingsWorker.Metas;
-public class MetaTokenDefinition : TokenDefinitionBase<MetaTokenType>
+namespace SettingsWorker.Meta;
+public class MetaTokenDefinitions : TokenDefinitionBase<MetaTokenType>
 {
     private string ws = Templates.WsOrBr;
     private string  brChar = Templates.GetEmptyUnicodeChar(Templates.BRChar);
-    public MetaTokenDefinition()
+    public MetaTokenDefinitions()
     {
         
         addToken(MetaTokenType.ТекущийАбзац, "[(]", 2);

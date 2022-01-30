@@ -14,7 +14,7 @@ public class SettingsTests
     {
         var s = new SettingsWorker.Settings();
         var load = await s.Load();
-        var s1 = s.DefaultRules.RequisiteRule.ToString();
+        var s1 = s.TokensDefinitions.AnnexTokenDefinitions.TokenDefinitionSettings[0].TokenPattern;
         //Assert.IsTrue(load);
     }
 
@@ -25,6 +25,13 @@ public class SettingsTests
         s.DefaultRules.RequisiteRule.TypeSearchMaxDeep = 999;
         s.Save();
     }
+    [Test]
+    public void NewSettings()
+    {
+        var s = new SettingsWorker.Settings();
+        s.Save();
+    }
+
 
      [Test]
     public async ValueTask CheckChangedSettings()

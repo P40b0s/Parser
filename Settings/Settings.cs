@@ -1,10 +1,10 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using SettingsWorker.Annexes;
-using SettingsWorker.Requisites;
+using SettingsWorker.Annex;
+using SettingsWorker.Requisite;
 using SettingsWorker.Regexes;
-using Settings.Requisites;
+using System.Text.Json.Serialization;
 
 namespace SettingsWorker;
 
@@ -12,13 +12,14 @@ namespace SettingsWorker;
 public interface ISettings
 {
     bool IsDefault {get;set;}
-    string Status();
+    void AddStatus(string status);
     AllRules DefaultRules {get;set;}
     AllTokensDefinitions TokensDefinitions {get;set;}
     List<CustomRule<AllRules>> CustomRules {get;set;}
     RequisiteChangers RequisiteChangers {get;set;}
     Paths Paths {get;}
     ValueTask<bool> Load();
+    List<string> Status {get;}
     void Save();
 }
 public partial class Settings : ISettings
@@ -27,11 +28,11 @@ public partial class Settings : ISettings
     {
         IsDefault = true;
     }
+    [JsonIgnore]
+    public List<string> Status {get;} = new List<string>();
     public bool IsDefault {get;set;} = false;
-    public string Status() => status;
-    private string fileName => "settings.json";
+    public void AddStatus(string status) => Status.Add(status);
     private System.DateTime loadDate {get;set;} = DateTime.Now;
-    string status {get;set;} = "Модуль настроек";
     public AllRules DefaultRules {get;set;} = new AllRules();
     public AllTokensDefinitions TokensDefinitions {get;set;} = new AllTokensDefinitions();
     public List<CustomRule<AllRules>> CustomRules {get;set;} = new List<CustomRule<AllRules>>()
@@ -86,34 +87,7 @@ public partial class Settings : ISettings
             },
         }},
     };
-    public RequisiteChangers RequisiteChangers {get;set;} = new RequisiteChangers()
-    {
-
-        OrganToOrgan  = new List<Changer>()
-        
-        {
-            new Changer()
-            {
-                From = $"^российской{Templates.WsOrBr}федерации",
-                To = "Российская Федерация"
-            },
-            new Changer()
-            {
-                From = $"^президента{Templates.WsOrBr}российской{Templates.WsOrBr}федерации",
-                To = "Президент Российской Федерации"
-            }
-        },
-        TypeToOrgan = new List<Changer>()
-        {
-            new Changer()
-            {
-                From = $"^соглашение",
-                To = "Российская Федерация"
-            }
-        },
-        OrganToType = new List<Changer>(),
-        TypeToType = new List<Changer>()
-    };
+    public RequisiteChangers RequisiteChangers {get;set;} =  new RequisiteChangers();
 
     [System.Text.Json.Serialization.JsonIgnore]
     public Paths Paths {get;} = new Paths();
@@ -125,19 +99,12 @@ public partial class Settings : ISettings
         this.CustomRules = settings.CustomRules;
         this.DefaultRules = settings.DefaultRules;
         this.TokensDefinitions = settings.TokensDefinitions;
-        this.status = $"Загружены настройки из файла {fileName} {loadDate.ToShortDateString} {loadDate.ToShortTimeString}";
+        //this.status = $"Загружены настройки из файла {fileName} {loadDate.ToShortDateString} {loadDate.ToShortTimeString}";
     }
     
 }
 
-public class Paths
-{
-    public string RootDirectory = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
-    public string DocumentsDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/Documents");
-    public string FilesUploadingDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/UploadedFiles");
-    public string XmlDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/Xml");
-    public string ConfigurationsDirectory = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "/Configuration");
-}
+
 
 
 

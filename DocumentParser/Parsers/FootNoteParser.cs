@@ -7,7 +7,7 @@ using DocumentParser.DocumentElements;
 using DocumentParser.DocumentElements.FootNotes;
 using Utils.Extensions;
 using DocumentParser.Elements;
-using SettingsWorker.FootNotes;
+using SettingsWorker.FootNote;
 using SettingsWorker;
 using DocumentParser.Parsers.Headers;
 using DocumentParser.Parsers.Annex;
@@ -39,7 +39,7 @@ namespace DocumentParser.Parsers
         public bool Parse()
         {
             UpdateStatus("Поиск сносок...");
-            Tokenize(extractor.FullText, new FootNoteTokensDefinition(settings.TokensDefinitions.FootNoteTokenDefinition.TokenDefinitionSettings));
+            Tokenize(extractor.FullText, new FootNoteTokensDefinition(settings.TokensDefinitions.FootNoteTokenDefinitions.TokenDefinitionSettings));
             var count = tokens.Count();
             foreach(var token in tokens)
             {

@@ -1,5 +1,5 @@
 using SettingsWorker.Regexes;
-namespace SettingsWorker.Items;
+namespace SettingsWorker.Item;
 public class ItemTokenDefinitions : TokenDefinitionBase<ItemTokenType>
 {
     private string ws = Templates.WsOrBr;

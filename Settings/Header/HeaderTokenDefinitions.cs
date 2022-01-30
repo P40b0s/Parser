@@ -1,11 +1,11 @@
 using SettingsWorker.Regexes;
-namespace SettingsWorker.Headers;
-public class HeadersTokenDefinitions : TokenDefinitionBase<HeaderTokenType>
+namespace SettingsWorker.Header;
+public class HeaderTokenDefinitions : TokenDefinitionBase<HeaderTokenType>
 {
     private string ws = Templates.WsOrBr;
     private string  brChar = Templates.GetEmptyUnicodeChar(Templates.BRChar);
 
-    public HeadersTokenDefinitions()
+    public HeaderTokenDefinitions()
     {
              
         addToken(HeaderTokenType.Заголовок, "(?<=\n\\s*)((?<type>раздел)\\s*)(?<number>[IVXML]{1}[^\\s.]*)(?<dot>[.])?", 1);

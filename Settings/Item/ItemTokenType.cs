@@ -1,4 +1,4 @@
-namespace SettingsWorker.Items;
+namespace SettingsWorker.Item;
 
 public enum ItemTokenType
 {

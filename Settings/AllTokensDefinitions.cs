@@ -1,11 +1,12 @@
 namespace SettingsWorker;
 public class AllTokensDefinitions
 {
-    public Requisites.RequisitesTokenDefinition RequisitesTokenDefinition {get;set;} = new Requisites.RequisitesTokenDefinition();
+    public Requisite.RequisiteTokenDefinitions RequisiteTokenDefinitions {get;set;} = new Requisite.RequisiteTokenDefinitions();
     public Changes.ChangesTokenDefinitions ChangesTokenDefinitions {get;set;} = new Changes.ChangesTokenDefinitions();
-    public Annexes.AnnexTokenDefinition AnnexTokenDefinitions {get;set;} = new Annexes.AnnexTokenDefinition();
-    public Headers.HeadersTokenDefinitions HeadersTokenDefinitions {get;set;} = new Headers.HeadersTokenDefinitions();
-    public FootNotes.FootNoteTokenDefinition FootNoteTokenDefinition {get;set;} = new FootNotes.FootNoteTokenDefinition();
-    public Metas.MetaTokenDefinition MetaTokenDefinition {get;set;} = new Metas.MetaTokenDefinition();
-    public Items.ItemTokenDefinitions ItemTokenDefinitions {get;set;} = new Items.ItemTokenDefinitions();
+    public Annex.AnnexTokenDefinitions AnnexTokenDefinitions {get;set;} = new Annex.AnnexTokenDefinitions();
+    public Header.HeaderTokenDefinitions HeaderTokenDefinitions {get;set;} = new Header.HeaderTokenDefinitions();
+    public FootNote.FootNoteTokenDefinitions FootNoteTokenDefinitions {get;set;} = new FootNote.FootNoteTokenDefinitions();
+    public Meta.MetaTokenDefinitions MetaTokenDefinitions {get;set;} = new Meta.MetaTokenDefinitions();
+    public Item.ItemTokenDefinitions ItemTokenDefinitions {get;set;} = new Item.ItemTokenDefinitions();
+    public Actualizer.ActualizerTokenDefinitions ActualizerTokenDefinitions {get;set;} = new Actualizer.ActualizerTokenDefinitions();
 }

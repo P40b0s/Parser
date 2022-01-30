@@ -3,7 +3,7 @@ using Lexer;
 using DocumentParser.Workers;
 using System.Linq;
 using DocumentParser.DocumentElements.MetaInformation;
-using SettingsWorker.Metas;
+using SettingsWorker.Meta;
 using DocumentParser.Elements;
 using SettingsWorker;
 
@@ -23,7 +23,7 @@ namespace DocumentParser.Parsers
         {
             UpdateStatus("Поиск метаинформации...");
             var percentage = 0;
-            Tokenize(extractor.FullText, new MetaTokensDefinition(settings.TokensDefinitions.MetaTokenDefinition.TokenDefinitionSettings));
+            Tokenize(extractor.FullText, new MetaTokensDefinition(settings.TokensDefinitions.MetaTokenDefinitions.TokenDefinitionSettings));
             var count = tokens.Count();
             foreach(var token in tokens)
             {

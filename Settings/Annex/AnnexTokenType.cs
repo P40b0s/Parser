@@ -1,4 +1,4 @@
-namespace SettingsWorker.Annexes;
+namespace SettingsWorker.Annex;
 
 public enum AnnexTokenType
 {

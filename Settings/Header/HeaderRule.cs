@@ -1,4 +1,4 @@
-namespace SettingsWorker.Headers;
+namespace SettingsWorker.Header;
 /// <summary>
 /// Пока нет правил
 /// </summary>

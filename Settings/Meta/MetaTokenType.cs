@@ -1,4 +1,4 @@
-namespace SettingsWorker.Metas;
+namespace SettingsWorker.Meta;
 
 public enum MetaTokenType
 {

@@ -1,4 +1,4 @@
-namespace SettingsWorker.Headers;
+namespace SettingsWorker.Header;
 
 public enum HeaderTokenType
 {

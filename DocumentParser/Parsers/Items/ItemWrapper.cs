@@ -4,7 +4,7 @@ using DocumentParser.DocumentElements;
 using Lexer;
 using Utils.Extensions;
 using DocumentParser.Elements;
-using SettingsWorker.Items;
+using SettingsWorker.Item;
 
 namespace DocumentParser.Parsers.Items;
 /// <summary>

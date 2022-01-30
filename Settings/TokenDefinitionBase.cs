@@ -1,5 +1,5 @@
 using SettingsWorker.Regexes;
-using SettingsWorker.Requisites;
+using SettingsWorker.Requisite;
 namespace SettingsWorker;
 public abstract class TokenDefinitionBase<TEnum> where TEnum : Enum
 {

@@ -1,23 +1,23 @@
 using System.Collections.Generic;
 using Lexer;
-using SettingsWorker.Requisites;
+using SettingsWorker.Requisite;
 
 namespace DocumentParser.Parsers.Requisites
 {
     public class RequisiteTokensModel
     {
-        public Token<RequisitesTokenType> typeToken {get;set;}
-        public List<Token<RequisitesTokenType>> organsTokens {get;set;} = new List<Token<RequisitesTokenType>>();
+        public Token<RequisiteTokenType> typeToken {get;set;}
+        public List<Token<RequisiteTokenType>> organsTokens {get;set;} = new List<Token<RequisiteTokenType>>();
         public Elements.ElementStructure nameElement {get;set;}
         public List<ExecutorRequisiteToken> personToken {get;set;} = new List<ExecutorRequisiteToken>();
-        public Token<RequisitesTokenType> signDateToken {get;set;}
-        public Token<RequisitesTokenType> numberToken {get;set;}
+        public Token<RequisiteTokenType> signDateToken {get;set;}
+        public Token<RequisiteTokenType> numberToken {get;set;}
         public bool NotHaveName {get;set;} = false;
     }
 
     public class ExecutorRequisiteToken
     {
-        public Token<RequisitesTokenType> executorToken {get;set;}
-        public Token<RequisitesTokenType> postToken {get;set;}
+        public Token<RequisiteTokenType> executorToken {get;set;}
+        public Token<RequisiteTokenType> postToken {get;set;}
     }
 }

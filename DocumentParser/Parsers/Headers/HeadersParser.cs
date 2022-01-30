@@ -8,7 +8,7 @@ using DocumentParser.DocumentElements;
 using DocumentParser.DocumentElements.FootNotes;
 using DocumentParser.Elements;
 using SettingsWorker;
-using SettingsWorker.Headers;
+using SettingsWorker.Header;
 
 namespace DocumentParser.Parsers.Headers
 {
@@ -103,7 +103,7 @@ namespace DocumentParser.Parsers.Headers
                 AddError("Парсер запущен без параметров ивлечения заголовков приложений. Если в приложенияъх есть загловки, они не будут извлечены", ErrorType.Warning);
             UpdateStatus("Поиск заголовков");
             var percentage = 0;
-            Tokenize(extractor.FullText, new HeaderTokensDefinition(settings.TokensDefinitions.HeadersTokenDefinitions.TokenDefinitionSettings));
+            Tokenize(extractor.FullText, new HeaderTokensDefinition(settings.TokensDefinitions.HeaderTokenDefinitions.TokenDefinitionSettings));
             var count = tokens.Count();
             foreach(var token in tokens)
             {

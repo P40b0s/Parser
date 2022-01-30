@@ -13,9 +13,9 @@ public abstract class TokensDefinitionBase<T> : ListTokensDefinition<T> where T 
     }
 }
 
-public class RequisitesTokensDefinition : TokensDefinitionBase<SettingsWorker.Requisites.RequisitesTokenType>
+public class RequisitesTokensDefinition : TokensDefinitionBase<SettingsWorker.Requisite.RequisiteTokenType>
 {
-    public RequisitesTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Requisites.RequisitesTokenType>> tokens) 
+    public RequisitesTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Requisite.RequisiteTokenType>> tokens) 
     : base(tokens){ }
 }
 public class ChangesTokensDefinition : TokensDefinitionBase<SettingsWorker.Changes.ChangesTokenType>
@@ -24,32 +24,32 @@ public class ChangesTokensDefinition : TokensDefinitionBase<SettingsWorker.Chang
     : base(tokens){ }
 }
 
-public class AnnexTokensDefinition : TokensDefinitionBase<SettingsWorker.Annexes.AnnexTokenType>
+public class AnnexTokensDefinition : TokensDefinitionBase<SettingsWorker.Annex.AnnexTokenType>
 {
-    public AnnexTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Annexes.AnnexTokenType>> tokens) 
+    public AnnexTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Annex.AnnexTokenType>> tokens) 
     : base(tokens){ }
 }
 
-public class HeaderTokensDefinition : TokensDefinitionBase<SettingsWorker.Headers.HeaderTokenType>
+public class HeaderTokensDefinition : TokensDefinitionBase<SettingsWorker.Header.HeaderTokenType>
 {
-    public HeaderTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Headers.HeaderTokenType>> tokens) 
+    public HeaderTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Header.HeaderTokenType>> tokens) 
     : base(tokens){ }
 }
 
-public class FootNoteTokensDefinition : TokensDefinitionBase<SettingsWorker.FootNotes.FootNoteTokenType>
+public class FootNoteTokensDefinition : TokensDefinitionBase<SettingsWorker.FootNote.FootNoteTokenType>
 {
-    public FootNoteTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.FootNotes.FootNoteTokenType>> tokens) 
+    public FootNoteTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.FootNote.FootNoteTokenType>> tokens) 
     : base(tokens){ }
 }
 
-public class MetaTokensDefinition : TokensDefinitionBase<SettingsWorker.Metas.MetaTokenType>
+public class MetaTokensDefinition : TokensDefinitionBase<SettingsWorker.Meta.MetaTokenType>
 {
-    public MetaTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Metas.MetaTokenType>> tokens) 
+    public MetaTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Meta.MetaTokenType>> tokens) 
     : base(tokens){ }
 }
 
-public class ItemTokensDefinition : TokensDefinitionBase<SettingsWorker.Items.ItemTokenType>
+public class ItemTokensDefinition : TokensDefinitionBase<SettingsWorker.Item.ItemTokenType>
 {
-    public ItemTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Items.ItemTokenType>> tokens) 
+    public ItemTokensDefinition(List<SettingsWorker.TokenDefinitionSettings<SettingsWorker.Item.ItemTokenType>> tokens) 
     : base(tokens){ }
 }

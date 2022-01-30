@@ -1,6 +1,6 @@
-using SettingsWorker.Requisites;
+using SettingsWorker.Requisite;
 using SettingsWorker.Changes;
-using SettingsWorker.Annexes;
+using SettingsWorker.Annex;
 namespace SettingsWorker;
 
 /// <summary>
@@ -11,9 +11,9 @@ public class AllRules
     public RequisiteRule RequisiteRule {get;set;} = new RequisiteRule();
     public ChangesRule ChangesRule {get;set;} = new ChangesRule();
     public AnnexRule AnnexRule {get;set;} = new AnnexRule();
-    public Headers.HeaderRule HeadersRule {get;set;} = new Headers.HeaderRule();
-    public FootNotes.FootNoteRule FootNoteRule {get;set;} = new FootNotes.FootNoteRule();
-    public Metas.MetaRule MetaRule {get;set;} = new Metas.MetaRule();
-    public Items.ItemRule ItemRule {get;set;} = new Items.ItemRule();
+    public Header.HeaderRule HeadersRule {get;set;} = new Header.HeaderRule();
+    public FootNote.FootNoteRule FootNoteRule {get;set;} = new FootNote.FootNoteRule();
+    public Meta.MetaRule MetaRule {get;set;} = new Meta.MetaRule();
+    public Item.ItemRule ItemRule {get;set;} = new Item.ItemRule();
     
 }

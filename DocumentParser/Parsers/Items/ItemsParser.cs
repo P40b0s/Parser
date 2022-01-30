@@ -5,7 +5,7 @@ using Lexer;
 using System.Linq;
 using System;
 using DocumentParser.Elements;
-using SettingsWorker.Items;
+using SettingsWorker.Item;
 using SettingsWorker;
 
 namespace DocumentParser.Parsers.Items;

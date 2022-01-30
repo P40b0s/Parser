@@ -1,6 +1,6 @@
-namespace SettingsWorker.Requisites;
+namespace SettingsWorker.Requisite;
 
-public enum RequisitesTokenType
+public enum RequisiteTokenType
 {
     None,
     Орган,

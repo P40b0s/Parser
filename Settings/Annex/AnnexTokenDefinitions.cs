@@ -1,11 +1,11 @@
 using SettingsWorker.Regexes;
 using SettingsWorker;
-namespace SettingsWorker.Annexes;
-public class AnnexTokenDefinition : TokenDefinitionBase<AnnexTokenType>
+namespace SettingsWorker.Annex;
+public class AnnexTokenDefinitions : TokenDefinitionBase<AnnexTokenType>
 {
     private string ws = Templates.WsOrBr;
     private string  brChar = Templates.GetEmptyUnicodeChar(Templates.BRChar);
-    public AnnexTokenDefinition()
+    public AnnexTokenDefinitions()
     {
         
         addToken(AnnexTokenType.Дата, $"(?:от\\s*)?(?<day>\\d{{1,2}})\\s*(?<month>{Templates.Months})\\s*(?<year>\\d{{4}})\\s*(?:г[ода.]+)");

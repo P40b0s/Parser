@@ -1,11 +1,11 @@
 using SettingsWorker.Regexes;
 using SettingsWorker;
-namespace SettingsWorker.FootNotes;
-public class FootNoteTokenDefinition : TokenDefinitionBase<FootNoteTokenType>
+namespace SettingsWorker.FootNote;
+public class FootNoteTokenDefinitions : TokenDefinitionBase<FootNoteTokenType>
 {
     private string ws = Templates.WsOrBr;
     private string  brChar = Templates.GetEmptyUnicodeChar(Templates.BRChar);
-    public FootNoteTokenDefinition()
+    public FootNoteTokenDefinitions()
     {
         
         addToken(FootNoteTokenType.Подчеркивания, "_{4,}");

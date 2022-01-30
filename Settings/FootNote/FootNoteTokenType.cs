@@ -1,4 +1,4 @@
-namespace SettingsWorker.FootNotes;
+namespace SettingsWorker.FootNote;
 
 public enum FootNoteTokenType
 {

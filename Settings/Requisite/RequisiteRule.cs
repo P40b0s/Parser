@@ -1,4 +1,4 @@
-namespace SettingsWorker.Requisites;
+namespace SettingsWorker.Requisite;
 [PropertyAttribute(about: "Правила для разбора реквизитов документа")]
 public class RequisiteRule : RuleBase
 {

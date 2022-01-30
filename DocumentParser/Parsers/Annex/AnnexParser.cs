@@ -5,7 +5,7 @@ using DocumentParser.DocumentElements;
 using System.Linq;
 using Utils.Extensions;
 using SettingsWorker;
-using SettingsWorker.Annexes;
+using SettingsWorker.Annex;
 using Utils;
 using DocumentParser.Parsers.Headers;
 using DocumentParser.DocumentElements.FootNotes;

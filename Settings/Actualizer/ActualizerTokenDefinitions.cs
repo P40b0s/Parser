@@ -1,7 +1,7 @@
 using SettingsWorker.Regexes;
 using SettingsWorker;
 namespace SettingsWorker.Actualizer;
-public class ActualizerTokenDefinition : TokenDefinitionBase<ActualizerTokenType>
+public class ActualizerTokenDefinitions : TokenDefinitionBase<ActualizerTokenType>
 {
     private string ws = Templates.WsOrBr;
     private string  brChar = Templates.GetEmptyUnicodeChar(Templates.BRChar);
@@ -19,8 +19,8 @@ public class ActualizerTokenDefinition : TokenDefinitionBase<ActualizerTokenType
                 + "|" + Templates.GetUnicodeChar('\u2077')
                 + "|" + Templates.GetUnicodeChar('\u2078')
                 + "|" + Templates.GetUnicodeChar('\u2079') + ")*";
-    private Dictionary<string, string> numbersDict {get;} = new NumbersDictionary();
-    public ActualizerTokenDefinition()
+    //private Dictionary<string, string> numbersDict {get;} = new NumbersDictionary();
+    public ActualizerTokenDefinitions()
     {
         
         addToken(ActualizerTokenType.NewEdition, "(изложить|изложив\\s*(его)?)\\s*в\\s*следующей\\s*редакции\\s*:\\s*\n", 1);
@@ -56,8 +56,8 @@ public class ActualizerTokenDefinition : TokenDefinitionBase<ActualizerTokenType
         addToken(ActualizerTokenType.After, "после", 1);
         addToken(ActualizerTokenType.NumbersRange, "(?<n1>[0-9.XVIxviABCabc]+)\\s?-\\s?(?<n2>[0-9.XVIxviABCabc]+)", 1);
         addToken(ActualizerTokenType.Number, $"[0-9-.XVIxviABCabc]+{UPPER}(?:(?<![.]))", 2);
-        addToken(ActualizerTokenType.StringNumber, oneToNine + "|" + tenToNineten, 3, numbersDict);
-        addToken(ActualizerTokenType.StringNumber, allTens(), 2, numbersDict);
+        //addToken(ActualizerTokenType.StringNumber, oneToNine + "|" + tenToNineten, 3, numbersDict);
+        //addToken(ActualizerTokenType.StringNumber, allTens(), 2, numbersDict);
     }
 }
 
