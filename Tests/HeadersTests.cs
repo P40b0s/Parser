@@ -123,13 +123,13 @@ public class HeadersTests : BaseTest<HeadersParser>
                 .WithChanges()
                 .Parse();
             var headersParser = new HeadersParser(word, requisites.BeforeBodyElement);
-            var hp =  headersParser.WithChanges().WithAnnexes(annexParser).Parse();
+            headersParser.WithChanges().WithAnnexes(annexParser).Parse();
             //var rParser = new DocumentParser.Parsers.Requisites.RequisitesParser(word, document);
             //rParser.Parse();
             //Сортируем приложения, потому что больше мы их использовать нигде не будем, а вообще сортировка будет проводиться в ItemsParser
             //Иначе потом во вложенных приложениях хрен что найдешь...
             annexParser.SortAnnexByHierarchy();
-            AddResult(files[i], hp, document);
+            AddResult(files[i], headersParser , document);
            
         }
         Assert.True(IsPassed());

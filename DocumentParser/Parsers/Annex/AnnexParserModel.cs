@@ -6,6 +6,7 @@ using DocumentParser.Workers;
 
 namespace DocumentParser.Parsers.Annex
 {
+    
     public class AnnexParserModel
     {
         public AnnexParserModel Parent {get;set;}

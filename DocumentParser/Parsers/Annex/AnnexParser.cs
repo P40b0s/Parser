@@ -266,20 +266,12 @@ namespace DocumentParser.Parsers.Annex
         {
             var numberToken = token.Next(AnnexTokenType.Номер);
             if(numberToken.IsOk)
-            {
                 annex.Annex.AnnexPrefix.Number = extractor.GetUnicodeString(numberToken.Value.CustomGroups[0]);
-                var annexParentToken = numberToken.Value.Next(AnnexTokenType.ПриложениеКДокументу);
-                if(annexParentToken.IsError)
-                    annexParentToken = numberToken.Value.Next(AnnexTokenType.ПриложениеКПриложению);
-                return annexParentToken;
-            }
             else
-            {
-                var annexParentToken = token.Next(AnnexTokenType.ПриложениеКДокументу);
-                if(annexParentToken.IsError)
-                    annexParentToken = token.Next(AnnexTokenType.ПриложениеКПриложению);
-                return annexParentToken;
-            } 
+                numberToken = token.Next(AnnexTokenType.ПриложениеКДокументу);
+            if(numberToken.IsError)
+                numberToken  = token.Next(AnnexTokenType.ПриложениеКПриложению);
+            return numberToken;
         }
 
         private bool searchName(Result<Token<AnnexTokenType>, TokenException> nameToken, AnnexParserModel annex)

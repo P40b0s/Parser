@@ -94,7 +94,7 @@ namespace DocumentParser.Parsers.Headers
         public HeadersParser Parse()
         {
             if (!withMeta)
-                AddError("Парсер запущен без параметров мата-информации, мета данные не будут добавлены.", ErrorType.Warning);
+                AddError("Парсер запущен без параметров мета-информации, мета данные не будут добавлены.", ErrorType.Warning);
             if (!withChanges)
                 AddError("Парсер запущен без параметра поиска изменений, Возможно ошибочное добавление приложений из параграфов с внесением изменения.", ErrorType.Warning);
             if (!withTables)
