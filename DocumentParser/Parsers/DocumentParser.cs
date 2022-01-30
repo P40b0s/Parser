@@ -24,9 +24,9 @@ namespace DocumentParser.Parsers
     /// 10. itemsParser.Parse(headersParser, annexParser);
     /// 11. annexParser.MoveAnnexByHierarchy();
     /// </summary>
-    public class DocumentParser : ParserBase
+    public class Parser : ParserBase
     {
-        public DocumentParser(string filePath)
+        public Parser(string filePath)
         {
             this.filePath = filePath;
             settings = new SettingsWorker.Settings();

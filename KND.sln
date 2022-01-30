@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Settings", "Settings\Settin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{73096FD1-1049-47F3-AABC-7BE098DE4ED8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Actualizer", "Actualizer\Actualizer.csproj", "{378A5C96-CD69-434A-BC07-D7F36A808AEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,5 +88,17 @@ Global
 		{73096FD1-1049-47F3-AABC-7BE098DE4ED8}.Release|x64.Build.0 = Release|Any CPU
 		{73096FD1-1049-47F3-AABC-7BE098DE4ED8}.Release|x86.ActiveCfg = Release|Any CPU
 		{73096FD1-1049-47F3-AABC-7BE098DE4ED8}.Release|x86.Build.0 = Release|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Debug|x64.Build.0 = Debug|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Debug|x86.Build.0 = Debug|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Release|x64.ActiveCfg = Release|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Release|x64.Build.0 = Release|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Release|x86.ActiveCfg = Release|Any CPU
+		{378A5C96-CD69-434A-BC07-D7F36A808AEB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

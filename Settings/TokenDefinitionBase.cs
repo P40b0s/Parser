@@ -8,6 +8,6 @@ public abstract class TokenDefinitionBase<TEnum> where TEnum : Enum
     /// </summary>
     /// <returns></returns>
    public List<TokenDefinitionSettings<TEnum>> TokenDefinitionSettings  {get;set;} = new List<TokenDefinitionSettings<TEnum>>();
-   protected void addToken(TEnum tt, string pattern, int queue = 1) => 
-        TokenDefinitionSettings.Add(new TokenDefinitionSettings<TEnum>(){TokenType = tt, TokenPattern = pattern, TokenQueue = queue});
+   protected void addToken(TEnum tt, string pattern, int queue = 1, Dictionary<string, string> converter = null) => 
+        TokenDefinitionSettings.Add(new TokenDefinitionSettings<TEnum>(){TokenType = tt, TokenPattern = pattern, TokenQueue = queue, Converter = converter});
 }

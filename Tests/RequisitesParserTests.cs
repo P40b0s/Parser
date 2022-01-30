@@ -174,7 +174,7 @@ public class RequisitesParserTests : BaseTest<DocumentParser.Parsers.Requisites.
         //var sourcePath = "/home/phobos/Документы/actualizer/02_07_2021.docx";
         var sourcePath = "/home/phobos/Документы/docx/П-1465-16_09_2020.docx";
         
-        var s = new DocumentParser.Parsers.DocumentParser(sourcePath);
+        var s = new DocumentParser.Parsers.Parser(sourcePath);
         s.StatusesUpdateCallback = u => System.Console.WriteLine(u);
         s.ErrorCallback = e => System.Console.WriteLine(e.Message);
         var load = await s.ParseDocument();

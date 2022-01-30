@@ -21,4 +21,5 @@ public struct TokenDefinitionSettings<T> where T : Enum
     /// </summary>
     /// <value></value>
     public int TokenQueue {get;set;}
+    public Dictionary<string, string> Converter {get;set;}
 }
