@@ -197,9 +197,13 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
             if(doc.Numbers.Count == 1 && doc.Organs.Count > 1)
             for(int o = doc.Organs.Count - 2; o >= 0; o--)
                 doc.Organs.RemoveAt(o);
+                //FIXME Если орган 1 и есть слеш то берем номер прямо так
+                //иначе проверяем номер через функцию coNumberExtractor
         }
         return true;  
     }
+
+    
 
     /// <summary>
     /// Извлечение номеров с возможность разбития их по правым слешам на несколько
