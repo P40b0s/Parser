@@ -87,7 +87,8 @@ public partial class Settings : ISettings
             },
         }},
     };
-    public RequisiteChangers RequisiteChangers {get;set;} =  new RequisiteChangers();
+    public RequisiteChangers RequisiteChangers {get;set;} =  new RequisiteChangers(true);
+    public Dictionaries.AllDictionaries Dictionaries {get;set;} = new Dictionaries.AllDictionaries();
 
     [System.Text.Json.Serialization.JsonIgnore]
     public Paths Paths {get;} = new Paths();

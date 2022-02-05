@@ -8,8 +8,8 @@ using DocumentParser.DocumentElements;
 using Lexer;
 using Lexer.Tokenizer;
 using DocumentParser.Parsers;
-using Settings;
 using SettingsWorker;
+using SettingsWorker.Actualizer;
 
 namespace Actualizer.Source;
 
@@ -34,12 +34,12 @@ public class SourceDocumentParser
         var sourceDocumentRequisites = getSourceDocReq(parser.document);
         foreach(var e in parser.word.GetElementsList)
         {
-            var lexer = new Lexer<ActualizerToken>();
+            var lexer = new Lexer<ActualizerTokenType>();
             if(e.IsParsed)
                 continue;
             var text = e.WordElement.Text;
-            var tokenSequence = lexer.Tokenize(text, new ActualizerTokenDefinition()).ToList();
-            if(tokenSequence.Any(a=>a.TokenType == ActualizerToken.In))
+            var tokenSequence = lexer.Tokenize(text, new ActualizerTokensDefinition(settings.TokensDefinitions.ActualizerTokenDefinitions.TokenDefinitionSettings));
+            if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.In))
             {
                 var operation = operations.GetNodeOperation(tokenSequence);
                 if(operation == Operation.Represent)

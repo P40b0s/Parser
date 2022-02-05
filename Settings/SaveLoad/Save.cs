@@ -21,7 +21,7 @@ public partial class Settings
         {
             WriteIndented = true,
             //Encoder = JavaScriptEncoder.Create(encoderSettings),
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
     }
     /// <summary>
@@ -48,10 +48,12 @@ public partial class Settings
     /// <param name="pathToDir"></param>
     /// <param name="deserializationObject"></param>
     /// <typeparam name="T"></typeparam>
-    public void SerializeFull<T>(string pathToDir, T serializationObject) //AllTokensDefinitions
+    public void SerializeFull<T>(string pathToDir, T serializationObject, string name = null) //AllTokensDefinitions
     {
         Paths.createPaths();
-        var name = serializationObject.GetType().Name + ".json";
+        if(name == null)
+            name = serializationObject.GetType().Name;
+        name = name + ".json";
         var sr = System.Text.Json.JsonSerializer.Serialize<T>(serializationObject, getOptions());
         System.IO.File.WriteAllText(Path.Combine(pathToDir, name), sr);
         
@@ -61,5 +63,7 @@ public partial class Settings
     {
         SerializeParts<AllTokensDefinitions>(Paths.TokensDirPath, TokensDefinitions);
         SerializeFull<RequisiteChangers>(Paths.ChangersDirPath, RequisiteChangers);
+        SerializeFull<List<CustomRule<AllRules>>>(Paths.CustomRulesDirPath, CustomRules, "CustomRules");
+        SerializeParts<Dictionaries.AllDictionaries>(Paths.DictionariesDirPath, Dictionaries);
     }
 }

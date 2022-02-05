@@ -1,4 +1,4 @@
-namespace Actualizer.Source;
+namespace Actualizer.Source.Operations;
 
 public enum Operation
 {

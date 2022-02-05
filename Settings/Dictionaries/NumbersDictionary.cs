@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-
-namespace Actualizer;
+namespace SettingsWorker.Dictionaries;
 public class NumbersDictionary : Dictionary<string, string>
 {
     public NumbersDictionary()

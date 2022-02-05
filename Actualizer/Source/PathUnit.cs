@@ -1,4 +1,6 @@
 using Lexer;
+using SettingsWorker.Actualizer;
+
 namespace Actualizer.Source;
 
 public struct PathUnit
@@ -7,5 +9,5 @@ public struct PathUnit
     public string Number {get;set;}
     public string AnnexType {get;set;}
     public string AnnexName {get;set;}
-    public Token<Actualizer.ActualizerToken> Token {get;set;}
+    public Token<ActualizerTokenType> Token {get;set;}
 }

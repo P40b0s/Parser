@@ -13,7 +13,7 @@ public partial class Settings
     /// <param name="deserializationValue">Куда будем десериализовывать файлы</param>
     /// <typeparam name="DT">Тип десериализации</typeparam>
     /// <returns></returns>
-    public async ValueTask<bool> DeserializePart<DT>(string dirPath, string removedStringToNamespace, DT deserializationValue)
+    public async ValueTask<bool> DeserializePart<DT>(string dirPath, string removedStringToNamespace, DT deserializationValue, string nameSpace = null)
     {
         if(Directory.Exists(dirPath))
         {
@@ -21,7 +21,9 @@ public partial class Settings
             {
                 var settings = await System.IO.File.ReadAllTextAsync(f.FullName);
                 var name = f.Name.Replace(f.Extension,"");
-                var ns = name.Replace(removedStringToNamespace, ""); //TokenDefinitions
+                var ns = nameSpace;
+                if(!string.IsNullOrEmpty(removedStringToNamespace))
+                    ns = name.Replace(removedStringToNamespace, ""); //TokenDefinitions
                 Type type = Type.GetType($"SettingsWorker.{ns}.{name}");
                 if(type != null)
                 {
@@ -59,10 +61,11 @@ public partial class Settings
     /// <param name="deserializationValue">Куда будем десериализовывать файлы</param>
     /// <typeparam name="DT">Тип десериализации</typeparam>
     /// <returns></returns>
-    public async ValueTask<bool> DeserializeFull<DT>(string dirPath, DT deserializationValue)
+    public async ValueTask<bool> DeserializeFull<T>(string dirPath, T deserializationValue, string name = null)
     {
-        var ns = typeof(DT).Namespace;
-        var name = typeof(DT).Name;
+        var ns = typeof(T).Namespace;
+        if(name == null)
+            name = typeof(T).Name;
         if(Directory.Exists(dirPath))
         {
             var filePath = new FileInfo(Path.Combine(dirPath, name+".json"));
@@ -75,11 +78,10 @@ public partial class Settings
                 return true;
             }
             var settings = await System.IO.File.ReadAllTextAsync(filePath.FullName);
-            //FIXME System.Collections.Generic.List`1[SettingsWorker.Requisite.Changer]' to type 'SettingsWorker.Requisite.RequisiteChangers'
-            var deserialized = System.Text.Json.JsonSerializer.Deserialize(settings, typeof(DT), getOptions());
+            var deserialized = System.Text.Json.JsonSerializer.Deserialize<T>(settings,  getOptions());
             if(deserialized != null)
             {
-                deserializationValue = (DT)deserialized;
+                deserializationValue = (T)deserialized;
                 AddStatus($"Настройки {name} успешно загружены из файла {stringFp}");
             }
             else
@@ -96,8 +98,10 @@ public partial class Settings
    
     public async ValueTask<bool> Load()
     {
-        //await LoadFiles<AllTokensDefinitions>(Paths.TokensDirPath, "TokenDefinitions", TokensDefinitions);
-        return await DeserializeFull<Requisite.RequisiteChangers>(Paths.ChangersDirPath, RequisiteChangers);
+        //await DeserializePart<AllTokensDefinitions>(Paths.TokensDirPath, "TokenDefinitions", TokensDefinitions);
+        //await DeserializeFull<Requisite.RequisiteChangers>(Paths.ChangersDirPath, RequisiteChangers);
+        //await DeserializeFull<List<CustomRule<AllRules>>>(Paths.CustomRulesDirPath, CustomRules, "CustomRules");
+        return await DeserializePart<Dictionaries.AllDictionaries>(Paths.DictionariesDirPath, "", Dictionaries, "Dictionaries");
     }
 
 

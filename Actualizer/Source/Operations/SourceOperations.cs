@@ -5,28 +5,35 @@ using DocumentParser.DocumentElements;
 using DocumentParser.Elements;
 using DocumentParser.Parsers;
 using Lexer;
+using SettingsWorker.Actualizer;
 
-namespace Actualizer.Source;
-    public class SourceOperations
+namespace Actualizer.Source.Operations;
+    public partial class SourceOperations
     {
+        public List<string> statuses = new List<string>();
+        public void AddStatus(string status)
+        {
+            statuses.Add(status);
+        }
 
+
+        /// <summary>
+        /// Внести в статью 2 пунта 1 фз № такогото.... изложив его в следующей редакции
+        /// </summary>
+        public void OneParagraphChange(ElementStructure currentParagraph,  List<Token<ActualizerTokenType>> tokenSequence, Parser parser,  List<StructureNode> structures, Operation operation)
+        {
+            var s = new StructureNode(currentParagraph, operation);
+            s.TargetDocumentRequisites = getTargetDocReq(tokenSequence, currentParagraph, parser);
+            var struc = GetTokensSequence(tokenSequence);
+            s.ChangePartName = GetPathArray(struc, parser, s, currentParagraph);
+            WordOperation(s.StructureOperation, s, tokenSequence, currentParagraph, parser);
+            currentParagraph.IsParsed = true;
+            structures.Add(s);
+        }
     /// <summary>
     /// Внести в статью 2 пунта 1 фз № такогото.... изложив его в следующей редакции
     /// </summary>
-    public void OneParagraphChange(ElementStructure currentParagraph,  List<Token<ActualizerToken>> tokenSequence, Parser parser,  List<StructureNode> structures, Operation operation)
-    {
-        var s = new StructureNode(currentParagraph, operation);
-        s.TargetDocumentRequisites = getTargetDocReq(tokenSequence, currentParagraph, parser);
-        var struc = GetTokensSequence(tokenSequence);
-        s.ChangePartName = GetPathArray(struc, parser, s, currentParagraph);
-        WordOperation(s.StructureOperation, s, tokenSequence, currentParagraph, parser);
-        currentParagraph.IsParsed = true;
-        structures.Add(s);
-    }
-    /// <summary>
-    /// Внести в статью 2 пунта 1 фз № такогото.... изложив его в следующей редакции
-    /// </summary>
-    public void NewEditionChange(ElementStructure currentParagraph,  List<Token<ActualizerToken>> tokenSequence, Parser parser,  List<StructureNode> structures, Operation operation)
+    public void NewEditionChange(ElementStructure currentParagraph,  List<Token<ActualizerTokenType>> tokenSequence, Parser parser,  List<StructureNode> structures, Operation operation)
     {
         var s = new StructureNode(currentParagraph, operation);
         var struc = GetTokensSequence(tokenSequence);
@@ -89,7 +96,7 @@ namespace Actualizer.Source;
     /// <summary>
     /// Внести в статью 2 пунта 1 фз № такогото.... изложив его в следующей редакции
     /// </summary>
-    public void NextSequenceChange(ElementStructure currentParagraph,  List<Token<ActualizerToken>> tokenSequence, Services.Documents.Parser.Parsers.DocumentParser parser,  List<StructureNode> structures, Operation operation)
+    public void NextSequenceChange(ElementStructure currentParagraph,  List<Token<ActualizerTokenType>> tokenSequence, Services.Documents.Parser.Parsers.DocumentParser parser,  List<StructureNode> structures, Operation operation)
     {
         var s = new StructureNode(currentParagraph, operation);
         s.TargetDocumentRequisites= getTargetDocReq(tokenSequence, currentParagraph, parser);
@@ -142,7 +149,7 @@ namespace Actualizer.Source;
                 if(item.Indents[i].IsChange)
                     continue;
                 var text = item.Indents[i].Text();
-                var lexer = new Lexer<ActualizerToken>();
+                var lexer = new Lexer<ActualizerTokenType>();
                 var tokens = lexer.Tokenize(text, new ActualizerTokenDefinition()).ToList();
                 int correction = 0;
                 //Если это первый параграф в нумерованном списке, то добавляем коррекцию по номеру
@@ -173,10 +180,10 @@ namespace Actualizer.Source;
                 if(struc != null)
                     subNode.ChangePartName = GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex), correction);
                 else
-                    if(!tokens.Any(a=>a.TokenType == ActualizerToken.Name))
+                    if(!tokens.Any(a=>a.TokenType == ActualizerTokenType.Name))
                         throw new Exception("Возможно ошибка в конструкции " + text);
                 //Возможна редкая контрукция в пункте 3: и началось перечисление в виде абзацев
-                if(struc != null && struc.Count() == 1 && tokens.Any(a=>a.TokenType == ActualizerToken.Definition) && item.Indents.Count > 2)
+                if(struc != null && struc.Count() == 1 && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition) && item.Indents.Count > 2)
                 {
                     GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex), correction);
                     indentZeroPath = subNode.Path.LastOrDefault();
@@ -211,21 +218,21 @@ namespace Actualizer.Source;
     /// <param name="currentElement"></param>
     /// <param name="parser"></param>
     /// <param name="correction"></param>
-    public void WordOperation(Operation currentOperation, StructureNode node, List<Token<ActualizerToken>>  tokens, ElementStructure currentElement, Services.Documents.Parser.Parsers.DocumentParser parser, int correction = 0)
+    public void WordOperation(Operation currentOperation, StructureNode node, List<Token<ActualizerTokenType>>  tokens, ElementStructure currentElement, Services.Documents.Parser.Parsers.DocumentParser parser, int correction = 0)
     {
         if(currentOperation == Operation.Add)
         {
-            var afterWord = tokens.Where(f=>f.TokenType == ActualizerToken.After);
+            var afterWord = tokens.Where(f=>f.TokenType == ActualizerTokenType.After);
             if(afterWord.Count() == 1)
             {
                 var afterWordToken = afterWord.ElementAt(0).NextLocal()?.NextLocal();
-                if(afterWordToken!= null && afterWordToken.TokenType == ActualizerToken.Quoted)
+                if(afterWordToken!= null && afterWordToken.TokenType == ActualizerTokenType.Quoted)
                 {
                     var quoted0 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(afterWordToken.StartIndex + correction , afterWordToken.Length));
                     node.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
                 }
                 var addWordToken = afterWordToken?.NextLocal()?.NextLocal()?.NextLocal();
-                if(addWordToken!= null && addWordToken.TokenType == ActualizerToken.Quoted)
+                if(addWordToken!= null && addWordToken.TokenType == ActualizerTokenType.Quoted)
                 {
                     var quoted1 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
                     node.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
@@ -238,14 +245,14 @@ namespace Actualizer.Source;
                 {
                     var wstr = new StructureNode(currentElement, Operation.Add);
                     var afterWordToken = w.NextLocal()?.NextLocal();
-                    if(afterWordToken!= null && afterWordToken.TokenType == ActualizerToken.Quoted)
+                    if(afterWordToken!= null && afterWordToken.TokenType == ActualizerTokenType.Quoted)
                     {
                         var quoted0 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(afterWordToken.StartIndex + correction , afterWordToken.Length));
                         wstr.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
                         
                     }
                     var addWordToken = afterWordToken?.NextLocal()?.NextLocal()?.NextLocal();
-                    if(addWordToken!= null && addWordToken.TokenType == ActualizerToken.Quoted)
+                    if(addWordToken!= null && addWordToken.TokenType == ActualizerTokenType.Quoted)
                     {
                         var quoted1 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
                         wstr.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
@@ -259,14 +266,14 @@ namespace Actualizer.Source;
         }
         if(currentOperation == Operation.Replace)
         {
-            var qotedToken0 = tokens.FirstOrDefault(f=>f.TokenType == ActualizerToken.Replace)?.BeforeLocal();
-            if(qotedToken0!= null && qotedToken0.TokenType == ActualizerToken.Quoted)
+            var qotedToken0 = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Replace)?.BeforeLocal();
+            if(qotedToken0!= null && qotedToken0.TokenType == ActualizerTokenType.Quoted)
             {
                 var quoted0 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(qotedToken0.StartIndex + correction , qotedToken0.Length));
                 node.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
             }
-            var newWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerToken.Replace)?.NextLocal()?.NextLocal();
-            if(newWordToken!= null && newWordToken.TokenType == ActualizerToken.Quoted)
+            var newWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Replace)?.NextLocal()?.NextLocal();
+            if(newWordToken!= null && newWordToken.TokenType == ActualizerTokenType.Quoted)
             {
                 var quoted1 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(newWordToken.StartIndex + correction , newWordToken.Length));
                 node.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
@@ -274,8 +281,8 @@ namespace Actualizer.Source;
         }
         if(currentOperation == Operation.AddToEnd)
         {
-            var addWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerToken.Add)?.NextLocal()?.NextLocal();
-            if(addWordToken!= null && addWordToken.TokenType == ActualizerToken.Quoted)
+            var addWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Add)?.NextLocal()?.NextLocal();
+            if(addWordToken!= null && addWordToken.TokenType == ActualizerTokenType.Quoted)
             {
                 var quoted = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
                 node.TargetText = quoted.Remove(0, 1).Remove(quoted.Length-2, 1);
@@ -283,8 +290,8 @@ namespace Actualizer.Source;
         }
         if(currentOperation == Operation.RemoveWord)
         {
-            var removeWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerToken.Remove)?.BeforeLocal();
-            if(removeWordToken != null && removeWordToken.TokenType == ActualizerToken.Quoted)
+            var removeWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Remove)?.BeforeLocal();
+            if(removeWordToken != null && removeWordToken.TokenType == ActualizerTokenType.Quoted)
             {
                 var quoted = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(removeWordToken.StartIndex + correction , removeWordToken.Length));
                 node.TargetText = quoted.Remove(0, 1).Remove(quoted.Length-2, 1);
@@ -315,13 +322,13 @@ namespace Actualizer.Source;
     /// </summary>
     /// <param name="tokenSequence"></param>
     /// <returns></returns>
-    public IEnumerable<Token<ActualizerToken>> GetTokensSequence(List<Token<ActualizerToken>> tokenSequence)
+    public IEnumerable<Token<ActualizerTokenType>> GetTokensSequence(List<Token<ActualizerTokenType>> tokenSequence)
     {
-        var struc = tokenSequence.Where(w=>w.TokenType == ActualizerToken.Header 
-                                    ||  w.TokenType == ActualizerToken.Item0
-                                    ||  w.TokenType == ActualizerToken.Item1
-                                    ||  w.TokenType == ActualizerToken.Item2
-                                    ||  w.TokenType == ActualizerToken.Indent);
+        var struc = tokenSequence.Where(w=>w.TokenType == ActualizerTokenType.Header 
+                                    ||  w.TokenType == ActualizerTokenType.Item0
+                                    ||  w.TokenType == ActualizerTokenType.Item1
+                                    ||  w.TokenType == ActualizerTokenType.Item2
+                                    ||  w.TokenType == ActualizerTokenType.Indent);
         var firstStruc = struc.FirstOrDefault();
         var lastStruc = struc.LastOrDefault();
         if(firstStruc == null || lastStruc == null)
@@ -330,18 +337,18 @@ namespace Actualizer.Source;
             struc = struc.Reverse();
         return struc;
     }
-    private IEnumerable<Token<ActualizerToken>> GetOperationTokensSequence(List<Token<ActualizerToken>> tokenSequence)
+    private IEnumerable<Token<ActualizerTokenType>> GetOperationTokensSequence(List<Token<ActualizerTokenType>> tokenSequence)
     {
-        var struc = tokenSequence.Where(w=> w.TokenType == ActualizerToken.OperationUnitHeader
-                                    ||  w.TokenType == ActualizerToken.OperationUnitIndent
-                                    ||  w.TokenType == ActualizerToken.OperationUnitItem0
-                                    ||  w.TokenType == ActualizerToken.OperationUnitItem1
-                                    ||  w.TokenType == ActualizerToken.OperationUnitItem2
-                                    ||  w.TokenType == ActualizerToken.Item0
-                                    ||  w.TokenType == ActualizerToken.Item1
-                                    ||  w.TokenType == ActualizerToken.Item2
-                                    ||  w.TokenType == ActualizerToken.Indent
-                                    ||  w.TokenType == ActualizerToken.Header);
+        var struc = tokenSequence.Where(w=> w.TokenType == ActualizerTokenType.OperationUnitHeader
+                                    ||  w.TokenType == ActualizerTokenType.OperationUnitIndent
+                                    ||  w.TokenType == ActualizerTokenType.OperationUnitItem0
+                                    ||  w.TokenType == ActualizerTokenType.OperationUnitItem1
+                                    ||  w.TokenType == ActualizerTokenType.OperationUnitItem2
+                                    ||  w.TokenType == ActualizerTokenType.Item0
+                                    ||  w.TokenType == ActualizerTokenType.Item1
+                                    ||  w.TokenType == ActualizerTokenType.Item2
+                                    ||  w.TokenType == ActualizerTokenType.Indent
+                                    ||  w.TokenType == ActualizerTokenType.Header);
         if(struc.Count() > 1)
         {
             var firstStruc = struc.FirstOrDefault();
@@ -359,7 +366,7 @@ namespace Actualizer.Source;
     /// <param name="s"></param>
     /// <param name="el"></param>
     /// <param name="startIndexCorrection">Для коррекции стартового индекса токена (на длинну номера итема)</param>
-    public string GetPathArray(IEnumerable<Token<ActualizerToken>> tokenSequence,  Services.Documents.Parser.Parsers.DocumentParser parser, StructureNode s, ElementStructure el, int startIndexCorrection = 0)
+    public string GetPathArray(IEnumerable<Token<ActualizerTokenType>> tokenSequence,  Services.Documents.Parser.Parsers.DocumentParser parser, StructureNode s, ElementStructure el, int startIndexCorrection = 0)
     {
         string lastStructureItemName = null;
         var last = tokenSequence.LastOrDefault();
@@ -398,7 +405,7 @@ namespace Actualizer.Source;
             if(number != null)
             {
                 //если номер что-то типа - подпункт "б"
-                if(maybenumberToken.TokenType == ActualizerToken.Quoted)
+                if(maybenumberToken.TokenType == ActualizerTokenType.Quoted)
                 {
                     number = number.Remove(0, 1).Remove(number.Length -2, 1);
                 }
@@ -411,28 +418,28 @@ namespace Actualizer.Source;
         }
         return lastStructureItemName;
     }
-    public Operation GetNodeOperation(List<Token<ActualizerToken>> tokens)
+    public Operation GetNodeOperation(List<Token<ActualizerTokenType>> tokens)
     {
         //Изложить в новой редации
-        if(tokens.Any(a=>a.TokenType == ActualizerToken.Represent) && tokens.Any(a=>a.TokenType == ActualizerToken.Definition))
+        if(tokens.Any(a=>a.TokenType == ActualizerTokenType.Represent) && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition))
             return Operation.Represent;
         //Дополнить (например пунктом) 8 следующего содержания:
-        if(tokens.Any(a=>a.TokenType == ActualizerToken.Add) && tokens.Any(a=>a.TokenType == ActualizerToken.Definition))
+        if(tokens.Any(a=>a.TokenType == ActualizerTokenType.Add) && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition))
             return Operation.AddNewElement;
         //Перечень изменений в виде нумерованного списка
-        if(tokens.Any(a=>a.TokenType == ActualizerToken.NextChanges))
+        if(tokens.Any(a=>a.TokenType == ActualizerTokenType.NextChanges))
             return Operation.NextChangeSequence;
         //после слов "абырвалг" дополнить словани "- Главрыба"
-        if(tokens.Any(a=>a.TokenType == ActualizerToken.Add) && tokens.Any(a=>a.TokenType == ActualizerToken.After))
+        if(tokens.Any(a=>a.TokenType == ActualizerTokenType.Add) && tokens.Any(a=>a.TokenType == ActualizerTokenType.After))
             return Operation.Add;
         //слова Эваывацуа удалить
-        if(tokens.Any(a=>a.TokenType == ActualizerToken.OperationUnitWord) && tokens.Any(a=>a.TokenType == ActualizerToken.Remove))
+        if(tokens.Any(a=>a.TokenType == ActualizerTokenType.OperationUnitWord) && tokens.Any(a=>a.TokenType == ActualizerTokenType.Remove))
             return Operation.RemoveWord;
         //слова ваоывоавта заменить....
-        if(tokens.Any(a=>a.TokenType == ActualizerToken.OperationUnitWord) && tokens.Any(a=>a.TokenType == ActualizerToken.Replace))
+        if(tokens.Any(a=>a.TokenType == ActualizerTokenType.OperationUnitWord) && tokens.Any(a=>a.TokenType == ActualizerTokenType.Replace))
             return Operation.Replace;
         //Дополнить словами "абырвалг"
-        if(tokens.Any(a=>a.TokenType == ActualizerToken.OperationUnitWord) && tokens.Any(a=>a.TokenType == ActualizerToken.Add))
+        if(tokens.Any(a=>a.TokenType == ActualizerTokenType.OperationUnitWord) && tokens.Any(a=>a.TokenType == ActualizerTokenType.Add))
             return Operation.AddToEnd;
         else
             return Operation.None;
@@ -442,11 +449,11 @@ namespace Actualizer.Source;
     /// </summary>
     /// <param name="tokens"></param>
     /// <returns></returns>
-    private DocumentRequisites getTargetDocReq(List<Token<ActualizerToken>> tokens, ElementStructure currentElement, Services.Documents.Parser.Parsers.DocumentParser parser)
+    private DocumentRequisites getTargetDocReq(List<Token<ActualizerTokenType>> tokens, ElementStructure currentElement, Parser parser)
     {
-        var reqToken = tokens.FirstOrDefault(a=>a.TokenType == ActualizerToken.ChangedActRequisites);
-        var annexToken = tokens.FirstOrDefault(a=>a.TokenType == ActualizerToken.AnnexRequisites);
-        var annexStopToken = tokens.FirstOrDefault(a=>a.TokenType == ActualizerToken.AnnexRequisitesStop);
+        var reqToken = tokens.FirstOrDefault(a=>a.TokenType == ActualizerTokenType.ChangedActRequisites);
+        var annexToken = tokens.FirstOrDefault(a=>a.TokenType == ActualizerTokenType.AnnexRequisites);
+        var annexStopToken = tokens.FirstOrDefault(a=>a.TokenType == ActualizerTokenType.AnnexRequisitesStop);
         string type = "";
         string annexType = null;
         string annexFullName = null;
@@ -459,13 +466,16 @@ namespace Actualizer.Source;
             if(annexToken != null && annexStopToken != null)
             {
                 annexType = annexToken.Value;
-                annexFullName = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(annexToken.EndIndex , annexStopToken.StartIndex - annexToken.EndIndex)).ToSearchString();
+                annexFullName = parser.word.GetUnicodeString(currentElement, new TextIndex(annexToken.EndIndex , annexStopToken.StartIndex - annexToken.EndIndex)).ToSearchString();
             }
             type = reqToken.CustomGroups[0].Value;
-            var day = int.Parse(reqToken.CustomGroups[1].Value);
-            var month = reqToken.CustomGroups[2].Value.MonthConverter();
-            var year = int.Parse(reqToken.CustomGroups[3].Value);
-            var signDate = new DateTime(year, month, day);
+            //var day = int.Parse(reqToken.CustomGroups[1].Value);
+            //var month = reqToken..CustomGroups[2].Value.MonthConverter();
+           // var year = int.Parse(reqToken.CustomGroups[3].Value);
+            //var signDate = new DateTime(year, month, day);
+            var signDate = reqToken.GetDate();
+            if(signDate.IsError)
+
             var number = reqToken.CustomGroups[4].Value;
             var name = reqToken.CustomGroups[5].Value;
             return new DocumentRequisites(){SignDate = signDate, Name = name, AnnexType = annexType, FullAnnexName = annexFullName, ActType = type, Number = number};
@@ -475,29 +485,29 @@ namespace Actualizer.Source;
 
     
 
-    private StructureType getStructureType(Token<ActualizerToken> token)
+    private StructureType getStructureType(Token<ActualizerTokenType> token)
     {
-        if(token.TokenType == ActualizerToken.Header)
+        if(token.TokenType == ActualizerTokenType.Header)
             return StructureType.Header;
-        if(token.TokenType == ActualizerToken.Item0)
+        if(token.TokenType == ActualizerTokenType.Item0)
             return StructureType.Item;
-        if(token.TokenType == ActualizerToken.Item1)
+        if(token.TokenType == ActualizerTokenType.Item1)
             return StructureType.Item;
-        if(token.TokenType == ActualizerToken.Item2)
+        if(token.TokenType == ActualizerTokenType.Item2)
             return StructureType.Item;
-        if(token.TokenType == ActualizerToken.Indent)
+        if(token.TokenType == ActualizerTokenType.Indent)
             return StructureType.Indent;
-            if(token.TokenType == ActualizerToken.OperationUnitSentence)
+            if(token.TokenType == ActualizerTokenType.OperationUnitSentence)
             return StructureType.Sentence;
-        if(token.TokenType == ActualizerToken.OperationUnitItem0)
+        if(token.TokenType == ActualizerTokenType.OperationUnitItem0)
             return StructureType.Item;
-        if(token.TokenType == ActualizerToken.OperationUnitItem1)
+        if(token.TokenType == ActualizerTokenType.OperationUnitItem1)
             return StructureType.Item;
-        if(token.TokenType == ActualizerToken.OperationUnitItem2)
+        if(token.TokenType == ActualizerTokenType.OperationUnitItem2)
             return StructureType.Item;
-        if(token.TokenType == ActualizerToken.OperationUnitHeader)
+        if(token.TokenType == ActualizerTokenType.OperationUnitHeader)
             return StructureType.Header;
-        if(token.TokenType == ActualizerToken.OperationUnitWord)
+        if(token.TokenType == ActualizerTokenType.OperationUnitWord)
             return StructureType.Word;
         return StructureType.None;
     }

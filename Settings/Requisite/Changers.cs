@@ -23,11 +23,11 @@ public enum ChangeType
 /// Изменение органов или типов документов согласно шаблону
 /// </summary>
 [PropertyAttribute(about: "Изменение органов или типов документов согласно шаблону")]
-public struct RequisiteChangers
+[Serializable]
+public class RequisiteChangers
 {
-
-    
-    public RequisiteChangers()
+    public RequisiteChangers(){}
+    public RequisiteChangers(bool  withDefault)
     {
         OrganToOrgan  = new List<Changer>()
         {
