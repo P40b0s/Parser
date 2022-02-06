@@ -5,13 +5,19 @@ using DocumentParser.DocumentElements;
 using DocumentParser.Elements;
 using DocumentParser.Parsers;
 using Lexer;
+using SettingsWorker;
 using SettingsWorker.Actualizer;
 
 namespace Actualizer.Source.Operations;
     public partial class SourceOperations
     {
-        public List<string> statuses = new List<string>();
-        public void AddStatus(string status)
+        ISettings settings {get;}
+        public SourceOperations(ISettings settings)
+        {
+            this.settings = settings;
+        }
+        public List<OperationError> statuses = new List<OperationError>();
+        public void AddError(string status, string text, string path, DocumentRequisites requisites)
         {
             statuses.Add(status);
         }
@@ -96,7 +102,7 @@ namespace Actualizer.Source.Operations;
     /// <summary>
     /// Внести в статью 2 пунта 1 фз № такогото.... изложив его в следующей редакции
     /// </summary>
-    public void NextSequenceChange(ElementStructure currentParagraph,  List<Token<ActualizerTokenType>> tokenSequence, Services.Documents.Parser.Parsers.DocumentParser parser,  List<StructureNode> structures, Operation operation)
+    public void NextSequenceChange(ElementStructure currentParagraph,  List<Token<ActualizerTokenType>> tokenSequence, Parser parser,  List<StructureNode> structures, Operation operation)
     {
         var s = new StructureNode(currentParagraph, operation);
         s.TargetDocumentRequisites= getTargetDocReq(tokenSequence, currentParagraph, parser);
@@ -150,7 +156,7 @@ namespace Actualizer.Source.Operations;
                     continue;
                 var text = item.Indents[i].Text();
                 var lexer = new Lexer<ActualizerTokenType>();
-                var tokens = lexer.Tokenize(text, new ActualizerTokenDefinition()).ToList();
+                var tokens = lexer.Tokenize(text,  new ActualizerTokensDefinition(settings.TokensDefinitions.ActualizerTokenDefinitions.TokenDefinitionSettings)).ToList();
                 int correction = 0;
                 //Если это первый параграф в нумерованном списке, то добавляем коррекцию по номеру
                 if(i == 0)
@@ -218,7 +224,7 @@ namespace Actualizer.Source.Operations;
     /// <param name="currentElement"></param>
     /// <param name="parser"></param>
     /// <param name="correction"></param>
-    public void WordOperation(Operation currentOperation, StructureNode node, List<Token<ActualizerTokenType>>  tokens, ElementStructure currentElement, Services.Documents.Parser.Parsers.DocumentParser parser, int correction = 0)
+    public void WordOperation(Operation currentOperation, StructureNode node, List<Token<ActualizerTokenType>>  tokens, ElementStructure currentElement, Parser parser, int correction = 0)
     {
         if(currentOperation == Operation.Add)
         {
@@ -228,13 +234,13 @@ namespace Actualizer.Source.Operations;
                 var afterWordToken = afterWord.ElementAt(0).NextLocal()?.NextLocal();
                 if(afterWordToken!= null && afterWordToken.TokenType == ActualizerTokenType.Quoted)
                 {
-                    var quoted0 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(afterWordToken.StartIndex + correction , afterWordToken.Length));
+                    var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(afterWordToken.StartIndex + correction , afterWordToken.Length));
                     node.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
                 }
                 var addWordToken = afterWordToken?.NextLocal()?.NextLocal()?.NextLocal();
                 if(addWordToken!= null && addWordToken.TokenType == ActualizerTokenType.Quoted)
                 {
-                    var quoted1 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
+                    var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
                     node.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
                 }
             }
@@ -247,14 +253,14 @@ namespace Actualizer.Source.Operations;
                     var afterWordToken = w.NextLocal()?.NextLocal();
                     if(afterWordToken!= null && afterWordToken.TokenType == ActualizerTokenType.Quoted)
                     {
-                        var quoted0 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(afterWordToken.StartIndex + correction , afterWordToken.Length));
+                        var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(afterWordToken.StartIndex + correction , afterWordToken.Length));
                         wstr.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
                         
                     }
                     var addWordToken = afterWordToken?.NextLocal()?.NextLocal()?.NextLocal();
                     if(addWordToken!= null && addWordToken.TokenType == ActualizerTokenType.Quoted)
                     {
-                        var quoted1 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
+                        var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
                         wstr.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
                     }
                     //Копируем путь в ноду чтоб потом не выбирать его из родителя
@@ -366,7 +372,7 @@ namespace Actualizer.Source.Operations;
     /// <param name="s"></param>
     /// <param name="el"></param>
     /// <param name="startIndexCorrection">Для коррекции стартового индекса токена (на длинну номера итема)</param>
-    public string GetPathArray(IEnumerable<Token<ActualizerTokenType>> tokenSequence,  Services.Documents.Parser.Parsers.DocumentParser parser, StructureNode s, ElementStructure el, int startIndexCorrection = 0)
+    public string GetPathArray(IEnumerable<Token<ActualizerTokenType>> tokenSequence,  Parser parser, StructureNode s, ElementStructure el, int startIndexCorrection = 0)
     {
         string lastStructureItemName = null;
         var last = tokenSequence.LastOrDefault();

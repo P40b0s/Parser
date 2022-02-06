@@ -10,6 +10,7 @@ using Lexer.Tokenizer;
 using DocumentParser.Parsers;
 using SettingsWorker;
 using SettingsWorker.Actualizer;
+using Actualizer.Source.Operations;
 
 namespace Actualizer.Source;
 
@@ -23,7 +24,7 @@ public class SourceDocumentParser
     {
         this.filePath = filePath;
         this.settings = settings;
-        operations = new SourceOperations();
+        operations = new SourceOperations(settings);
     }
     public async ValueTask<SourceDocumentParserResult> Parse()
     {
@@ -38,7 +39,7 @@ public class SourceDocumentParser
             if(e.IsParsed)
                 continue;
             var text = e.WordElement.Text;
-            var tokenSequence = lexer.Tokenize(text, new ActualizerTokensDefinition(settings.TokensDefinitions.ActualizerTokenDefinitions.TokenDefinitionSettings));
+            var tokenSequence = lexer.Tokenize(text, new ActualizerTokensDefinition(settings.TokensDefinitions.ActualizerTokenDefinitions.TokenDefinitionSettings)).ToList();
             if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.In))
             {
                 var operation = operations.GetNodeOperation(tokenSequence);
@@ -51,10 +52,10 @@ public class SourceDocumentParser
                     operations.NextSequenceChange(e, tokenSequence, parser, structures, operation);
                 }
             }
-            if(tokenSequence.Any(a=>a.TokenType == ActualizerToken.ChangedActRequisites))
+            if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.ChangedActRequisites))
             {
                 var operation = operations.GetNodeOperation(tokenSequence);
-                if(tokenSequence.Any(a=>a.TokenType == ActualizerToken.Add || a.TokenType == ActualizerToken.After))
+                if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.Add || a.TokenType == ActualizerTokenType.After))
                 {
                     operations.OneParagraphChange(e, tokenSequence, parser, structures, operation);
                 }

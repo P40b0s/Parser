@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using Services.Documents.Lexer.Tokens;
-using Test.Regexes.Actualizer.Source;
+using Actualizer.Source;
+using Lexer;
+using SettingsWorker.Actualizer;
 
 namespace Actualizer;
 public struct OperationError
@@ -13,7 +14,7 @@ public struct OperationError
         Requisites = requisites;
         Tokens = null;
     }
-    public OperationError(string error, string text, List<Token<ActualizerToken>> tokens, DocumentRequisites requisites)
+    public OperationError(string error, string text, List<Token<ActualizerTokenType>> tokens, DocumentRequisites requisites)
     {
         Error = error;
         OriginalText = text;
@@ -25,5 +26,5 @@ public struct OperationError
     public string OriginalText {get;}
     public string Error {get;}
     public string Path {get;}
-    public List<Token<ActualizerToken>> Tokens {get;}
+    public List<Token<ActualizerTokenType>> Tokens {get;}
 }

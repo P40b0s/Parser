@@ -1,15 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
+using Actualizer.Source;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
-using Services.Documents.Parser;
-using Test.Regexes.Actualizer.Source;
+using DocumentParser.Elements;
+using DocumentParser.Parsers;
 
 namespace Actualizer;
 public static class ParagraphsExtension
 {
-    public static void CopyParagraphStyle(this OpenXmlElement par, Paragraph target, SourceDocumentParserResult source, Services.Documents.Parser.Parsers.DocumentParser parser)
+    public static void CopyParagraphStyle(this OpenXmlElement par, Paragraph target, SourceDocumentParserResult source, Parser parser)
     {
         var pPr = par.Elements<DocumentFormat.OpenXml.Wordprocessing.ParagraphProperties>().FirstOrDefault();
         if(pPr?.ParagraphStyleId != null)
@@ -26,7 +27,7 @@ public static class ParagraphsExtension
             }              
         }
     }
-    public static void CopyAllRunsStyles(this Paragraph par, SourceDocumentParserResult source, Services.Documents.Parser.Parsers.DocumentParser parser)
+    public static void CopyAllRunsStyles(this Paragraph par, SourceDocumentParserResult source, Parser parser)
     {
         foreach(var rr in par.OfType<DocumentFormat.OpenXml.Wordprocessing.Run>())
         {
@@ -46,7 +47,7 @@ public static class ParagraphsExtension
         }
     }
 
-    public static void CopyAllImages(this Paragraph par, SourceDocumentParserResult source, Services.Documents.Parser.Parsers.DocumentParser parser)
+    public static void CopyAllImages(this Paragraph par, SourceDocumentParserResult source, Parser parser)
     {
         par.Descendants<DocumentFormat.OpenXml.Drawing.Blip>()
         .ToList().ForEach(blip =>
