@@ -62,42 +62,36 @@ public struct Result<T> : IResult<T>
     }
 }
 
+public static class ResultExtensions
+{
+    public static Result<T> Lift<T>(this T value) => new Result<T>(value);
+     /// функтор
+        public static Result<TResult> Select<TSource, TResult>(this Result<TSource> result, Func<TSource, TResult> functor)
+        {
+            return result.IsOk
+            ? functor(result.Value()).Lift()
+            : Result<TResult>.Err(result.Error());
+        }
 
+        /// монада
+        public static Result<TResult> Select<TSource, TResult>(this Result<TSource> result, Func<TSource, Result<TResult>> arrow)
+        {
+            return result.IsOk
+            ? arrow(result.Value())
+            : Result<TResult>.Err(result.Error());
+        }
 
-// public struct Result<T,E> : IResult<T,E> where E : IError, new()
-// {
-//     public Result(T result)
-//     {
-//         value = result;
-//         error = default(E);
-//     }
-    
-//     public Result(E error)
-//     {
-//         this.error = error;
-//         value = default(T);
-//     }
-//     /// <summary>
-//     /// Значение результата
-//     /// </summary>
-//     /// <returns></returns>
-//      public T Value([CallerMemberName]string caller = null)
-//     {
-//         if(this.IsError)
-//             throw new Exception($"Метод {caller} пытается получить результат операции, со статусом ERROR: {Error().Message}");
-//         else return value;
-//     }
-//     private T value {get;init;}
-//     public E Error([CallerMemberName]string caller = null)
-//     {
-//         if(!this.IsError)
-//             throw new Exception($"Метод {caller} пытается получить ошибку операции, но операция завершена положительно и у нее есть результат: " + Value().ToString());
-//         else return error;
-//     }
-//     private E error {get;init;}
-//     public bool IsOk => error == null;
-//     public bool IsError => error != null;
-// }
+        public static Result<TProjection> SelectMany<TSource, TResult, TProjection>(this Result<TSource> result, 
+        Func<TSource, Result<TResult>> arrow,
+        Func<TSource, TResult, TProjection> projection)
+        {
+            return result.Select(
+                result => arrow(result).Select(
+                    projectionResult => projection(result, projectionResult)
+                )
+            );
+        }
+}
 
 
 
