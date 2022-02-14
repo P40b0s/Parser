@@ -60,7 +60,7 @@ public abstract class BaseTest<T> where T : DocumentParser.Parsers.ParserBase
             System.Console.WriteLine($"Ошибки в {file.Description}:");
         foreach(var e in parser.GetExceptions())
         {
-            var error = e.ErrorType.Equals(ErrorType.Fatal) ? "fatal" : "warning";
+            var error = e.ErrorType.Equals(Utils.ErrorType.Fatal) ? "fatal" : "warning";
             System.Console.WriteLine(e.Message + " статус: " + error );
         }
         List<PredicateResult> predicateResults = getPredicateResults(file, parser);
