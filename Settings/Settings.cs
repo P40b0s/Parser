@@ -29,6 +29,7 @@ public partial class Settings : ISettings
     public Settings()
     {
         IsDefault = true;
+        Load();
     }
     [JsonIgnore]
     public List<string> Status {get;} = new List<string>();
