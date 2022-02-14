@@ -57,7 +57,23 @@ namespace DocumentParser.Workers
             try
             {
                 _docxPath = documentPath;
-                file = File.Open(_docxPath, FileMode.Open);
+                for (int i=1; i <= 10; ++i) 
+                {
+                    try 
+                    {
+                        file = File.Open(_docxPath, FileMode.Open);
+                        break; 
+                    }
+                    catch (IOException e) when (i <= 10) 
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }
+                if(file == null)
+                {
+                    AddError($"Ошибка чтения файла {documentPath} файл открыт в другой программе");
+                    return;
+                } 
                 Document = WordprocessingDocument.Open(file, true);
                 StylePart = Document.MainDocumentPart.StyleDefinitionsPart.Styles;
                 Body = Document.MainDocumentPart.Document.Body;
