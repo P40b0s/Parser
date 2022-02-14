@@ -92,6 +92,8 @@ public partial class Settings : ISettings
 
     [System.Text.Json.Serialization.JsonIgnore]
     public Paths Paths {get;} = new Paths();
+
+    public DocumentProcessing.PoolSettings PoolSettings {get;set;} = new DocumentProcessing.PoolSettings();
    
 
     private void update(Settings settings)

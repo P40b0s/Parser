@@ -4,7 +4,8 @@ namespace Utils;
 public enum ErrorType
 {
     Fatal,
-    Warning
+    Warning,
+    Info
 }
 
 public interface IError

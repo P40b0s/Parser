@@ -14,6 +14,7 @@ public class Paths
     public static string TokensDirPath => Path.Combine(cfgDir, tokensDefinitionsDir);
     public static  string ChangersDirPath => cfgDir;
     public static  string CustomRulesDirPath => cfgDir;
+    public static  string RootCfgDirPath => cfgDir;
     public static  string DictionariesDirPath => Path.Combine(cfgDir, dictionariesDir);
     
     public static void createPaths()

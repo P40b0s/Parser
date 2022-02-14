@@ -98,10 +98,12 @@ public partial class Settings
    
     public async ValueTask<bool> Load()
     {
-        //await DeserializePart<AllTokensDefinitions>(Paths.TokensDirPath, "TokenDefinitions", TokensDefinitions);
-        //await DeserializeFull<Requisite.RequisiteChangers>(Paths.ChangersDirPath, RequisiteChangers);
-        //await DeserializeFull<List<CustomRule<AllRules>>>(Paths.CustomRulesDirPath, CustomRules, "CustomRules");
-        return await DeserializePart<Dictionaries.AllDictionaries>(Paths.DictionariesDirPath, "", Dictionaries, "Dictionaries");
+        await DeserializePart<AllTokensDefinitions>(Paths.TokensDirPath, "TokenDefinitions", TokensDefinitions);
+        await DeserializeFull<Requisite.RequisiteChangers>(Paths.ChangersDirPath, RequisiteChangers);
+        await DeserializeFull<List<CustomRule<AllRules>>>(Paths.CustomRulesDirPath, CustomRules, "CustomRules");
+        await DeserializePart<Dictionaries.AllDictionaries>(Paths.DictionariesDirPath, "", Dictionaries, "Dictionaries");
+        await DeserializeFull<DocumentProcessing.PoolSettings>(Paths.RootCfgDirPath, PoolSettings, nameof(PoolSettings));
+        return true;
     }
 
 
