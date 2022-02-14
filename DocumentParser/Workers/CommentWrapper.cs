@@ -5,6 +5,12 @@ using System;
 using System.Collections.Generic;
 
 namespace DocumentParser.Workers;
+
+public struct CommentRange
+{
+    public string CommentId {get;set;} = "";
+    public bool HaveCommentRange {get;set;} = false;
+}
 public struct CommentWrapper
 {
     public CommentWrapper(OpenXmlElement e, ISettings sett, DataExtractor extractor, WordProperties props)

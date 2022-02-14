@@ -1,10 +1,11 @@
 
+using System.Collections.Generic;
 using DocumentParser.DocumentElements;
 
 namespace DocumentParser.Interfaces
 {
     public interface IComment
     {
-        Comment Comment {get;set;}
+        List<Comment> Comments {get;set;}
     }
 }

@@ -88,7 +88,7 @@ namespace DocumentParser.Workers
                 AddError(ex);
             }
         }
-        public List<ElementStructure> GetParagrapsByComment(string comment) => ElementsList.Where(w=>w.Comment != null && w.Comment.Values.Contains(comment)).ToList();
+        public List<ElementStructure> GetParagrapsByComment(string comment) => ElementsList.Where(w=>w.Comments != null && w.Comments.Where(w=>w.Values.Contains(comment)).Count() > 0).ToList();
 
         private void SearchComments()
         {
@@ -180,13 +180,29 @@ namespace DocumentParser.Workers
                     int paragraphStartIndex = 0;
                     int currentElement = 0;
                     int arrayIndex = 0;
+                    var commentRange = new CommentRange();
+                    bool haveCommentRange = false;
+                    string commentRangeId = "";
                     foreach(var par in elements)
                     {
-                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, DocumentImages);
+                        foreach (var el in par)
+                        {
+                            if(el.GetType() == typeof(CommentRangeStart))
+                            {
+                                commentRange = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, HaveCommentRange = true};
+                            }
+                            if(el.GetType() == typeof(CommentRangeEnd))
+                            {
+                                commentRange = new CommentRange();
+                            }
+                                
+                        }
+                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, commentRange, comments, DocumentImages);
                         if(p.IsParagraph)
                         {
                             if(!p.IsEmpty)
                             {
+
                                 ElementsList.Add(new ElementStructure(ElementsList, arrayIndex) 
                                 {  
                                     ElementIndex = count,
@@ -216,7 +232,7 @@ namespace DocumentParser.Workers
                             var parsInTable = p.Element.Descendants<Paragraph>();
                             foreach(var tpar in parsInTable)
                             {
-                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, DocumentImages);
+                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, commentRange, comments, DocumentImages);
                                 if(!p.IsEmpty)
                                 {
                                     ElementsList.Add(new ElementStructure(ElementsList, arrayIndex) 
@@ -238,7 +254,7 @@ namespace DocumentParser.Workers
                         currentElement++;
                         UpdateStatus("Предобработка текста", elements.Count(), currentElement);
                     }
-                    ProcessComments();
+                    //ProcessComments();
                     AddError(DataExtractor);
                     AddError(Properties);
                 }
@@ -249,27 +265,30 @@ namespace DocumentParser.Workers
             });
         }
 
-        private void ProcessComments()
-        {
-            var com = ElementsList.SelectMany(w=>w.WordElement.RunWrapper.Comments).Distinct();
-            if(com.Count() > 0)
-                UpdateStatus($"Обработка коментариев: {com.Count()} шт.");
-            foreach(var c in com)
-            {
-                var items = ElementsList.Where(w=>w.WordElement.RunWrapper.Comments.Contains(c) || w.WordElement.CommentId == c);
-                var startCommentItem = items.FirstOrDefault()?.CurrentIndex;
-                var endCommentItem = items.LastOrDefault()?.CurrentIndex;
-                if(startCommentItem.HasValue && endCommentItem.HasValue)
-                {                                                                     // +1 потому что берем по колчичеству а не по индексам
-                    var between =  ElementsList.Skip(startCommentItem.Value).Take((endCommentItem.Value - startCommentItem.Value) + 1);
-                    foreach(var b in between)
-                    {
-                        var comment = comments.FirstOrDefault(f=>f.id == c);
-                        b.WordElement.RunWrapper.SetComment(comment.ToComment);
-                    }
-                }
-            }
-        }
+        // private void ProcessComments()
+        // {
+        //     foreach(var element in )
+        //     var com = ElementsList.SelectMany(w=>w.WordElement.RunWrapper.CommentsId).Distinct();
+        //     if(com.Count() > 0)
+        //         UpdateStatus($"Обработка коментариев: {com.Count()} шт.");
+        //     foreach(var c in com)
+        //     {
+        //         var comment = comments.FirstOrDefault(f=>f.id == c);
+
+        //         var items = ElementsList.Where(w=>w.WordElement.RunWrapper.CommentsId.Contains(c) || w.WordElement. == c);
+        //         var startCommentItem = items.FirstOrDefault()?.CurrentIndex;
+        //         var endCommentItem = items.LastOrDefault()?.CurrentIndex;
+        //         if(startCommentItem.HasValue && endCommentItem.HasValue)
+        //         {                                                                     // +1 потому что берем по колчичеству а не по индексам
+        //             var between =  ElementsList.Skip(startCommentItem.Value).Take((endCommentItem.Value - startCommentItem.Value) + 1);
+        //             foreach(var b in between)
+        //             {
+        //                 var comment = comments.FirstOrDefault(f=>f.id == c);
+        //                 b.WordElement.RunWrapper.SetComment(comment.ToComment);
+        //             }
+        //         }
+        //     }
+        // }
 
         public void SetElementNode(ITextIndex txt, NodeType nodeType)
         {

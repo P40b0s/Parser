@@ -188,7 +188,7 @@ public partial class ElementStructure
         this.WordElement.RunWrapper.GetCustRuns(),
         this.MetaInfo,
         this.HyperTextInfo,
-        this.Comment,
+        this.Comments,
         this.FootNoteInfo,
         null, //Почему не ищем таблицу?
         this.IsChange,

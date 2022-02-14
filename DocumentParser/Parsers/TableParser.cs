@@ -87,7 +87,7 @@ namespace DocumentParser.Parsers
                                                 par.WordElement.RunWrapper.GetCustRuns(),
                                                 par.MetaInfo,
                                                 par.HyperTextInfo,
-                                                par.Comment,
+                                                par.Comments,
                                                 par.FootNoteInfo,
                                                 null,
                                                 par.IsChange,

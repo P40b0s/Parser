@@ -26,7 +26,7 @@ namespace DocumentParser.DocumentElements
         
         public Note() { }
         public string Name {get;set;}
-        public Comment Comment {get;set;}
+        public List<Comment> Comments {get;set;}
         public HyperTextInfo HyperTextInfo {get;set;}
         public MetaInfo Meta {get;set;}
         public List<Header> Headers {get;set;} = new List<Header>();

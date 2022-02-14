@@ -18,7 +18,7 @@ namespace DocumentParser.DocumentElements
                      List<Run> runs,
                      MetaInfo meta,
                      HyperTextInfo hyperTextInfo,
-                     Comment comment,
+                     List<Comment> comments,
                      FootNoteInfo footNote,
                      DocumentTable table,
                      bool isChange,
@@ -32,7 +32,7 @@ namespace DocumentParser.DocumentElements
             Runs = runs;
             Meta = meta;
             HyperTextInfo = hyperTextInfo;
-            Comment = comment;
+            Comments = comments;
             Table = table;
             IsChange = isChange;
             FootNote = footNote;
@@ -56,7 +56,7 @@ namespace DocumentParser.DocumentElements
         public MetaInfo Meta {get;set;}
         public HyperTextInfo HyperTextInfo {get;set;}
         public FootNoteInfo FootNote {get;set;}
-        public Comment Comment {get;set;}
+        public List<Comment> Comments {get;set;}
         public bool IsDefinition {get;set;}
         public bool IsChange {get;set;}
         public string IndentHash { get; set; }

@@ -93,7 +93,7 @@ namespace DocumentParser.DocumentElements
         public List<Indent> Indents {get;set;}
         public List<Item> Items {get;set;}
         public List<FootNoteInfo> FootNotes {get;set;}
-        public Comment Comment {get;set;}
+        public List<Comment> Comments {get;set;}
         public string SearchName {get;set;}
 
         /// <summary>
