@@ -194,33 +194,39 @@ namespace DocumentParser.Workers
                             if(el.GetType() == typeof(CommentRangeStart))
                             {
                                 var id = ((CommentRangeStart)el).Id;
-                                //commentRange = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, HaveCommentRange = true};
-                                //var end = el.Descendants<Run>().FirstOrDefault(f=>f.FirstChild.GetType() == typeof(CommentReference) && ((CommentReference)f.FirstChild).Id == id);
-                                var end = par.Descendants<CommentReference>().FirstOrDefault(f=>f.Id == id);
-                                //var end = elements.FirstOrDefault(f=>f.GetType() == typeof(CommentRangeEnd) && ((CommentRangeEnd)f).Id == ((CommentRangeStart)el).Id);
-                                var rwt = el.Descendants<Run>().TakeWhile(t=> t!= end.Parent).ToList();
-                                //Перебираем все найденые раны если находим их в списке с комментами то заменяем на новый
-                                //это сделано потому что один коммент может быть внутри другого
-                                //таким образом каждый вложенный коммент затрет id его родительского коммента
-                                for(int r = rwt.Count -1; r >= 0; r--)
+                                var end = Body.Descendants<CommentReference>().FirstOrDefault(f=>f.Id == id);
+                                if(end == null)
+                                {
+                                    AddError($"Не могу найти окончание комментария {id}");
+                                    break;
+                                }
+                                //Находим все раны в параграфе после начала коммента
+                                var parsFrom = el.ElementsAfter().OfType<Run>().ToList();
+                                //находим все раны в прараграфах которые идут после нашего параграфа
+                                parsFrom.AddRange(par.ElementsAfter().SelectMany(s=>s.Descendants<Run>()));
+                                var currentRunsWithCommentRange = new List<Run>();
+                                //если в параграфе встречаем наш стоп ран (ран в котором находится CommentReference) то останавливаем цикл
+                                foreach(var pp in parsFrom)
+                                {
+                                    if(pp == end.Parent)
+                                        break;
+                                    currentRunsWithCommentRange.Add(pp);
+                                }
+                                //Если есть вложенные комменты, то при каждой итерации заменяыем комменты на вложенные
+                                for(int r = currentRunsWithCommentRange.Count -1; r >= 0; r--)
                                 {
                                     for(int i = 0; i < runsWithComments.Count; i++)
                                     {
-                                        if(runsWithComments[i].Run == rwt[r])
+                                        if(runsWithComments[i].Run == currentRunsWithCommentRange[r])
                                         {
-                                            runsWithComments[i] = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, Run = rwt[r]};
-                                            rwt.RemoveAt(r);
+                                            runsWithComments[i] = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, Run = currentRunsWithCommentRange[r]};
+                                            currentRunsWithCommentRange.RemoveAt(r);
                                         }
                                     }        
                                 }
                                 //добавляем все раны что не были обнаружены в списке вложенных комментов
-                                runsWithComments.AddRange(rwt.Select(s=> new CommentRange(){CommentId = id, Run = s}));
-                            }
-                            // if(el.GetType() == typeof(CommentRangeEnd))
-                            // {
-                            //     commentRange = new CommentRange();
-                            // }
-                                
+                                runsWithComments.AddRange(currentRunsWithCommentRange.Select(s=> new CommentRange(){CommentId = id, Run = s}));
+                            }    
                         }
                         var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, runsWithComments, Comments, DocumentImages);
                         if(p.IsParagraph)

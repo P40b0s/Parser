@@ -144,7 +144,7 @@ namespace DocumentParser.Workers
                     if(runInComment.CommentId != null)
                     {
                         wrap.CommentId = runInComment.CommentId;
-                        wrap.Comment = comments.FirstOrDefault(f=>f.id == runInComment.CommentId).ToComment;
+                        //wrap.Comment = comments.FirstOrDefault(f=>f.id == runInComment.CommentId).ToComment;
                     }
                        
                     //if(commentRange.HaveCommentRange)

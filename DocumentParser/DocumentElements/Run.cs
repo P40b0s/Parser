@@ -7,12 +7,9 @@ namespace DocumentParser.DocumentElements
     {
         public Guid Id {get;} = Guid.NewGuid();
         public string Text {get;set;} = "";
-        //коментарий для рана будем вывожить если у него есть метка commentstart
-        public Comment Comment {get;set;}
+        public string CommentId {get;set;}
         public RunProperties Properties {get;set;}
         public Image Image {get;set;}
-        //public int ImagePosition {get;set;} = -1;
-        //public int FormulaPosition {get;set;} = -1;
         public string FormulaLatexFormat {get;set;}
         public string FormulaMathMlFormat {get;set;}
         public int Index { get; set; }
