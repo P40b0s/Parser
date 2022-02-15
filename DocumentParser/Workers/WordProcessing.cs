@@ -190,6 +190,8 @@ namespace DocumentParser.Workers
                             if(el.GetType() == typeof(CommentRangeStart))
                             {
                                 commentRange = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, HaveCommentRange = true};
+                                var end = elements.FirstOrDefault(f=>f.GetType() == typeof(CommentRangeEnd) && ((CommentRangeEnd)f).Id == ((CommentRangeStart)el).Id);
+
                             }
                             if(el.GetType() == typeof(CommentRangeEnd))
                             {

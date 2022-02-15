@@ -145,16 +145,17 @@ namespace DocumentParser.Workers
                         commentId = "";
                     }
                     var wrap = new RunElement(el, sett, props, extractor, tempRuns, runImages);
-                    if(!commentRange.HaveCommentRange && localCommentRange)
-                    {
-                        wrap.CommentId = commentId;
-                        wrap.Comment = comments.FirstOrDefault(f=>f.id == commentId).ToComment;
-                    }
                     if(commentRange.HaveCommentRange)
                     {
                        wrap.CommentId = commentRange.CommentId;
                        wrap.Comment = comments.FirstOrDefault(f=>f.id == commentRange.CommentId).ToComment;
                     }
+                    if(!commentRange.HaveCommentRange && localCommentRange)
+                    {
+                        wrap.CommentId = commentId;
+                        wrap.Comment = comments.FirstOrDefault(f=>f.id == commentId).ToComment;
+                    }
+                    
                     if(wrap.CanAdd)
                     {
                         tempRuns.Add(wrap);
