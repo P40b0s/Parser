@@ -54,7 +54,7 @@ namespace DocumentParser.Parsers
                             breakCycle = true;
                         }
                     }
-                    if(paragraphAfter == null)
+                    if(paragraphAfter == null && lastAnchor.IsOk)
                     {
                         //теперь подключаем анкоры
                         var par = extractor.GetElement(lastAnchor.Value);
