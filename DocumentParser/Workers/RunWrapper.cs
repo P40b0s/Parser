@@ -25,8 +25,6 @@ namespace DocumentParser.Workers
          string formulaMathMlFormat,
          ISettings sett)
         {
-            //CommentStart = commentStart;
-            //CommentEnd = commentEnd;
             CommentId = commentId;
             Text = text;
             Properties = properties;
@@ -35,9 +33,6 @@ namespace DocumentParser.Workers
             FormulaMathMlFormat = formulaMathMlFormat;
             settings = sett;
         }
-        //public bool CommentStart {get;set;}
-        //public bool CommentEnd {get;set;}
-        public string CommentId {get; set;}
         public bool HaveRun => run != null;
         public bool HaveComment => CommentId != null;
         public bool CanAdd => HaveFormula || HaveImage || (HaveRun && Text != "") || HaveComment;
