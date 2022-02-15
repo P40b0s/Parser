@@ -16,7 +16,6 @@ namespace DocumentParser.Workers
     {
         public RunElement(
          string commentId,
-         Comment comment,
          string text,
          RunProperties properties,
          Image image,
@@ -29,7 +28,6 @@ namespace DocumentParser.Workers
             //CommentStart = commentStart;
             //CommentEnd = commentEnd;
             CommentId = commentId;
-            Comment = comment;
             Text = text;
             Properties = properties;
             Image = image;
@@ -40,13 +38,12 @@ namespace DocumentParser.Workers
         //public bool CommentStart {get;set;}
         //public bool CommentEnd {get;set;}
         public string CommentId {get; set;}
-        
         public bool HaveRun => run != null;
         public bool HaveComment => CommentId != null;
         public bool CanAdd => HaveFormula || HaveImage || (HaveRun && Text != "") || HaveComment;
         public RunElement Clone()
         {
-            return new RunElement(CommentId, Comment, Text, Properties, Image, FormulaLatexFormat, FormulaMathMlFormat, settings);
+            return new RunElement(CommentId, Text, Properties, Image, FormulaLatexFormat, FormulaMathMlFormat, settings);
         }
        // WordProperties properties{get;}
         //DataExtractor extractor {get;}
@@ -130,8 +127,6 @@ namespace DocumentParser.Workers
             {
                 Runs = new List<RunElement>();
                 var tempRuns = new List<RunElement>();
-                bool localCommentRange = false;
-                string commentId = "";
                 foreach(var el in p)
                 {
                     // if(el.GetType() == typeof(CommentRangeStart))
@@ -149,7 +144,7 @@ namespace DocumentParser.Workers
                     if(runInComment.CommentId != null)
                     {
                         wrap.CommentId = runInComment.CommentId;
-                        //wrap.Comment = comments.FirstOrDefault(f=>f.id == runInComment.CommentId).ToComment;
+                        wrap.Comment = comments.FirstOrDefault(f=>f.id == runInComment.CommentId).ToComment;
                     }
                        
                     //if(commentRange.HaveCommentRange)
@@ -219,8 +214,8 @@ namespace DocumentParser.Workers
         //     //Удаляем все элементы с пустым текстом и индексом комментов
         //     Runs.RemoveAll(r=>r.Text == "" && r.CommentId != null);
         // }
-        public List<Comment> Comments => Runs.Where(f=>f.Comment != null).Select(s=>s.Comment).ToList();
-        public List<string> CommentsId => Runs.Where(w=>w.HaveComment).Select(s=>s.CommentId).ToList();
+        //public List<Comment> Comments => Runs.Where(f=>f.Comment != null).Select(s=>s.Comment).ToList();
+        public List<string> Comments => Runs.Where(w=>w.HaveComment).Select(s=>s.CommentId).ToList();
         public bool HaveFormula => Runs.Any(c=>c.HaveFormula);
         public bool HaveImage => Runs.Any(c=>c.HaveImage);
         public List<RunElement> GetRuns() => Runs;

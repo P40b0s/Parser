@@ -41,7 +41,7 @@ public struct CommentWrapper
     public DateTime? Date {get;set;}
     public string Initials {get;set;}
     public List<string> Paragraphs {get;}
-    public DocumentParser.DocumentElements.Comment ToComment => new DocumentParser.DocumentElements.Comment(Paragraphs, Auhtor, Initials, Date);
+    public DocumentParser.DocumentElements.Comment ToComment => new DocumentParser.DocumentElements.Comment(id, Paragraphs, Auhtor, Initials, Date);
     
 }
 

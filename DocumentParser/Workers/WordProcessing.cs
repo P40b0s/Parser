@@ -20,7 +20,7 @@ namespace DocumentParser.Workers
     public class WordProcessing : Parsers.ParserBase, IDisposable
     {
         List<ElementStructure> ElementsList { get; } = new List<ElementStructure>();
-        List<CommentWrapper> comments {get;}= new List<CommentWrapper>();
+        public List<CommentWrapper> Comments {get;}= new List<CommentWrapper>();
         /// <summary>
         /// Выносим имаджи сюда, потому что если присутствуют тяжелые рисунки и надо загрузить весь док, то это может длиться очень долго
         /// поэтому запрашиваем загрузку рисунка только когда необходимо, а на фронт сливаем облегченный вариант
@@ -88,7 +88,14 @@ namespace DocumentParser.Workers
                 AddError(ex);
             }
         }
-        public List<ElementStructure> GetParagrapsByComment(string comment) => ElementsList.Where(w=>w.Comments != null && w.Comments.Where(w=>w.Values.Contains(comment)).Count() > 0).ToList();
+        public List<ElementStructure> GetParagrapsByComment(string comment)
+        {
+            var com = Comments.FirstOrDefault(f=>f.ToComment.Values.Contains(comment));
+            if(com.id != null)
+                return ElementsList.Where(w=>w.Comments.Contains(com.id)).ToList();
+            else return new List<ElementStructure>();
+        }
+         
 
         private void SearchComments()
         {
@@ -98,7 +105,7 @@ namespace DocumentParser.Workers
                 var com = Document.MainDocumentPart.WordprocessingCommentsPart.Comments.Elements<DocumentFormat.OpenXml.Wordprocessing.Comment>();
                 foreach(var c in com)
                 {
-                    comments.Add(new CommentWrapper(c, Settings, DataExtractor, Properties));
+                    Comments.Add(new CommentWrapper(c, Settings, DataExtractor, Properties));
                 }
             }
         }
@@ -188,9 +195,10 @@ namespace DocumentParser.Workers
                             {
                                 var id = ((CommentRangeStart)el).Id;
                                 //commentRange = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, HaveCommentRange = true};
-                                var end = el.Descendants<Run>().FirstOrDefault(f=>f.FirstChild.GetType() == typeof(CommentReference) && ((CommentReference)f.FirstChild).Id == id);
+                                //var end = el.Descendants<Run>().FirstOrDefault(f=>f.FirstChild.GetType() == typeof(CommentReference) && ((CommentReference)f.FirstChild).Id == id);
+                                var end = par.Descendants<CommentReference>().FirstOrDefault(f=>f.Id == id);
                                 //var end = elements.FirstOrDefault(f=>f.GetType() == typeof(CommentRangeEnd) && ((CommentRangeEnd)f).Id == ((CommentRangeStart)el).Id);
-                                var rwt = el.Descendants<Run>().TakeWhile(t=> t!= end).ToList();
+                                var rwt = el.Descendants<Run>().TakeWhile(t=> t!= end.Parent).ToList();
                                 //Перебираем все найденые раны если находим их в списке с комментами то заменяем на новый
                                 //это сделано потому что один коммент может быть внутри другого
                                 //таким образом каждый вложенный коммент затрет id его родительского коммента
@@ -214,7 +222,7 @@ namespace DocumentParser.Workers
                             // }
                                 
                         }
-                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, runsWithComments, comments, DocumentImages);
+                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, runsWithComments, Comments, DocumentImages);
                         if(p.IsParagraph)
                         {
                             if(!p.IsEmpty)
@@ -249,7 +257,7 @@ namespace DocumentParser.Workers
                             var parsInTable = p.Element.Descendants<Paragraph>();
                             foreach(var tpar in parsInTable)
                             {
-                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, runsWithComments, comments, DocumentImages);
+                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, runsWithComments, Comments, DocumentImages);
                                 if(!p.IsEmpty)
                                 {
                                     ElementsList.Add(new ElementStructure(ElementsList, arrayIndex) 

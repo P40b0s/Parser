@@ -118,7 +118,8 @@ namespace DocumentParser.Parsers
             document.Body = new DocumentBody(headersParser.Headers.Select(s=>s.Header).ToList(),
                                             headersParser.BodyIndents,
                                             headersParser.BodyItems,
-                                            annexParser.Annexes.Select(s=>s.Annex).ToList());
+                                            annexParser.Annexes.Select(s=>s.Annex).ToList(),
+                                            word.Comments.Select(s=>s.ToComment).ToList());
             if(word.DocumentImages.Count > 0)
             {
                 document.Images = word.DocumentImages;

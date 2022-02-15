@@ -12,13 +12,15 @@ namespace DocumentParser.DocumentElements
 {
     public class Comment 
     {
-        public Comment(List<string> values, string subject, string initials, DateTime? date)
+        public Comment(string id, List<string> values, string subject, string initials, DateTime? date)
         {
+            Id = id;
             Values = values;
             Subject = subject;
             Initials = initials;
             Date = date;
         }
+        public string Id {get;}
         public List<string> Values {get;}
         public string Subject {get;}
         public string Initials {get;}

@@ -47,7 +47,7 @@ public partial class ElementStructure
     public int Length {get;set;}
     public bool IsChange {get;set;}
     public DocumentTable Table {get;set;}
-    public List<Comment> Comments => WordElement.RunWrapper.Comments;
+    public List<string> Comments => WordElement.RunWrapper.Comments;
     public IEnumerable<DocumentFormat.OpenXml.Wordprocessing.Run> GetRuns()
     {
         return WordElement.Element.Elements<DocumentFormat.OpenXml.Wordprocessing.Run>();

@@ -10,7 +10,7 @@ using DocumentParser.Interfaces;
 
 namespace DocumentParser.DocumentElements
 {
-    public class Indent : StructureNodeBase, IComment, IMetaInformation, IIsDefinition, IIsChange, IHyperTextInfo, IFootNote
+    public class Indent : StructureNodeBase, IMetaInformation, IIsDefinition, IIsChange, IHyperTextInfo, IFootNote
     {
         public Indent(ParagraphProperties properties,
                      int elementIndex,
@@ -18,7 +18,6 @@ namespace DocumentParser.DocumentElements
                      List<Run> runs,
                      MetaInfo meta,
                      HyperTextInfo hyperTextInfo,
-                     List<Comment> comments,
                      FootNoteInfo footNote,
                      DocumentTable table,
                      bool isChange,
@@ -32,7 +31,6 @@ namespace DocumentParser.DocumentElements
             Runs = runs;
             Meta = meta;
             HyperTextInfo = hyperTextInfo;
-            Comments = comments;
             Table = table;
             IsChange = isChange;
             FootNote = footNote;
@@ -56,7 +54,6 @@ namespace DocumentParser.DocumentElements
         public MetaInfo Meta {get;set;}
         public HyperTextInfo HyperTextInfo {get;set;}
         public FootNoteInfo FootNote {get;set;}
-        public List<Comment> Comments {get;set;}
         public bool IsDefinition {get;set;}
         public bool IsChange {get;set;}
         public string IndentHash { get; set; }

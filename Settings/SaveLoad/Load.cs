@@ -27,7 +27,7 @@ public partial class Settings
                 Type type = Type.GetType($"SettingsWorker.{ns}.{name}");
                 if(type != null)
                 {
-                     var deserialized = System.Text.Json.JsonSerializer.Deserialize(settings, type, getOptions());
+                    var deserialized = System.Text.Json.JsonSerializer.Deserialize(settings, type, getOptions());
                     if(deserialized != null)
                     {
                         var props = typeof(DT).GetProperties();

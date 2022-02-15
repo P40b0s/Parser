@@ -26,7 +26,7 @@ namespace DocumentParser.DocumentElements
         public string Number { get; set; }
         public string Postfix {get;set;}
         public string Type {get;set;}
-        public List<Comment> Comments {get;set;}
+        public string CommentId {get;set;}
         public HyperTextInfo HyperTextInfo {get;set;}
         public MetaInfo Meta {get;set;}
         public DocumentTable Table {get;set;}
