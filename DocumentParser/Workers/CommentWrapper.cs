@@ -8,8 +8,8 @@ namespace DocumentParser.Workers;
 
 public struct CommentRange
 {
-    public string CommentId {get;set;} = "";
-    public bool HaveCommentRange {get;set;} = false;
+    public string CommentId {get;set;}
+    public Run Run {get;set;}
 }
 public struct CommentWrapper
 {

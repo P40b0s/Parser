@@ -18,13 +18,13 @@ namespace DocumentParser.Workers
             Element = e;
             this.props = props;
             this.extractor = extractor;
-            RunWrapper = new RunWrapper(e, sett, props, extractor, new CommentRange(), new List<CommentWrapper>());
+            RunWrapper = new RunWrapper(e, sett, props, extractor, new List<CommentRange>(), new List<CommentWrapper>());
             //var commnetRangeStart = Element.ChildElements.OfType<CommentRangeStart>().FirstOrDefault()?.Id;
             //var commnetRangeEnd = Element.ChildElements.OfType<CommentRangeEnd>().FirstOrDefault();
             //Поставим первый попавшийся коммент из ранов
             //CommentId = RunWrapper.Comments.FirstOrDefault();
         }
-        public ParagraphWrapper(OpenXmlElement e, ISettings sett, DataExtractor extractor, WordProperties props, CommentRange commentRange, List<CommentWrapper> comments)
+        public ParagraphWrapper(OpenXmlElement e, ISettings sett, DataExtractor extractor, WordProperties props, List<CommentRange> commentRange, List<CommentWrapper> comments)
         {
             Element = e;
             this.props = props;
@@ -35,7 +35,7 @@ namespace DocumentParser.Workers
             //Поставим первый попавшийся коммент из ранов
             //CommentId = RunWrapper.Comments.FirstOrDefault();
         }
-        public ParagraphWrapper(OpenXmlElement e, ISettings sett,  DataExtractor extractor, WordProperties props, CommentRange commentRange, List<CommentWrapper> comments, List<Image> runImages = null)
+        public ParagraphWrapper(OpenXmlElement e, ISettings sett,  DataExtractor extractor, WordProperties props, List<CommentRange> commentRange, List<CommentWrapper> comments, List<Image> runImages = null)
         {
             Element = e;
             this.props = props;

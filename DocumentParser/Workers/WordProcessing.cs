@@ -162,7 +162,7 @@ namespace DocumentParser.Workers
         //     }
         //     return index;
         // }
-        
+        List<CommentRange> runsWithComments = new List<CommentRange>();
         /// <summary>
         /// Установка индексов элемена в бодике
         /// </summary>
@@ -180,26 +180,41 @@ namespace DocumentParser.Workers
                     int paragraphStartIndex = 0;
                     int currentElement = 0;
                     int arrayIndex = 0;
-                    var commentRange = new CommentRange();
-                    bool haveCommentRange = false;
-                    string commentRangeId = "";
                     foreach(var par in elements)
                     {
                         foreach (var el in par)
                         {
                             if(el.GetType() == typeof(CommentRangeStart))
                             {
-                                commentRange = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, HaveCommentRange = true};
-                                var end = elements.FirstOrDefault(f=>f.GetType() == typeof(CommentRangeEnd) && ((CommentRangeEnd)f).Id == ((CommentRangeStart)el).Id);
-
+                                var id = ((CommentRangeStart)el).Id;
+                                //commentRange = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, HaveCommentRange = true};
+                                var end = el.Descendants<Run>().FirstOrDefault(f=>f.FirstChild.GetType() == typeof(CommentReference) && ((CommentReference)f.FirstChild).Id == id);
+                                //var end = elements.FirstOrDefault(f=>f.GetType() == typeof(CommentRangeEnd) && ((CommentRangeEnd)f).Id == ((CommentRangeStart)el).Id);
+                                var rwt = el.Descendants<Run>().TakeWhile(t=> t!= end).ToList();
+                                //Перебираем все найденые раны если находим их в списке с комментами то заменяем на новый
+                                //это сделано потому что один коммент может быть внутри другого
+                                //таким образом каждый вложенный коммент затрет id его родительского коммента
+                                for(int r = rwt.Count -1; r >= 0; r--)
+                                {
+                                    for(int i = 0; i < runsWithComments.Count; i++)
+                                    {
+                                        if(runsWithComments[i].Run == rwt[r])
+                                        {
+                                            runsWithComments[i] = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, Run = rwt[r]};
+                                            rwt.RemoveAt(r);
+                                        }
+                                    }        
+                                }
+                                //добавляем все раны что не были обнаружены в списке вложенных комментов
+                                runsWithComments.AddRange(rwt.Select(s=> new CommentRange(){CommentId = id, Run = s}));
                             }
-                            if(el.GetType() == typeof(CommentRangeEnd))
-                            {
-                                commentRange = new CommentRange();
-                            }
+                            // if(el.GetType() == typeof(CommentRangeEnd))
+                            // {
+                            //     commentRange = new CommentRange();
+                            // }
                                 
                         }
-                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, commentRange, comments, DocumentImages);
+                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, runsWithComments, comments, DocumentImages);
                         if(p.IsParagraph)
                         {
                             if(!p.IsEmpty)
@@ -234,7 +249,7 @@ namespace DocumentParser.Workers
                             var parsInTable = p.Element.Descendants<Paragraph>();
                             foreach(var tpar in parsInTable)
                             {
-                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, commentRange, comments, DocumentImages);
+                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, runsWithComments, comments, DocumentImages);
                                 if(!p.IsEmpty)
                                 {
                                     ElementsList.Add(new ElementStructure(ElementsList, arrayIndex) 

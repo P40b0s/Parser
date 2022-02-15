@@ -124,7 +124,7 @@ namespace DocumentParser.Workers
 
     public struct RunWrapper
     {
-        public RunWrapper(OpenXmlElement p, ISettings sett, WordProperties props, DataExtractor extractor, CommentRange commentRange, List<CommentWrapper> comments, List<Image> runImages = null)
+        public RunWrapper(OpenXmlElement p, ISettings sett, WordProperties props, DataExtractor extractor, List<CommentRange> commentRange, List<CommentWrapper> comments, List<Image> runImages = null)
         {
             if(p.GetType() == typeof(Paragraph))
             {
@@ -134,27 +134,33 @@ namespace DocumentParser.Workers
                 string commentId = "";
                 foreach(var el in p)
                 {
-                    if(el.GetType() == typeof(CommentRangeStart))
-                    {
-                        localCommentRange = true;
-                        commentId = ((CommentRangeStart)el).Id;
-                    }
-                    if(el.GetType() == typeof(CommentRangeEnd))
-                    { 
-                        localCommentRange = false;
-                        commentId = "";
-                    }
+                    // if(el.GetType() == typeof(CommentRangeStart))
+                    // {
+                    //     localCommentRange = true;
+                    //     commentId = ((CommentRangeStart)el).Id;
+                    // }
+                    // if(el.GetType() == typeof(CommentRangeEnd))
+                    // { 
+                    //     localCommentRange = false;
+                    //     commentId = "";
+                    // }
                     var wrap = new RunElement(el, sett, props, extractor, tempRuns, runImages);
-                    if(commentRange.HaveCommentRange)
+                    var runInComment = commentRange.FirstOrDefault(f=>f.Run == el);
+                    if(runInComment.CommentId != null)
                     {
-                       wrap.CommentId = commentRange.CommentId;
-                       wrap.Comment = comments.FirstOrDefault(f=>f.id == commentRange.CommentId).ToComment;
+                        wrap.CommentId = runInComment.CommentId;
+                        //wrap.Comment = comments.FirstOrDefault(f=>f.id == runInComment.CommentId).ToComment;
                     }
-                    if(!commentRange.HaveCommentRange && localCommentRange)
-                    {
-                        wrap.CommentId = commentId;
-                        wrap.Comment = comments.FirstOrDefault(f=>f.id == commentId).ToComment;
-                    }
+                       
+                    //if(commentRange.HaveCommentRange)
+                    // {
+                    //    wrap.CommentId = commentRange.CommentId;
+                    // }
+                    // if(!commentRange.HaveCommentRange && localCommentRange)
+                    // {
+                    //     wrap.CommentId = commentId;
+                    //     wrap.Comment = comments.FirstOrDefault(f=>f.id == commentId).ToComment;
+                    // }
                     
                     if(wrap.CanAdd)
                     {
