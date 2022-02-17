@@ -67,6 +67,7 @@ namespace DocumentParser.Workers
         public bool IsBold(OpenXmlElement p)
         {
             var par = ExtractParagraphProperties(p);
+            
             var runs = p.Elements<DocumentFormat.OpenXml.Wordprocessing.Run>().Select(r => ExtractRunProperties(r)).All(a => a.IsBold);
             return runs || (par?.RProperties?.IsBold ?? false);
         }

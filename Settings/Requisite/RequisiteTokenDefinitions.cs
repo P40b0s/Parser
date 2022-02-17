@@ -5,16 +5,16 @@ public class RequisiteTokenDefinitions : TokenDefinitionBase<RequisiteTokenType>
 {
     public RequisiteTokenDefinitions()
     {
-        addToken(RequisiteTokenType.Орган, $"российская{Templates.WsBr}+федерация", 1);
-        addToken(RequisiteTokenType.Орган, $"российской{Templates.WsBr}+федерации", 2);
-        addToken(RequisiteTokenType.Орган, $"президента{Templates.WsBr}+российской{Templates.WsBr}+федерации", 1);
+        addToken(RequisiteTokenType.Орган, $"(?<=\n\\s*)российская{Templates.WsBr}+федерация", 1);
+        addToken(RequisiteTokenType.Орган, $"(?<=\n\\s*)российской{Templates.WsBr}+федерации", 2);
+        addToken(RequisiteTokenType.Орган, $"(?<=\n\\s*)президента{Templates.WsBr}+российской{Templates.WsBr}+федерации", 1);
         //addToken(RequisiteTokenType.Орган, $"правительство{Templates.WsBr}+российской{Templates.WsBr}+федерации", 1);
         //addToken(RequisiteTokenType.Орган, $"министерство.+федерации$", 1);
         //addToken(RequisiteTokenType.Орган, $"правительство.+(области|края|республики)$", 1);
         //addToken(RequisiteTokenType.Орган, $"правительство{Templates.WsBr}+российской{Templates.WsBr}+федерации", 1);
-        addToken(RequisiteTokenType.Орган, $"министерство{Templates.WsBrWord}+", 1);
-        addToken(RequisiteTokenType.Орган, $"правительство{Templates.WsBrWord}+", 1);
-        addToken(RequisiteTokenType.Орган, $"федеральн[аяое]{{2}}{Templates.WsBrWord}+", 1);
+        addToken(RequisiteTokenType.Орган, $"(?<=\n\\s*)министерство{Templates.WsBrWord}+", 1);
+        addToken(RequisiteTokenType.Орган, $"(?<=\n\\s*)правительство{Templates.WsBrWord}+", 1);
+        addToken(RequisiteTokenType.Орган, $"(?<=\n\\s*)федеральн[аяое]{{2}}{Templates.WsBrWord}+", 1);
 
         addToken(RequisiteTokenType.Вид, $"федеральный{Templates.WsBr}+закон", 1);
         addToken(RequisiteTokenType.Вид, $"закон{Templates.WsBr}+российской{Templates.WsBr}+федерации{Templates.WsBr}+о{Templates.WsBr}+поправке{Templates.WsBr}+к{Templates.WsBr}+конституции{Templates.WsBr}+российской{Templates.WsBr}+федерации", 1);
