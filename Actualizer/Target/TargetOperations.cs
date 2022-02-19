@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Actualizer.Source;
+using Actualizer.Source.Operations;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentParser.Elements;
 using DocumentParser.Parsers;
 using SettingsWorker;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
@@ -138,7 +140,7 @@ public class TargetOperations
             node.ChangesNodes[n].WordElement.Element.CopyParagraphStyle(newPar, source, parser);
             newPar.CopyAllRunsStyles(source, parser);
             newPar.CopyAllImages(source, parser);
-            //Выбираем первый и последний параграфы для веделения коментариями
+            //Выбираем первый и последний параграфы для выделения коментариями
             if(n == 0)
                 first = newPar;
             if(n == node.ChangesNodes.Count() - 1)
@@ -231,7 +233,7 @@ public class TargetOperations
         var tmpFile = "tmp";
         //parser.word.SaveDocument(tmpFile, true);
         parser.word.Dispose();
-        parser = new Services.Documents.Parser.Parsers.DocumentParser(tmpFile, settings);
+        parser = new Parser(tmpFile);
         await ParseTargetDocument();
     }
 
@@ -266,7 +268,7 @@ public class TargetOperations
         if(path.Type == JsonItemType.Indents)
         {
             var items = targetDocumentJObject.SelectTokens(path.Path);
-            List<Services.Documents.Core.DocumentElements.Indent> l = items.Select(s=>s.ToObject<Services.Documents.Core.DocumentElements.Indent>()).ToList();
+            List<DocumentParser.DocumentElements.Indent> l = items.Select(s=>s.ToObject<DocumentParser.DocumentElements.Indent>()).ToList();
             var num = sorter.GetItemNumberBefore(l.Select(s=>l.IndexOf(s).ToString()), node.Path.Last());
             int index = 0;
             if(!int.TryParse(num, out index))
@@ -283,7 +285,7 @@ public class TargetOperations
         if(path.Type == JsonItemType.Headers)
         {
             var items = targetDocumentJObject.SelectTokens(path.Path);
-            List<Services.Documents.Core.DocumentElements.Header> l = items.Select(s=>s.ToObject<Services.Documents.Core.DocumentElements.Header>()).ToList();
+            List<DocumentParser.DocumentElements.Header> l = items.Select(s=>s.ToObject<DocumentParser.DocumentElements.Header>()).ToList();
             var num = sorter.GetItemNumberBefore(l.Select(s=>s.Number), node.Path.Last());
             var itemBefore = l.First(f=>f.Number == num);
             var item = parser.word.GetElement(itemBefore.ElementIndex);
@@ -299,7 +301,7 @@ public class TargetOperations
         if(path.Type == JsonItemType.Items)
         {
             var items = targetDocumentJObject.SelectTokens(path.Path);
-            List<Item> l = items.Select(s=>s.ToObject<Services.Documents.Core.DocumentElements.Item>()).ToList();
+            List<DocumentParser.DocumentElements.Item> l = items.Select(s=>s.ToObject<DocumentParser.DocumentElements.Item>()).ToList();
             var num = sorter.GetItemNumberBefore(l.Select(s=>s.Number), node.Path.Last());
             var itemBefore = l.First(f=>f.Number == num);
             var item = parser.word.GetElement(itemBefore.ElementIndex);

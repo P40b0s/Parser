@@ -32,7 +32,7 @@ public partial class Token<T>
             {
                 if(i+1 < tokens.Count)
                     return new Result<Token<T>, TokenException>(tokens[i+1]);
-                else return new Result<Token<T>, TokenException>(outOfRangeException(i-1));
+                else return new Result<Token<T>, TokenException>(outOfRangeException(i+1));
                     
             }
         }

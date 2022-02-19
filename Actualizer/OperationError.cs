@@ -22,9 +22,9 @@ public struct OperationError
         Requisites = requisites;
         Path = null;
     }
-    public DocumentRequisites Requisites {get;}
-    public string OriginalText {get;}
-    public string Error {get;}
-    public string Path {get;}
-    public List<Token<ActualizerTokenType>> Tokens {get;}
+    public DocumentRequisites Requisites {init; get;}
+    public string OriginalText {init; get;}
+    public string Error {init; get;}
+    public string Path {init; get;}
+    public List<Token<ActualizerTokenType>> Tokens {init; get;}
 }

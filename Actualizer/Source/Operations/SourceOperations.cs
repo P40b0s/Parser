@@ -7,6 +7,7 @@ using DocumentParser.Parsers;
 using Lexer;
 using SettingsWorker;
 using SettingsWorker.Actualizer;
+using Utils.Extensions;
 
 namespace Actualizer.Source.Operations;
     public partial class SourceOperations
@@ -19,7 +20,15 @@ namespace Actualizer.Source.Operations;
         public List<OperationError> statuses = new List<OperationError>();
         public void AddError(string status, string text, string path, DocumentRequisites requisites)
         {
-            statuses.Add(status);
+            statuses.Add(new OperationError(){Error = status, Requisites = requisites, OriginalText = text, Path = path});
+        }
+        public void AddError(string status, string text, DocumentRequisites requisites)
+        {
+            statuses.Add(new OperationError(){Error = status, Requisites = requisites, OriginalText = text});
+        }
+        public void AddError(string status, string text)
+        {
+            statuses.Add(new OperationError(){Error = status, OriginalText = text});
         }
 
 
@@ -105,15 +114,17 @@ namespace Actualizer.Source.Operations;
     public void NextSequenceChange(ElementStructure currentParagraph,  List<Token<ActualizerTokenType>> tokenSequence, Parser parser,  List<StructureNode> structures, Operation operation)
     {
         var s = new StructureNode(currentParagraph, operation);
-        s.TargetDocumentRequisites= getTargetDocReq(tokenSequence, currentParagraph, parser);
+        s.TargetDocumentRequisites = getTargetDocReq(tokenSequence, currentParagraph, parser);
         PathUnit zeroPath = new PathUnit();
-        if(s.TargetDocumentRequisites.AnnexType!= null)
+        if(s.TargetDocumentRequisites.AnnexType != null)
         {
             zeroPath = new PathUnit() {Number = null, Token = null, AnnexName = s.TargetDocumentRequisites.FullAnnexName, AnnexType = s.TargetDocumentRequisites.AnnexType, Type = StructureType.Annex};
         }
-        var index = currentParagraph.Next().ElementIndex;
-        IEnumerable<Item> items = null;
-        items = RecursiveElementSearch(index, parser.document.Body.Items);
+        var next = currentParagraph.Next();
+        if (next.IsError)
+            AddError("Следующий параграф не найден", currentParagraph.WordElement.Text, s.TargetDocumentRequisites);
+        var index = next.Value.ElementIndex;
+        var items = RecursiveElementSearch(index, parser.document.Body.Items);
         if(items == null)
         {
             foreach(var h in parser.document.Body.Headers)
@@ -215,6 +226,7 @@ namespace Actualizer.Source.Operations;
             }
         }
     }
+    //FIXME все переелать под нормальную проверку! никаких NextLocal().Value.NextLocal()!!!
     /// <summary>
     /// Атомарные операции со словами
     /// </summary>
@@ -231,16 +243,16 @@ namespace Actualizer.Source.Operations;
             var afterWord = tokens.Where(f=>f.TokenType == ActualizerTokenType.After);
             if(afterWord.Count() == 1)
             {
-                var afterWordToken = afterWord.ElementAt(0).NextLocal()?.NextLocal();
-                if(afterWordToken!= null && afterWordToken.TokenType == ActualizerTokenType.Quoted)
+                var afterWordToken = afterWord.ElementAt(0).NextLocal().Value.NextLocal();
+                if(afterWordToken.IsOk && afterWordToken.Value.TokenType == ActualizerTokenType.Quoted)
                 {
-                    var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(afterWordToken.StartIndex + correction , afterWordToken.Length));
+                    var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(afterWordToken.Value.StartIndex + correction , afterWordToken.Value.Length));
                     node.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
                 }
-                var addWordToken = afterWordToken?.NextLocal()?.NextLocal()?.NextLocal();
-                if(addWordToken!= null && addWordToken.TokenType == ActualizerTokenType.Quoted)
+                var addWordToken = afterWordToken.Value.NextLocal().Value.NextLocal().Value.NextLocal();
+                if(addWordToken.IsOk && addWordToken.Value.TokenType == ActualizerTokenType.Quoted)
                 {
-                    var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
+                    var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(addWordToken.Value.StartIndex + correction , addWordToken.Value.Length));
                     node.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
                 }
             }
@@ -250,17 +262,17 @@ namespace Actualizer.Source.Operations;
                 foreach(var w in afterWord)
                 {
                     var wstr = new StructureNode(currentElement, Operation.Add);
-                    var afterWordToken = w.NextLocal()?.NextLocal();
-                    if(afterWordToken!= null && afterWordToken.TokenType == ActualizerTokenType.Quoted)
+                    var afterWordToken = w.NextLocal().Value.NextLocal();
+                    if(afterWordToken.IsOk && afterWordToken.Value.TokenType == ActualizerTokenType.Quoted)
                     {
-                        var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(afterWordToken.StartIndex + correction , afterWordToken.Length));
+                        var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(afterWordToken.Value.StartIndex + correction , afterWordToken.Value.Length));
                         wstr.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
                         
                     }
-                    var addWordToken = afterWordToken?.NextLocal()?.NextLocal()?.NextLocal();
-                    if(addWordToken!= null && addWordToken.TokenType == ActualizerTokenType.Quoted)
+                    var addWordToken = afterWordToken.Value.NextLocal().Value.NextLocal().Value.NextLocal();
+                    if(addWordToken.IsOk && addWordToken.Value.TokenType == ActualizerTokenType.Quoted)
                     {
-                        var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
+                        var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(addWordToken.Value.StartIndex + correction , addWordToken.Value.Length));
                         wstr.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
                     }
                     //Копируем путь в ноду чтоб потом не выбирать его из родителя
@@ -272,36 +284,55 @@ namespace Actualizer.Source.Operations;
         }
         if(currentOperation == Operation.Replace)
         {
-            var qotedToken0 = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Replace)?.BeforeLocal();
-            if(qotedToken0!= null && qotedToken0.TokenType == ActualizerTokenType.Quoted)
+            var qotedToken0 = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Replace);
+            if(qotedToken0!= null)
             {
-                var quoted0 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(qotedToken0.StartIndex + correction , qotedToken0.Length));
-                node.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
+                var qt0 = qotedToken0.BeforeLocal();
+                if(qt0.IsOk && qt0.Value.TokenType == ActualizerTokenType.Quoted)
+                {
+                    var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(qt0.Value.StartIndex + correction , qt0.Value.Length));
+                    node.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
+                }
             }
-            var newWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Replace)?.NextLocal()?.NextLocal();
-            if(newWordToken!= null && newWordToken.TokenType == ActualizerTokenType.Quoted)
+            var newWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Replace);
+            if(newWordToken != null)
             {
-                var quoted1 = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(newWordToken.StartIndex + correction , newWordToken.Length));
-                node.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
+                var nwt = newWordToken.NextLocal();
+                if(nwt.IsOk && nwt.Value.TokenType == ActualizerTokenType.Quoted)
+                {
+                    var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(nwt.Value.StartIndex + correction , nwt.Value.Length));
+                    node.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
+                }
             }
+            
         }
         if(currentOperation == Operation.AddToEnd)
         {
-            var addWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Add)?.NextLocal()?.NextLocal();
-            if(addWordToken!= null && addWordToken.TokenType == ActualizerTokenType.Quoted)
+            var addWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Add);
+            if(addWordToken!= null)
             {
-                var quoted = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(addWordToken.StartIndex + correction , addWordToken.Length));
-                node.TargetText = quoted.Remove(0, 1).Remove(quoted.Length-2, 1);
+                var awt = addWordToken.NextLocal();
+                if(awt.IsOk && addWordToken.TokenType == ActualizerTokenType.Quoted)
+                {
+                    var quoted = parser.word.GetUnicodeString(currentElement, new TextIndex(awt.Value.StartIndex + correction , awt.Value.Length));
+                    node.TargetText = quoted.Remove(0, 1).Remove(quoted.Length-2, 1);
+                }
             }
+           
         }
         if(currentOperation == Operation.RemoveWord)
         {
-            var removeWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Remove)?.BeforeLocal();
-            if(removeWordToken != null && removeWordToken.TokenType == ActualizerTokenType.Quoted)
+            var removeWordToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Remove);
+            if(removeWordToken != null)
             {
-                var quoted = parser.word.GetUnicodeString(currentElement, new Core.TextIndex(removeWordToken.StartIndex + correction , removeWordToken.Length));
-                node.TargetText = quoted.Remove(0, 1).Remove(quoted.Length-2, 1);
+                var rwt = removeWordToken.BeforeLocal();
+                if(rwt.IsOk && removeWordToken.TokenType == ActualizerTokenType.Quoted)
+                {
+                    var quoted = parser.word.GetUnicodeString(currentElement, new TextIndex(rwt.Value.StartIndex + correction , rwt.Value.Length));
+                    node.TargetText = quoted.Remove(0, 1).Remove(quoted.Length-2, 1);
+                }
             }
+           
         }
     }
 
@@ -404,19 +435,22 @@ namespace Actualizer.Source.Operations;
         {
             string number = null;
             var maybenumberToken = order.NextLocal();
-            if(maybenumberToken.ConvertedValue != null)
-                number = maybenumberToken.ConvertedValue;
-            else
-                number = parser.word.GetUnicodeString(el, new Core.TextIndex(maybenumberToken.StartIndex + startIndexCorrection , maybenumberToken.Length) );
-            if(number != null)
+            if(maybenumberToken.IsOk)
             {
-                //если номер что-то типа - подпункт "б"
-                if(maybenumberToken.TokenType == ActualizerTokenType.Quoted)
+                if(maybenumberToken.Value.ConvertedValue != null)
+                    number = maybenumberToken.Value.ConvertedValue;
+                else
+                    number = parser.word.GetUnicodeString(el, new TextIndex(maybenumberToken.Value.StartIndex + startIndexCorrection , maybenumberToken.Value.Length) );
+                if(number != null)
                 {
-                    number = number.Remove(0, 1).Remove(number.Length -2, 1);
-                }
-                s.Path.Add(new PathUnit(){Number = number, Token = order, Type = getStructureType(order)});
-            } 
+                    //если номер что-то типа - подпункт "б"
+                    if(maybenumberToken.Value.TokenType == ActualizerTokenType.Quoted)
+                    {
+                        number = number.Remove(0, 1).Remove(number.Length -2, 1);
+                    }
+                    s.Path.Add(new PathUnit(){Number = number, Token = order, Type = getStructureType(order)});
+                } 
+            }
         }
         if(s.Path.Count > 0 && s.TargetDocumentRequisites.AnnexType != null)
         {
@@ -481,10 +515,10 @@ namespace Actualizer.Source.Operations;
             //var signDate = new DateTime(year, month, day);
             var signDate = reqToken.GetDate();
             if(signDate.IsError)
-
+                AddError("Не могу распознать дату в возможных реквизитах документа", signDate.Error.Message);
             var number = reqToken.CustomGroups[4].Value;
             var name = reqToken.CustomGroups[5].Value;
-            return new DocumentRequisites(){SignDate = signDate, Name = name, AnnexType = annexType, FullAnnexName = annexFullName, ActType = type, Number = number};
+            return new DocumentRequisites(){SignDate = signDate.Value.Value, Name = name, AnnexType = annexType, FullAnnexName = annexFullName, ActType = type, Number = number};
         }
         else return new DocumentRequisites();
     }
@@ -517,4 +551,4 @@ namespace Actualizer.Source.Operations;
             return StructureType.Word;
         return StructureType.None;
     }
-    }
+}

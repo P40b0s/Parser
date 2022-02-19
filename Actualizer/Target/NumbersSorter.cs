@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Test.Regexes.Actualizer.Source;
+using Actualizer.Source;
 
 namespace Actualizer.Target;
 

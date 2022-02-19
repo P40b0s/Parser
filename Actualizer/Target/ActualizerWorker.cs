@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Actualizer.Source;
+using Actualizer.Source.Operations;
 using DocumentFormat.OpenXml.Wordprocessing;
 using SettingsWorker;
 
@@ -12,7 +13,7 @@ public class ActualizerWorker
 {
     string targetFilePath{get;}
     SourceDocumentParserResult source {get;}
-    ISettings settingse {get;}
+    ISettings settings {get;}
     TargetOperations operations {get;}
     public ActualizerWorker(string targetFilePath, SourceDocumentParserResult source)
     {
