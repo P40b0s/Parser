@@ -17,6 +17,8 @@ public interface ISettings
     AllTokensDefinitions TokensDefinitions {get;set;}
     List<CustomRule<AllRules>> CustomRules {get;set;}
     RequisiteChangers RequisiteChangers {get;set;}
+    Dictionaries.AllDictionaries Dictionaries {get;set;}
+    DocumentProcessing.PoolSettings PoolSettings {get;set;}
     Paths Paths {get;}
     ValueTask<bool> Load();
     List<string> Status {get;}
@@ -27,6 +29,7 @@ public partial class Settings : ISettings
     public Settings()
     {
         IsDefault = true;
+        Load();
     }
     [JsonIgnore]
     public List<string> Status {get;} = new List<string>();
@@ -92,6 +95,8 @@ public partial class Settings : ISettings
 
     [System.Text.Json.Serialization.JsonIgnore]
     public Paths Paths {get;} = new Paths();
+
+    public DocumentProcessing.PoolSettings PoolSettings {get;set;} = new DocumentProcessing.PoolSettings();
    
 
     private void update(Settings settings)

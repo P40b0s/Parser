@@ -11,7 +11,7 @@ public partial class ItemsParser
     {
         //Перемещаем все неопознаные элементы из рутов хедеров в абзацы хедеров
         //быстрая версия
-        for(int h = 0 - 1; h < headers.Count; h++)
+        for(int h = 0; h < headers.Count; h++)
         {
             for(int i = headers[h].RootElements.Count - 1; i >=0 ; i--)
             {

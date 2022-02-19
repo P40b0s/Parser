@@ -20,7 +20,7 @@ namespace DocumentParser.Workers
     public class WordProcessing : Parsers.ParserBase, IDisposable
     {
         List<ElementStructure> ElementsList { get; } = new List<ElementStructure>();
-        List<CommentWrapper> comments {get;}= new List<CommentWrapper>();
+        public List<CommentWrapper> Comments {get;}= new List<CommentWrapper>();
         /// <summary>
         /// Выносим имаджи сюда, потому что если присутствуют тяжелые рисунки и надо загрузить весь док, то это может длиться очень долго
         /// поэтому запрашиваем загрузку рисунка только когда необходимо, а на фронт сливаем облегченный вариант
@@ -57,7 +57,23 @@ namespace DocumentParser.Workers
             try
             {
                 _docxPath = documentPath;
-                file = File.Open(_docxPath, FileMode.Open);
+                for (int i=1; i <= 10; ++i) 
+                {
+                    try 
+                    {
+                        file = File.Open(_docxPath, FileMode.Open);
+                        break; 
+                    }
+                    catch (IOException e) when (i <= 10) 
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }
+                if(file == null)
+                {
+                    AddError($"Ошибка чтения файла {documentPath} файл открыт в другой программе");
+                    return;
+                } 
                 Document = WordprocessingDocument.Open(file, true);
                 StylePart = Document.MainDocumentPart.StyleDefinitionsPart.Styles;
                 Body = Document.MainDocumentPart.Document.Body;
@@ -72,7 +88,14 @@ namespace DocumentParser.Workers
                 AddError(ex);
             }
         }
-        public List<ElementStructure> GetParagrapsByComment(string comment) => ElementsList.Where(w=>w.Comment != null && w.Comment.Values.Contains(comment)).ToList();
+        public List<ElementStructure> GetParagrapsByComment(string comment)
+        {
+            var com = Comments.FirstOrDefault(f=>f.ToComment.Values.Contains(comment));
+            if(com.id != null)
+                return ElementsList.Where(w=>w.Comments.Contains(com.id)).ToList();
+            else return new List<ElementStructure>();
+        }
+         
 
         private void SearchComments()
         {
@@ -82,7 +105,7 @@ namespace DocumentParser.Workers
                 var com = Document.MainDocumentPart.WordprocessingCommentsPart.Comments.Elements<DocumentFormat.OpenXml.Wordprocessing.Comment>();
                 foreach(var c in com)
                 {
-                    comments.Add(new CommentWrapper(c, Settings, DataExtractor, Properties));
+                    Comments.Add(new CommentWrapper(c, Settings, DataExtractor, Properties));
                 }
             }
         }
@@ -146,7 +169,7 @@ namespace DocumentParser.Workers
         //     }
         //     return index;
         // }
-        
+        List<CommentRange> runsWithComments = new List<CommentRange>();
         /// <summary>
         /// Установка индексов элемена в бодике
         /// </summary>
@@ -166,11 +189,51 @@ namespace DocumentParser.Workers
                     int arrayIndex = 0;
                     foreach(var par in elements)
                     {
-                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, DocumentImages);
+                        foreach (var el in par)
+                        {
+                            if(el.GetType() == typeof(CommentRangeStart))
+                            {
+                                var id = ((CommentRangeStart)el).Id;
+                                var end = Body.Descendants<CommentReference>().FirstOrDefault(f=>f.Id == id);
+                                if(end == null)
+                                {
+                                    AddError($"Не могу найти окончание комментария {id}");
+                                    break;
+                                }
+                                //Находим все раны в параграфе после начала коммента
+                                var parsFrom = el.ElementsAfter().OfType<Run>().ToList();
+                                //находим все раны в прараграфах которые идут после нашего параграфа
+                                parsFrom.AddRange(par.ElementsAfter().SelectMany(s=>s.Descendants<Run>()));
+                                var currentRunsWithCommentRange = new List<Run>();
+                                //если в параграфе встречаем наш стоп ран (ран в котором находится CommentReference) то останавливаем цикл
+                                foreach(var pp in parsFrom)
+                                {
+                                    if(pp == end.Parent)
+                                        break;
+                                    currentRunsWithCommentRange.Add(pp);
+                                }
+                                //Если есть вложенные комменты, то при каждой итерации заменяыем комменты на вложенные
+                                for(int r = currentRunsWithCommentRange.Count -1; r >= 0; r--)
+                                {
+                                    for(int i = 0; i < runsWithComments.Count; i++)
+                                    {
+                                        if(runsWithComments[i].Run == currentRunsWithCommentRange[r])
+                                        {
+                                            runsWithComments[i] = new CommentRange(){CommentId = ((CommentRangeStart)el).Id, Run = currentRunsWithCommentRange[r]};
+                                            currentRunsWithCommentRange.RemoveAt(r);
+                                        }
+                                    }        
+                                }
+                                //добавляем все раны что не были обнаружены в списке вложенных комментов
+                                runsWithComments.AddRange(currentRunsWithCommentRange.Select(s=> new CommentRange(){CommentId = id, Run = s}));
+                            }    
+                        }
+                        var p = new ParagraphWrapper(par, Settings, DataExtractor, Properties, runsWithComments, Comments, DocumentImages);
                         if(p.IsParagraph)
                         {
                             if(!p.IsEmpty)
                             {
+
                                 ElementsList.Add(new ElementStructure(ElementsList, arrayIndex) 
                                 {  
                                     ElementIndex = count,
@@ -200,7 +263,7 @@ namespace DocumentParser.Workers
                             var parsInTable = p.Element.Descendants<Paragraph>();
                             foreach(var tpar in parsInTable)
                             {
-                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, DocumentImages);
+                                var twrap = new ParagraphWrapper(tpar, Settings, DataExtractor, Properties, runsWithComments, Comments, DocumentImages);
                                 if(!p.IsEmpty)
                                 {
                                     ElementsList.Add(new ElementStructure(ElementsList, arrayIndex) 
@@ -222,7 +285,7 @@ namespace DocumentParser.Workers
                         currentElement++;
                         UpdateStatus("Предобработка текста", elements.Count(), currentElement);
                     }
-                    ProcessComments();
+                    //ProcessComments();
                     AddError(DataExtractor);
                     AddError(Properties);
                 }
@@ -233,27 +296,30 @@ namespace DocumentParser.Workers
             });
         }
 
-        private void ProcessComments()
-        {
-            var com = ElementsList.SelectMany(w=>w.WordElement.RunWrapper.Comments).Distinct();
-            if(com.Count() > 0)
-                UpdateStatus($"Обработка коментариев: {com.Count()} шт.");
-            foreach(var c in com)
-            {
-                var items = ElementsList.Where(w=>w.WordElement.RunWrapper.Comments.Contains(c) || w.WordElement.CommentId == c);
-                var startCommentItem = items.FirstOrDefault()?.CurrentIndex;
-                var endCommentItem = items.LastOrDefault()?.CurrentIndex;
-                if(startCommentItem.HasValue && endCommentItem.HasValue)
-                {                                                                     // +1 потому что берем по колчичеству а не по индексам
-                    var between =  ElementsList.Skip(startCommentItem.Value).Take((endCommentItem.Value - startCommentItem.Value) + 1);
-                    foreach(var b in between)
-                    {
-                        var comment = comments.FirstOrDefault(f=>f.id == c);
-                        b.WordElement.RunWrapper.SetComment(comment.ToComment);
-                    }
-                }
-            }
-        }
+        // private void ProcessComments()
+        // {
+        //     foreach(var element in )
+        //     var com = ElementsList.SelectMany(w=>w.WordElement.RunWrapper.CommentsId).Distinct();
+        //     if(com.Count() > 0)
+        //         UpdateStatus($"Обработка коментариев: {com.Count()} шт.");
+        //     foreach(var c in com)
+        //     {
+        //         var comment = comments.FirstOrDefault(f=>f.id == c);
+
+        //         var items = ElementsList.Where(w=>w.WordElement.RunWrapper.CommentsId.Contains(c) || w.WordElement. == c);
+        //         var startCommentItem = items.FirstOrDefault()?.CurrentIndex;
+        //         var endCommentItem = items.LastOrDefault()?.CurrentIndex;
+        //         if(startCommentItem.HasValue && endCommentItem.HasValue)
+        //         {                                                                     // +1 потому что берем по колчичеству а не по индексам
+        //             var between =  ElementsList.Skip(startCommentItem.Value).Take((endCommentItem.Value - startCommentItem.Value) + 1);
+        //             foreach(var b in between)
+        //             {
+        //                 var comment = comments.FirstOrDefault(f=>f.id == c);
+        //                 b.WordElement.RunWrapper.SetComment(comment.ToComment);
+        //             }
+        //         }
+        //     }
+        // }
 
         public void SetElementNode(ITextIndex txt, NodeType nodeType)
         {

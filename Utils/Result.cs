@@ -45,11 +45,23 @@ public struct Result<T> : IResult<T>
             throw new Exception("Вы пытаетесь получить результат операции, со статусом ERROR: " + Error.Message);
         else return value;
     }
-     private IError getError()
+    private IError getError()
     {
         if(!this.IsError)
             throw new Exception("Вы пытаетесь получить ошибку операции, но операция завершена положительно и у нее есть результат: " + Value.ToString());
         else return error;
+    }
+    public static Result<T> SetError(string error)
+    {
+        return new Result<T>(new DefaultError(){Message = error});
+    }
+    public static Result<T> SetError(string error, ErrorType errorType)
+    {
+        return new Result<T>(new DefaultError(){Message = error, ErrorType = errorType});
+    }
+    public static Result<T> SetSuccess(T value)
+    {
+        return new Result<T>(value);
     }
 }
 

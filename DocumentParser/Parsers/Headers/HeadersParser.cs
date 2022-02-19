@@ -94,13 +94,13 @@ namespace DocumentParser.Parsers.Headers
         public HeadersParser Parse()
         {
             if (!withMeta)
-                AddError("Парсер запущен без параметров мета-информации, мета данные не будут добавлены.", ErrorType.Warning);
+                AddError("Парсер запущен без параметров мета-информации, мета данные не будут добавлены.", Utils.ErrorType.Warning);
             if (!withChanges)
-                AddError("Парсер запущен без параметра поиска изменений, Возможно ошибочное добавление приложений из параграфов с внесением изменения.", ErrorType.Warning);
+                AddError("Парсер запущен без параметра поиска изменений, Возможно ошибочное добавление приложений из параграфов с внесением изменения.", Utils.ErrorType.Warning);
             if (!withTables)
-                AddError("Парсер запущен без параметров привязки таблиц. Таблицы не будут добавлены к заголовкам приложений", ErrorType.Warning);
+                AddError("Парсер запущен без параметров привязки таблиц. Таблицы не будут добавлены к заголовкам приложений", Utils.ErrorType.Warning);
             if (annexParser == null)
-                AddError("Парсер запущен без параметров ивлечения заголовков приложений. Если в приложенияъх есть загловки, они не будут извлечены", ErrorType.Warning);
+                AddError("Парсер запущен без параметров ивлечения заголовков приложений. Если в приложенияъх есть загловки, они не будут извлечены", Utils.ErrorType.Warning);
             UpdateStatus("Поиск заголовков");
             var percentage = 0;
             Tokenize(extractor.FullText, new HeaderTokensDefinition(settings.TokensDefinitions.HeaderTokenDefinitions.TokenDefinitionSettings));

@@ -5,6 +5,12 @@ using System;
 using System.Collections.Generic;
 
 namespace DocumentParser.Workers;
+
+public struct CommentRange
+{
+    public string CommentId {get;set;}
+    public Run Run {get;set;}
+}
 public struct CommentWrapper
 {
     public CommentWrapper(OpenXmlElement e, ISettings sett, DataExtractor extractor, WordProperties props)
@@ -35,7 +41,7 @@ public struct CommentWrapper
     public DateTime? Date {get;set;}
     public string Initials {get;set;}
     public List<string> Paragraphs {get;}
-    public DocumentParser.DocumentElements.Comment ToComment => new DocumentParser.DocumentElements.Comment(Paragraphs, Auhtor, Initials, Date);
+    public DocumentParser.DocumentElements.Comment ToComment => new DocumentParser.DocumentElements.Comment(id, Paragraphs, Auhtor, Initials, Date);
     
 }
 

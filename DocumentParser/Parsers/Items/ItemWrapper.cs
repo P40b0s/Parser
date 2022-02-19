@@ -67,7 +67,6 @@ public class ItemWrapper : Item
                                             First.WordElement.RunWrapper.GetCustRuns(CuttingLenght),
                                             First.MetaInfo,
                                             First.HyperTextInfo,
-                                            First.Comment,
                                             First.FootNoteInfo,
                                             null,
                                             First.IsChange,
@@ -82,7 +81,6 @@ public class ItemWrapper : Item
                                                 p.WordElement.RunWrapper.GetCustRuns(),
                                                 p.MetaInfo,
                                                 p.HyperTextInfo,
-                                                p.Comment,
                                                 p.FootNoteInfo,
                                                 null,
                                                 p.IsChange));

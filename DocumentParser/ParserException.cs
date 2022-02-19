@@ -1,21 +1,14 @@
 using Utils;
 namespace DocumentParser;
 
-public enum ErrorType
-{
-    Fatal,
-    Warning,
-    Info
-}
-
-public class ParserException : CustomError<ErrorType>
+public class ParserException : CustomError
 {
     public ParserException(){}
     public ParserException(string message) : base(message){}
     public ParserException(string message, ErrorType error) : base(message, error){}
 }
 
-public class ElementQueryException : CustomError<ErrorType>
+public class ElementQueryException : CustomError
 {
     public ElementQueryException(){}
     public ElementQueryException(string message) : base(message){}

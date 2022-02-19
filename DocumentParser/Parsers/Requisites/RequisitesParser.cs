@@ -328,7 +328,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
         extractor.SetElementNode(gdDate.Value, NodeType.stop);
         var sfToken = gdDate.Value.Next(RequisiteTokenType.ОдобренСФ);
         if (sfToken.IsError)
-            return AddError("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error , ErrorType.Warning);
+            return AddError("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error , Utils.ErrorType.Warning);
         var sfDate = sfToken.Value.Next();
         if (sfDate.IsError)
             return AddError("После даты принятия в Государственной Думе должна идти дата одобрения в Совете Федерации, но она не найдена ", sfToken.Error);
@@ -395,7 +395,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
             BeforeBodyElement = beforeNameElement.Value;
             tokensRequisiteModel.NotHaveName = true;
             doc.Name = "";
-            return AddError("Не найдено наименование выделеное жирным шрифтом, возможно оно отсутсвует", ErrorType.Warning);
+            return AddError("Не найдено наименование выделеное жирным шрифтом, возможно оно отсутсвует", Utils.ErrorType.Warning);
         }
         extractor.SetElementNode(name, NodeType.stop);
         BeforeBodyElement = name;

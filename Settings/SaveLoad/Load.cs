@@ -27,19 +27,27 @@ public partial class Settings
                 Type type = Type.GetType($"SettingsWorker.{ns}.{name}");
                 if(type != null)
                 {
-                     var deserialized = System.Text.Json.JsonSerializer.Deserialize(settings, type, getOptions());
-                    if(deserialized != null)
+                    try
                     {
-                        var props = typeof(DT).GetProperties();
-                        foreach(var p in props)
+                        var deserialized = System.Text.Json.JsonSerializer.Deserialize(settings, type, getOptions());
+                        if(deserialized != null)
                         {
-                            if(p.Name == name)
+                            var props = typeof(DT).GetProperties();
+                            foreach(var p in props)
                             {
-                                //p.SetValue(TokensDefinitions, Convert.ChangeType(deserialized, p.PropertyType));
-                                p.SetValue(deserializationValue, deserialized);
-                                AddStatus($"Настройки {name} успешно загружены из файла {f.Name}");
+                                if(p.Name == name)
+                                {
+                                    //p.SetValue(TokensDefinitions, Convert.ChangeType(deserialized, p.PropertyType));
+                                    p.SetValue(deserializationValue, deserialized);
+                                    AddStatus($"Настройки {name} успешно загружены из файла {f.Name}");
+                                }
                             }
                         }
+                    }
+                    catch (System.Text.Json.JsonException jex)
+                    {
+                        AddStatus($"Ошибка десериализации файла {f.Name}, настройки {name} будут загружены по умолчанию");
+                        File.Delete(f.FullName);
                     }
                 }
                 else
@@ -98,10 +106,12 @@ public partial class Settings
    
     public async ValueTask<bool> Load()
     {
-        //await DeserializePart<AllTokensDefinitions>(Paths.TokensDirPath, "TokenDefinitions", TokensDefinitions);
-        //await DeserializeFull<Requisite.RequisiteChangers>(Paths.ChangersDirPath, RequisiteChangers);
-        //await DeserializeFull<List<CustomRule<AllRules>>>(Paths.CustomRulesDirPath, CustomRules, "CustomRules");
-        return await DeserializePart<Dictionaries.AllDictionaries>(Paths.DictionariesDirPath, "", Dictionaries, "Dictionaries");
+        await DeserializePart<AllTokensDefinitions>(Paths.TokensDirPath, "TokenDefinitions", TokensDefinitions);
+        await DeserializeFull<Requisite.RequisiteChangers>(Paths.ChangersDirPath, RequisiteChangers);
+        await DeserializeFull<List<CustomRule<AllRules>>>(Paths.CustomRulesDirPath, CustomRules, "CustomRules");
+        await DeserializePart<Dictionaries.AllDictionaries>(Paths.DictionariesDirPath, "", Dictionaries, "Dictionaries");
+        await DeserializeFull<DocumentProcessing.PoolSettings>(Paths.RootCfgDirPath, PoolSettings, nameof(PoolSettings));
+        return true;
     }
 
 

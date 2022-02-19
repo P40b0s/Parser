@@ -64,6 +64,7 @@ public partial class Settings
         SerializeParts<AllTokensDefinitions>(Paths.TokensDirPath, TokensDefinitions);
         SerializeFull<RequisiteChangers>(Paths.ChangersDirPath, RequisiteChangers);
         SerializeFull<List<CustomRule<AllRules>>>(Paths.CustomRulesDirPath, CustomRules, "CustomRules");
+        SerializeFull<DocumentProcessing.PoolSettings>(Paths.RootCfgDirPath, PoolSettings, "PoolSettings");
         SerializeParts<Dictionaries.AllDictionaries>(Paths.DictionariesDirPath, Dictionaries);
     }
 }

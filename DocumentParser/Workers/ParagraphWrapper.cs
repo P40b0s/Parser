@@ -18,22 +18,33 @@ namespace DocumentParser.Workers
             Element = e;
             this.props = props;
             this.extractor = extractor;
-            RunWrapper = new RunWrapper(e, sett, props, extractor);
+            RunWrapper = new RunWrapper(e, sett, props, extractor, new List<CommentRange>(), new List<CommentWrapper>());
             //var commnetRangeStart = Element.ChildElements.OfType<CommentRangeStart>().FirstOrDefault()?.Id;
             //var commnetRangeEnd = Element.ChildElements.OfType<CommentRangeEnd>().FirstOrDefault();
             //Поставим первый попавшийся коммент из ранов
-            CommentId = RunWrapper.Comments.FirstOrDefault();
+            //CommentId = RunWrapper.Comments.FirstOrDefault();
         }
-        public ParagraphWrapper(OpenXmlElement e, ISettings sett,  DataExtractor extractor, WordProperties props, List<Image> runImages = null)
+        public ParagraphWrapper(OpenXmlElement e, ISettings sett, DataExtractor extractor, WordProperties props, List<CommentRange> commentRange, List<CommentWrapper> comments)
         {
             Element = e;
             this.props = props;
             this.extractor = extractor;
-            RunWrapper = new RunWrapper(e, sett, props, extractor, runImages);
+            RunWrapper = new RunWrapper(e, sett, props, extractor, commentRange, comments);
             //var commnetRangeStart = Element.ChildElements.OfType<CommentRangeStart>().FirstOrDefault()?.Id;
             //var commnetRangeEnd = Element.ChildElements.OfType<CommentRangeEnd>().FirstOrDefault();
             //Поставим первый попавшийся коммент из ранов
-            CommentId = RunWrapper.Comments.FirstOrDefault();
+            //CommentId = RunWrapper.Comments.FirstOrDefault();
+        }
+        public ParagraphWrapper(OpenXmlElement e, ISettings sett,  DataExtractor extractor, WordProperties props, List<CommentRange> commentRange, List<CommentWrapper> comments, List<Image> runImages = null)
+        {
+            Element = e;
+            this.props = props;
+            this.extractor = extractor;
+            RunWrapper = new RunWrapper(e, sett, props, extractor, commentRange, comments, runImages);
+            //var commnetRangeStart = Element.ChildElements.OfType<CommentRangeStart>().FirstOrDefault()?.Id;
+            //var commnetRangeEnd = Element.ChildElements.OfType<CommentRangeEnd>().FirstOrDefault();
+            //Поставим первый попавшийся коммент из ранов
+            //CommentId = RunWrapper.Comments.FirstOrDefault();
         }
         public RunWrapper RunWrapper {get;}
         public bool IsParagraph => Element.GetType() == typeof(Paragraph);
@@ -70,7 +81,7 @@ namespace DocumentParser.Workers
         public bool ContainsText => !String.IsNullOrEmpty(Text);
         public bool IsEmpty => String.IsNullOrWhiteSpace(Text) && !ContainsFormula && !ContainsImage;
         public int Length => ContainsText ? Text.Length : 0;
-        public string CommentId {get;}
+        //public string CommentId {get;}
         
     }
 
