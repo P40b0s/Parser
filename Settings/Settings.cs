@@ -23,6 +23,7 @@ public interface ISettings
     ValueTask<bool> Load();
     List<string> Status {get;}
     void Save();
+    void LoadDefault();
 }
 public partial class Settings : ISettings
 {
@@ -30,6 +31,11 @@ public partial class Settings : ISettings
     {
         IsDefault = true;
         Load();
+    }
+    //необходимо загружать дефолтные рулы при каждом проходе парсера
+    public void LoadDefault()
+    {
+        DefaultRules = new AllRules();
     }
     [JsonIgnore]
     public List<string> Status {get;} = new List<string>();
