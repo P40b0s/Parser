@@ -143,6 +143,14 @@ public class RequisitesParserTests : BaseTest<DocumentParser.Parsers.Requisites.
             Description = "была непонятна ошибка с наименованием!",
             DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
         },
+        //14
+        new Files<DocumentParser.Parsers.Requisites.RequisitesParser>()
+        {
+            FilePath = "была_ошибка_подписанта.docx",
+            Description = "была непонятная ошибка с нахождением подписантов!",
+            DirPath = Paths.CurrentDir + Paths.RequisitesTestPath
+        },
+        
     };
 
     //
@@ -151,7 +159,7 @@ public class RequisitesParserTests : BaseTest<DocumentParser.Parsers.Requisites.
         [Test]
         public async ValueTask ParseRequisites()
         {
-            for(int i = 13; i< files.Count; i++)
+            for(int i = 10; i< files.Count; i++)
             {
                 await settings.Load();
                 document = new Document();
@@ -170,7 +178,6 @@ public class RequisitesParserTests : BaseTest<DocumentParser.Parsers.Requisites.
                 rParser.Parse();
                 //Проверка внутренних ошибок парсеров
                 AddResult(files[i], rParser, document);
-
             }
             Assert.True(IsPassed());
         }

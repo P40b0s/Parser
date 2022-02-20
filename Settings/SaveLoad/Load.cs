@@ -111,6 +111,7 @@ public partial class Settings
         await DeserializeFull<List<CustomRule<AllRules>>>(Paths.CustomRulesDirPath, CustomRules, "CustomRules");
         await DeserializePart<Dictionaries.AllDictionaries>(Paths.DictionariesDirPath, "", Dictionaries, "Dictionaries");
         await DeserializeFull<DocumentProcessing.PoolSettings>(Paths.RootCfgDirPath, PoolSettings, nameof(PoolSettings));
+        DefaultRules = new AllRules();
         return true;
     }
 

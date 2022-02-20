@@ -27,7 +27,7 @@ public class RequisiteTokenDefinitions : TokenDefinitionBase<RequisiteTokenType>
         addToken(RequisiteTokenType.ПринятГД, $"принят{Templates.WsBr}+государственной{Templates.WsBr}+думой", 1);
         
         addToken(RequisiteTokenType.Должность, $"президент{Templates.WsBr}+Российской{Templates.WsBr}+Федерации", 1);
-        addToken(RequisiteTokenType.Должность, $"председатель{Templates.WsBr}+Правительства{Templates.WsBr}+Российской{Templates.WsBr}+Федерации", 1);
+        addToken(RequisiteTokenType.Должность, $"председатель{Templates.WsBr}+Правительства{Templates.WsOrBr}Российской{Templates.WsBr}+Федерации", 1);
         addToken(RequisiteTokenType.Должность, $"исполняющий{Templates.WsBr}+(полномочия|обязанности){Templates.WsBrWord}+", 1);
         addToken(RequisiteTokenType.Должность, $"министр{Templates.WsBrWord}+", 1);
         addToken(RequisiteTokenType.Должность, $"губернатор{Templates.WsBrWord}+", 1);
