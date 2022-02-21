@@ -91,6 +91,17 @@ public class AnnexTests : BaseTest<AnnexParser>
                 },
             }
         },
+        //2
+         new Files<AnnexParser>()
+        {
+            FilePath = "354.docx",
+            Description = "Была ошибка с парсингом приложения",
+            DirPath = Paths.CurrentDir + Paths.AnnexHeadersTestPath,
+            PredicateParserTests = new List<PredicateTest<AnnexParser>>()
+            {
+            
+            }
+        },
 
     };
 
@@ -99,7 +110,7 @@ public class AnnexTests : BaseTest<AnnexParser>
     [Test]
     public async ValueTask TestChanges()
     {
-        for(int i = 0; i< files.Count; i++)
+        for(int i = 2; i< files.Count; i++)
         {
             await settings.Load();
             document = new Document();

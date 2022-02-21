@@ -13,5 +13,16 @@
     <ProjectReference Include="..\Lexer\Lexer.csproj" />
     <ProjectReference Include="..\Settings\Settings.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <FormulaFiles Include="Formulas\*.*" />
+    <FormulaOutDir Include="$(OutDir)cfg\formulas" />
+  </ItemGroup>
+  <Target Name="CopyFormulas" AfterTargets="Build">
+    <MakeDir Directories="$(OutDir)cfg" />
+    <MakeDir Directories="$(OutDir)cfg\formulas" />
+    <Message Text="Копирование файлов преобразования @(FormulaFiles)" Importance="high"  />
+    <Copy SourceFiles="@(FormulaFiles)" DestinationFolder="$(OutDir)cfg\formulas" SkipUnchangedFiles="true" />
+
+  </Target>
 
 </Project>

@@ -20,9 +20,9 @@ public class FullTests : BaseTest<Parser>
         //0
         new Files<Parser>()
         {
-            FilePath = "476-тест_комментов.docx",
-            Description = "тест прохода коментариев",
-            DirPath = Paths.CurrentDir + Paths.RootTestPath,
+            FilePath = "354.docx",
+            Description = "тест большого правительства с 6 приложениями",
+            DirPath = Paths.CurrentDir + Paths.AnnexHeadersTestPath,
         },
     };
     

@@ -21,4 +21,13 @@
     <ProjectReference Include="..\Utils\Utils.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <SettingsCfgDir Include="$(OutDir)configs" />
+  </ItemGroup>
+
+  <Target Name="clearCfgDirs" AfterTargets="Build">
+    <Message Text="Очистка директорий конфигов...$(OutDir)configs" />
+    <RemoveDir Directories="$(OutDir)configs" />
+  </Target>
+
 </Project>
