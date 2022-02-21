@@ -46,49 +46,49 @@ namespace DocumentParser.Parsers
                     var next = token.Next(MetaTokenType.Абзац);
                     if(next.IsOk)
                     {
-                        if(getMeta(next.Value, NodeType.МетаАбзац, isNew, token))
+                        if(getMeta(next.Value(), NodeType.МетаАбзац, isNew, token))
                             Count++;
                         continue;
                     }
                     next = token.Next(MetaTokenType.Пункт);
                     if(next.IsOk)
                     {
-                        if(getMeta(next.Value, NodeType.МетаПункт, isNew, token))
+                        if(getMeta(next.Value(), NodeType.МетаПункт, isNew, token))
                             Count++;
                         continue;
                     }
                     next = token.Next(MetaTokenType.Наименование);
                     if(next.IsOk)
                     {
-                        if(getMeta(next.Value, NodeType.МетаИнформация, isNew, token))
+                        if(getMeta(next.Value(), NodeType.МетаИнформация, isNew, token))
                             Count++;
                         continue;
                     }
                     next = token.Next(MetaTokenType.Статья);
                     if(next.IsOk)
                     {
-                        if(getMeta(next.Value, NodeType.МетаСтатья, isNew, token))
+                        if(getMeta(next.Value(), NodeType.МетаСтатья, isNew, token))
                             Count++;
                         continue;
                     }
                     next = token.Next(MetaTokenType.Глава);
                     if(next.IsOk)
                     {
-                        if(getMeta(next.Value, NodeType.Глава, isNew, token))
+                        if(getMeta(next.Value(), NodeType.Глава, isNew, token))
                             Count++;
                         continue;
                     }
                     next = token.Next(MetaTokenType.Раздел);
                     if(next.IsOk)
                     {
-                        if(getMeta(next.Value, NodeType.МетаРаздел, isNew, token))
+                        if(getMeta(next.Value(), NodeType.МетаРаздел, isNew, token))
                             Count++;
                         continue;
                     }
                     next = token.Next(MetaTokenType.Приложение);
                     if(next.IsOk)
                     {
-                        if(getMeta(next.Value, NodeType.МетаПриложение, isNew, token))
+                        if(getMeta(next.Value(), NodeType.МетаПриложение, isNew, token))
                             Count++;
                         continue;
                     }
@@ -134,46 +134,46 @@ namespace DocumentParser.Parsers
             if(action.IsError)
                 return false;
             //после команды обнаружен признак завершения последовательности
-            var end = action.Value.Next(MetaTokenType.Конец);
+            var end = action.Value().Next(MetaTokenType.Конец);
             if(end.IsOk)
             {
-                setMeta(action.Value, structure, actionEnum, isNew, start);
+                setMeta(action.Value(), structure, actionEnum, isNew, start);
                 return true;   
             }
             //и проверяем на едицу структуры - бывает дополнен пункт.... а бывает пункт дополнен
             //соответсвенно в этом блоке есть какая то единица - пункт статья раздел итд...
             else
             {
-                var structAfterCommand = action.Value.Next(MetaTokenType.Абзац);
+                var structAfterCommand = action.Value().Next(MetaTokenType.Абзац);
                 var structureAfterCommand = NodeType.МетаАбзац;
                 if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Value.Next(MetaTokenType.Пункт);
+                    structAfterCommand  = action.Value().Next(MetaTokenType.Пункт);
                     structureAfterCommand = NodeType.МетаПункт;
                 }
                 if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Value.Next(MetaTokenType.Наименование);
+                    structAfterCommand  = action.Value().Next(MetaTokenType.Наименование);
                     structureAfterCommand = NodeType.МетаИнформация;
                 }
                 if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Value.Next(MetaTokenType.Статья);
+                    structAfterCommand  = action.Value().Next(MetaTokenType.Статья);
                     structureAfterCommand = NodeType.МетаСтатья;
                 }
                 if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Value.Next(MetaTokenType.Глава);
+                    structAfterCommand  = action.Value().Next(MetaTokenType.Глава);
                     structureAfterCommand = NodeType.МетаГлава;
                 }
                 if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Value.Next(MetaTokenType.Раздел);
+                    structAfterCommand  = action.Value().Next(MetaTokenType.Раздел);
                     structureAfterCommand = NodeType.МетаРаздел;
                 }
                 if(structAfterCommand.IsError)
                 {
-                    structAfterCommand  = action.Value.Next(MetaTokenType.Приложение);
+                    structAfterCommand  = action.Value().Next(MetaTokenType.Приложение);
                     structureAfterCommand = NodeType.МетаПриложение;
                 }
                 //если найдена структура то проверяем на конец, если конца нет то продолжаем поиск дальше
@@ -181,27 +181,27 @@ namespace DocumentParser.Parsers
                 {
                     action = structAfterCommand;
                     structure = structureAfterCommand;
-                    var end3 = action.Value.Next(MetaTokenType.Конец);
+                    var end3 = action.Value().Next(MetaTokenType.Конец);
                     if(end3.IsOk)
                     {
-                        setMeta(action.Value, structure, actionEnum, isNew, start);
+                        setMeta(action.Value(), structure, actionEnum, isNew, start);
                         return true;   
                     }
                 }
             }
             //Если не закрыта скобка то выдаем ошибку
-            var error = action.Value.Next();
-            if(error.IsOk && (error.Value.TokenType == MetaTokenType.ТекущийАбзац || error.Value.TokenType == MetaTokenType.НовыйАбзац))
+            var error = action.Value().Next();
+            if(error.IsOk && (error.Value().TokenType == MetaTokenType.ТекущийАбзац || error.Value().TokenType == MetaTokenType.НовыйАбзац))
             {
-                var el = extractor.GetElement(error.Value);
-                return AddError($"Ошибка разбора блока с метаинформацией: {el.WordElement.Text} получено значение: \"{error.Value}\" ожидалось: \")\"");
+                var el = extractor.GetElement(error.Value());
+                return AddError($"Ошибка разбора блока с метаинформацией: {el.WordElement.Text} получено значение: \"{error.Value()}\" ожидалось: \")\"");
             }
-           return getMeta(action.Value, structure, isNew, start);
+           return getMeta(action.Value(), structure, isNew, start);
         }
         // private void addException(Result<MetaTokenType> token, string waitToken)
         // {
         //     var par = extractor.GetElements(token.Token).FirstOrDefault();
-        //     exceptions.Add(new ParserException($"Ошибка разбора блока с метаинформацией: {par.WordElement.Text} получено значение: \"{token.Token.Next().Token.Value}\" ожидалось: \"{waitToken}\""));
+        //     exceptions.Add(new ParserException($"Ошибка разбора блока с метаинформацией: {par.WordElement.Text} получено значение: \"{token.Token.Next().Token.Value()}\" ожидалось: \"{waitToken}\""));
         // }
         
     }

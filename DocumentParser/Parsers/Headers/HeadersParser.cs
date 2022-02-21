@@ -153,8 +153,8 @@ namespace DocumentParser.Parsers.Headers
                         var table = firstItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
                         if(table.IsOk)
                         {
-                            Headers[h].Header.Table = table.Value.Table;
-                            Headers[h].RootElements.Remove(table.Value);
+                            Headers[h].Header.Table = table.Value().Table;
+                            Headers[h].RootElements.Remove(table.Value());
                         }
                     }
                 }
@@ -199,11 +199,11 @@ namespace DocumentParser.Parsers.Headers
             header.LastElement = headerPar;
             header.StartIndex = headerPar.ElementIndex +1;
             var meta = headerPar.Next();
-            if(withMeta && meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
+            if(withMeta && meta.IsOk && meta.IsOk && meta.Value().MetaInfo.FullIsMeta)
             {
-                header.Header.Meta = meta.Value.MetaInfo;
-                header.LastElement = meta.Value;
-                header.StartIndex = meta.Value.ElementIndex +1;
+                header.Header.Meta = meta.Value().MetaInfo;
+                header.LastElement = meta.Value();
+                header.StartIndex = meta.Value().ElementIndex +1;
             }
             Headers.Add(header);
             Count++;

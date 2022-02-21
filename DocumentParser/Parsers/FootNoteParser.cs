@@ -230,7 +230,7 @@ namespace DocumentParser.Parsers
                 if(!line.IsOk)
                     return (null, null);
                 
-                var footnotes = line.Value.FindForwardMany(f=>f.TokenType == FootNoteTokenType.Сноска);
+                var footnotes = line.Value().FindForwardMany(f=>f.TokenType == FootNoteTokenType.Сноска);
                 var prevNum = 0;
                 for(int i = 0; i< footnotes.Count; i++)
                 {
@@ -295,7 +295,7 @@ namespace DocumentParser.Parsers
                     list.Add(item);
 
                 }
-                return (list, line.Value);
+                return (list, line.Value());
             }
             return (null, null);
         }

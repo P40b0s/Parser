@@ -95,15 +95,15 @@ namespace DocumentParser.Workers
                     {
                         var i = extractor.GetImage((r as Picture));
                         if(i.IsOk)
-                            Image = new Image(i.Value, Id);
+                            Image = new Image(i.Value(), Id);
                         else
-                            System.Console.WriteLine(i.Error);
+                            System.Console.WriteLine(i.Error());
                     } 
                     if(r.GetType() == typeof(Drawing))
                     {
                         var i = extractor.GetImage((r as Drawing));
                         if(i.IsOk)
-                            Image = new Image(i.Value, Id);
+                            Image = new Image(i.Value(), Id);
                         else
                             System.Console.WriteLine(i.Error);
                     }

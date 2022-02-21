@@ -24,7 +24,7 @@ namespace DocumentParser.Parsers
             var lastAnchor = tokens.GetLast(l=>l.TokenType == ChangesTokenType.Ancor);
             var count = tokens.Count();
             if(lastAnchor.IsOk)
-                count = tokens.IndexOf(lastAnchor.Value);
+                count = tokens.IndexOf(lastAnchor.Value());
             int percent = 0;
             foreach(var t in tokens)
             {
@@ -57,7 +57,7 @@ namespace DocumentParser.Parsers
                     if(paragraphAfter == null && lastAnchor.IsOk)
                     {
                         //теперь подключаем анкоры
-                        var par = extractor.GetElement(lastAnchor.Value);
+                        var par = extractor.GetElement(lastAnchor.Value());
                         paragraphAfter = extractor.GetElement(par.ElementIndex + 1);
                     }
                 }

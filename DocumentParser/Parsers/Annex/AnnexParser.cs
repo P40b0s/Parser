@@ -125,8 +125,8 @@ namespace DocumentParser.Parsers.Annex
                         var table = firstRootItem.FindForward(t=>t.NodeType == NodeType.Таблица, 1);
                         if(table.IsOk)
                         {
-                            Annexes[a].Annex.Table = table.Value.Table;
-                            Annexes[a].RootElements.Remove(table.Value);
+                            Annexes[a].Annex.Table = table.Value().Table;
+                            Annexes[a].RootElements.Remove(table.Value());
                         }
                     }
                 }
@@ -183,7 +183,7 @@ namespace DocumentParser.Parsers.Annex
             var approvedDataToken = token.Next(AnnexTokenType.Дата);
             if(approvedDataToken.IsError)
                 return AddError("Дата утверждения приложения не найдена");
-            var approvedNumberToken = approvedDataToken.Value.Next(AnnexTokenType.Номер);
+            var approvedNumberToken = approvedDataToken.Value().Next(AnnexTokenType.Номер);
             if(approvedNumberToken.IsError)
                 return AddError("Номер утверждения приложения не найден");
             var newAnnex = new AnnexParserModel();
@@ -193,23 +193,23 @@ namespace DocumentParser.Parsers.Annex
             //должно по идее все быть в пределах 1 параграфа
             var approvedElement = extractor.GetElements(token).FirstOrDefault();
             extractor.SetElementNode(approvedElement, NodeType.Приложение);
-            newAnnex.Annex.ApprovedPrefix.Number = extractor.GetUnicodeString(approvedNumberToken.Value.CustomGroups[0]);
-            var date = approvedDataToken.Value.GetDate();
+            newAnnex.Annex.ApprovedPrefix.Number = extractor.GetUnicodeString(approvedNumberToken.Value().CustomGroups[0]);
+            var date = approvedDataToken.Value().GetDate();
             if(date.IsError)
-                return AddError($"В приложении № {Annexes.Count + 1} " + date.Error.Message);
-            newAnnex.Annex.ApprovedPrefix.Date = date.Value.Value;
-            newAnnex.Annex.ApprovedPrefix.Organ = extractor.GetUnicodeString(approvedElement, new TextIndex(token.Length, (approvedDataToken.Value.StartIndex - token.Length - approvedElement.StartIndex))).Trim();
+                return AddError($"В приложении № {Annexes.Count + 1} " + date.Error().Message);
+            newAnnex.Annex.ApprovedPrefix.Date = date.Value().Value;
+            newAnnex.Annex.ApprovedPrefix.Organ = extractor.GetUnicodeString(approvedElement, new TextIndex(token.Length, (approvedDataToken.Value().StartIndex - token.Length - approvedElement.StartIndex))).Trim();
             //возможно надо взять в расчет indentation(left) у этих абзацев он примерно 5000
             //прверяем следующий может такое быть что это типа лоп информации
             // у него такой же отступ как у первго
             var nextPar = approvedElement.Next();
             //найден дополнительный параграф с какими то комментами
-            if(nextPar.IsOk && nextPar.IsOk && nextPar.Value.ParagraphProperties.Ind?.Left > 300)
+            if(nextPar.IsOk && nextPar.Value().ParagraphProperties.Ind?.Left > 300)
             {
-                newAnnex.Annex.ApprovedPrefix.ExtendedInfo = extractor.GetUnicodeString(nextPar.Value);
-                extractor.SetElementNode(nextPar.Value, NodeType.Приложение);
+                newAnnex.Annex.ApprovedPrefix.ExtendedInfo = extractor.GetUnicodeString(nextPar.Value());
+                extractor.SetElementNode(nextPar.Value(), NodeType.Приложение);
             }
-            var nameToken = approvedNumberToken.Value.FindForward(AnnexTokenType.ТипПриложения, 3);
+            var nameToken = approvedNumberToken.Value().FindForward(AnnexTokenType.ТипПриложения, 3);
             if(!searchName(nameToken, newAnnex))
                 return false;
             Annexes.Add(newAnnex);
@@ -225,20 +225,20 @@ namespace DocumentParser.Parsers.Annex
             var annexParentToken = getAnnexParent(token, annex);
             if(annexParentToken.IsError)
             {
-                var n = numberToken.IsOk ? numberToken.Value.Value : numberToken.Error.Message;
-                return AddError($"Не могу определить поле \"Утверждено...\" {token.Value} {n} {annex.Annex.AnnexPrefix.AnnexTo}",annexParentToken.Error);
+                var n = numberToken.IsOk ? numberToken.Value().Value : numberToken.Error().Message;
+                return AddError($"Не могу определить поле \"Утверждено...\" {token.Value} {n} {annex.Annex.AnnexPrefix.AnnexTo}",annexParentToken.Error());
             }
                 
-            if(annexParentToken.Value.TokenType == AnnexTokenType.ПриложениеКПриложению)
+            if(annexParentToken.Value().TokenType == AnnexTokenType.ПриложениеКПриложению)
             {
-                var prefixElement = extractor.GetElements(annexParentToken.Value).FirstOrDefault();
-                annex.Annex.AnnexPrefix.AnnexTo = extractor.GetUnicodeString(prefixElement, new TextIndex(annexParentToken.Value.EndIndex - prefixElement.StartIndex, prefixElement.WordElement.Length - (annexParentToken.Value.EndIndex - prefixElement.StartIndex))).Trim();
+                var prefixElement = extractor.GetElements(annexParentToken.Value()).FirstOrDefault();
+                annex.Annex.AnnexPrefix.AnnexTo = extractor.GetUnicodeString(prefixElement, new TextIndex(annexParentToken.Value().EndIndex - prefixElement.StartIndex, prefixElement.WordElement.Length - (annexParentToken.Value().EndIndex - prefixElement.StartIndex))).Trim();
                 var parentName = annex.Annex.AnnexPrefix.AnnexTo.ToSearchString();
                 var parent = Annexes.FirstOrDefault(f=>f.SearchName == parentName);
                 if(parent == null)
                 {
-                    var n = numberToken.IsOk ? numberToken.Value.Value : numberToken.Error.Message;
-                    return AddError($"Не могу определить предка (Не найдено наименование приложения {annex.Annex.AnnexPrefix.AnnexTo}) {token.Value} {n} {annexParentToken.Value.Value} {annex.Annex.AnnexPrefix.AnnexTo}");
+                    var n = numberToken.IsOk ? numberToken.Value().Value : numberToken.Error().Message;
+                    return AddError($"Не могу определить предка (Не найдено наименование приложения {annex.Annex.AnnexPrefix.AnnexTo}) {token.Value} {n} {annexParentToken.Value().Value} {annex.Annex.AnnexPrefix.AnnexTo}");
                 }
                 annex.Parent = parent;
                 annex.Hierarchy = 1;
@@ -248,13 +248,13 @@ namespace DocumentParser.Parsers.Annex
             {
                 //Здесь больше ничего не делаем и так понятно что приложение к документу который мы разбираем в данный момент
                 //сюда его реквизиты пробрасывать незачем
-                var prefixElement = extractor.GetElements(annexParentToken.Value).FirstOrDefault();
-                annex.Annex.AnnexPrefix.AnnexTo = extractor.GetUnicodeString(prefixElement, new TextIndex(annexParentToken.Value.Length, prefixElement.WordElement.Length - annexParentToken.Value.Length)).Trim();
+                var prefixElement = extractor.GetElements(annexParentToken.Value()).FirstOrDefault();
+                annex.Annex.AnnexPrefix.AnnexTo = extractor.GetUnicodeString(prefixElement, new TextIndex(annexParentToken.Value().Length, prefixElement.WordElement.Length - annexParentToken.Value().Length)).Trim();
                 annex.Hierarchy = 0;
                 extractor.SetElementNode(prefixElement, NodeType.Приложение);
             }
             extractor.SetElementNode(token, NodeType.Приложение);
-            var nameToken = annexParentToken.Value.FindForward(AnnexTokenType.ТипПриложения, 3);
+            var nameToken = annexParentToken.Value().FindForward(AnnexTokenType.ТипПриложения, 3);
             if(!searchName(nameToken, annex))
                 return false;
             Annexes.Add(annex);
@@ -266,7 +266,7 @@ namespace DocumentParser.Parsers.Annex
         {
             var numberToken = token.Next(AnnexTokenType.Номер);
             if(numberToken.IsOk)
-                annex.Annex.AnnexPrefix.Number = extractor.GetUnicodeString(numberToken.Value.CustomGroups[0]);
+                annex.Annex.AnnexPrefix.Number = extractor.GetUnicodeString(numberToken.Value().CustomGroups[0]);
             else
                 numberToken = token.Next(AnnexTokenType.ПриложениеКДокументу);
             if(numberToken.IsError)
@@ -277,13 +277,13 @@ namespace DocumentParser.Parsers.Annex
         private bool searchName(Result<Token<AnnexTokenType>, TokenException> nameToken, AnnexParserModel annex)
         {
             if(nameToken.IsError)
-                return AddError($"Не удалось определить наименование приложения № {Annexes.Count + 1} ", nameToken.Error);
+                return AddError($"Не удалось определить наименование приложения № {Annexes.Count + 1} ", nameToken.Error());
             
-            var nameElement = extractor.GetElements(nameToken.Value).FirstOrDefault();
+            var nameElement = extractor.GetElements(nameToken.Value()).FirstOrDefault();
             if(!extractor.Properties.IsBold(nameElement.WordElement.Element))
                 AddError($"Наименование приложения № {Annexes.Count + 1} не выделено жирным шрифтом", ErrorType.Warning);
-            annex.Annex.AnnexType = extractor.GetUnicodeString(nameToken.Value);
-            annex.Annex.Name = extractor.GetUnicodeString(nameElement,  new TextIndex(nameToken.Value.Length, nameElement.WordElement.Length - nameToken.Value.Length));
+            annex.Annex.AnnexType = extractor.GetUnicodeString(nameToken.Value());
+            annex.Annex.Name = extractor.GetUnicodeString(nameElement,  new TextIndex(nameToken.Value().Length, nameElement.WordElement.Length - nameToken.Value().Length));
             annex.SearchName = annex.Annex.Name.ToSearchString();
             annex.Annex.SearchName = annex.SearchName;
             extractor.SetElementNode(nameElement, NodeType.Приложение);
@@ -292,11 +292,11 @@ namespace DocumentParser.Parsers.Annex
             //Поиск мета информации
             
             var meta = nameElement.Next();
-            if(withMeta && meta.IsOk && meta.IsOk && meta.Value.MetaInfo.FullIsMeta)
+            if(withMeta && meta.IsOk && meta.Value().MetaInfo.FullIsMeta)
             {
-                annex.Annex.Meta = meta.Value.MetaInfo;
-                annex.LastElement = meta.Value;
-                annex.StartIndex = meta.Value.ElementIndex + 1;
+                annex.Annex.Meta = meta.Value().MetaInfo;
+                annex.LastElement = meta.Value();
+                annex.StartIndex = meta.Value().ElementIndex + 1;
             }
             return true;
         }

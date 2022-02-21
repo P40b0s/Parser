@@ -13,7 +13,7 @@ public static class ResultExtension
     public static Result<T, E> Next<T, E>(this Result<T, E> result, Action<T> action, string error) where E : class, IError, new()
     {
         if (result.IsOk)
-            action(result.Value);
+            action(result.Value());
         else
             return new Result<T, E>(Activator.CreateInstance(typeof(E), new object[] { error }) as E);
         return result;

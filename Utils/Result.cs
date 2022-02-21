@@ -1,19 +1,21 @@
 using System;
+using System.Runtime.CompilerServices;
+
 namespace Utils;
 
 public interface IResult<T, out E> where E : IError
 {
-    T Value {get;}
-    E Error {get;}
-    bool IsOk => Error == null;
-    bool IsError => Error != null;
+    T Value([CallerMemberName]string caller = null);
+    E Error([CallerMemberName]string caller = null);
+    bool IsOk {get;}
+    bool IsError {get;}
 }
 public interface IResult<T>
 {
-    T Value {get;}
-    IError Error {get;}
-    bool IsOk => Error == null;
-    bool IsError => Error != null;
+    T Value([CallerMemberName]string caller = null);
+    IError Error([CallerMemberName]string caller = null);
+    bool IsOk {get;}
+    bool IsError {get;}
 }
 
 public struct Result<T> : IResult<T>
@@ -33,24 +35,22 @@ public struct Result<T> : IResult<T>
     /// Значение результата
     /// </summary>
     /// <returns></returns>
-    public T Value => getValue();
+    public T Value([CallerMemberName]string caller = null)
+    {
+        if(this.IsError)
+            throw new Exception($"Метод {caller} пытается получить результат операции, со статусом ERROR: {Error().Message}");
+        else return value;
+    }
     private T value {get;init;}
-    public IError Error => getError();
+    public IError Error([CallerMemberName]string caller = null)
+    {
+        if(!this.IsError)
+            throw new Exception($"Метод {caller} пытается получить ошибку операции, но операция завершена положительно и у нее есть результат: " + Value().ToString());
+        else return error;
+    }
     private IError error {get;init;}
     public bool IsOk => error == null;
     public bool IsError => error != null;
-    private T getValue()
-    {
-        if(this.IsError)
-            throw new Exception("Вы пытаетесь получить результат операции, со статусом ERROR: " + Error.Message);
-        else return value;
-    }
-    private IError getError()
-    {
-        if(!this.IsError)
-            throw new Exception("Вы пытаетесь получить ошибку операции, но операция завершена положительно и у нее есть результат: " + Value.ToString());
-        else return error;
-    }
     public static Result<T> SetError(string error)
     {
         return new Result<T>(new DefaultError(){Message = error});
@@ -84,24 +84,22 @@ public struct Result<T,E> : IResult<T,E> where E : IError, new()
     /// Значение результата
     /// </summary>
     /// <returns></returns>
-    public T Value => getValue();
+     public T Value([CallerMemberName]string caller = null)
+    {
+        if(this.IsError)
+            throw new Exception($"Метод {caller} пытается получить результат операции, со статусом ERROR: {Error().Message}");
+        else return value;
+    }
     private T value {get;init;}
-    public E Error => getError();
+    public E Error([CallerMemberName]string caller = null)
+    {
+        if(!this.IsError)
+            throw new Exception($"Метод {caller} пытается получить ошибку операции, но операция завершена положительно и у нее есть результат: " + Value().ToString());
+        else return error;
+    }
     private E error {get;init;}
     public bool IsOk => error == null;
     public bool IsError => error != null;
-    private T getValue()
-    {
-        if(this.IsError)
-            throw new TryGetValueIfErrorExistsException("Вы не можете получить Value, так как результат операции: false " + Error.Message);
-        else return value;
-    }
-     private E getError()
-    {
-        if(!this.IsError)
-            throw new TryGetErrorIfResultExistsException("Вы не можете получить Error, так как результат операции: true " + Value.ToString());
-        else return error;
-    }
 }
 
 
