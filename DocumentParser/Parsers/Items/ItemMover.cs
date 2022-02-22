@@ -39,7 +39,7 @@ public partial class ItemsParser
 
     private void elementsMove(List<Elements.ElementStructure> from, List<Indent> to, System.Predicate<NodeType> predicate)
     {
-         for(int i = from.Count - 1; i >=0; i--)
+        for(int i = from.Count - 1; i >=0; i--)
         {
             if(predicate(from[i].NodeType))
             {

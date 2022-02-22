@@ -116,10 +116,11 @@ namespace DocumentParser.Parsers
                 extractor.SetMetaNode(metaPar, NodeType.НеОпределено, action, meta, false);
             }
         }
+        //FIXME тут какая то ошибка!
         private bool getMeta(Token<MetaTokenType> token, NodeType structure, bool isNew, Token<MetaTokenType> start)
         {   
-            var action = token.Next(MetaTokenType.Редакции);
             var actionEnum = MetaAction.edit;
+            var action = token.Next(MetaTokenType.Редакции);
             if(action.IsError)
             {
                 action = token.Next(MetaTokenType.Дополнен);
@@ -177,7 +178,7 @@ namespace DocumentParser.Parsers
                     structureAfterCommand = NodeType.МетаПриложение;
                 }
                 //если найдена структура то проверяем на конец, если конца нет то продолжаем поиск дальше
-                if(structAfterCommand.IsError)
+                if(structAfterCommand.IsOk)
                 {
                     action = structAfterCommand;
                     structure = structureAfterCommand;

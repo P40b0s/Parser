@@ -88,18 +88,18 @@ namespace DocumentParser.DocumentElements
         public string Name { get; set; }
         public HyperTextInfo HyperTextInfo {get;set;}
         public MetaInfo Meta {get;set;}
-        public List<Header> Headers {get;set;}
+        public List<Header> Headers {get;set;} = new List<Header>();
         public DocumentTable Table {get;set;}
-        public List<Indent> Indents {get;set;}
-        public List<Item> Items {get;set;}
-        public List<FootNoteInfo> FootNotes {get;set;}
+        public List<Indent> Indents {get;set;} = new List<Indent>();
+        public List<Item> Items {get;set;} = new List<Item>();
+        public List<FootNoteInfo> FootNotes {get;set;} = new List<FootNoteInfo>();
         public string CommentId {get;set;}
         public string SearchName {get;set;}
 
         /// <summary>
         /// Если есть приложение к приложению
         /// </summary>
-        public List<Annex> Annexes {get;set;}
+        public List<Annex> Annexes {get;set;} = new List<Annex>();
         
     }
 
