@@ -58,7 +58,7 @@ public partial class Token<T>
             return new Result<Token<T>, TokenException>(wrongFoundException(index, nextIs, found));
         }
     }
-        /// <summary>
+    /// <summary>
     /// Поиск токенов из перечня предиката
     /// </summary>
     /// <param name="nextIs">Искомый токен</param>

@@ -73,9 +73,10 @@ namespace DocumentParser.Parsers
             //FIXME ПОЧЕМУ? через 2 масяа уже не ясно
             //замкнутый круг
             var tableParser = new TableParser(word);
+            tableParser.UpdateCallback+= c => UpdateStatus(c);
+            tableParser.ErrorCallback+= e => AddError(e);
             //Передаем, чтоб можно было вызвать пару методов headerParser после поиска таблиц
             tableParser.Parse();
-            AddError(metaParser);
             var annexParser = new AnnexParser(word);
             annexParser.UpdateCallback+= c => UpdateStatus(c);
             annexParser.ErrorCallback+= e => AddError(e);
@@ -103,16 +104,12 @@ namespace DocumentParser.Parsers
             footNodeParser.UpdateCallback+= c => UpdateStatus(c);
             footNodeParser.ErrorCallback+= e => AddError(e);
             footNodeParser.Parse(headersParser, annexParser);
-            AddError(footNodeParser);
 
             var itemsParser = new ItemsParser(word);
+            itemsParser.UpdateCallback+= c => UpdateStatus(c);
+            itemsParser.ErrorCallback+= e => AddError(e);
             itemsParser.Parse(headersParser, annexParser);
-            
-            AddError(headersParser);
-            AddError(itemsParser);
-            AddError(tableParser);
 
-           
             //Создаем документ
             UpdateStatus("Формирование документа...");
             document.Body = new DocumentBody(headersParser.Headers.Select(s=>s.Header).ToList(),

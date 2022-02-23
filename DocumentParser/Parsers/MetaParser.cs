@@ -121,6 +121,7 @@ namespace DocumentParser.Parsers
         {   
             var actionEnum = MetaAction.edit;
             var action = token.Next(MetaTokenType.Редакции);
+           
             if(action.IsError)
             {
                 action = token.Next(MetaTokenType.Дополнен);
@@ -139,6 +140,13 @@ namespace DocumentParser.Parsers
             if(end.IsOk)
             {
                 setMeta(action.Value(), structure, actionEnum, isNew, start);
+                return true;   
+            }
+            //Если конец не найден проверяем разделители, может быть несколько документов разделенных ;
+            var splitter = action.Value().FindForwardMany(s=>s.TokenType == MetaTokenType.Разделитель);
+            if(splitter.Count > 0)
+            {
+                setMeta(splitter.Last(), structure, actionEnum, isNew, start);
                 return true;   
             }
             //и проверяем на едицу структуры - бывает дополнен пункт.... а бывает пункт дополнен
@@ -190,15 +198,17 @@ namespace DocumentParser.Parsers
                     }
                 }
             }
+            
             //Если не закрыта скобка то выдаем ошибку
             var error = action.Value().Next();
             if(error.IsOk && (error.Value().TokenType == MetaTokenType.ТекущийАбзац || error.Value().TokenType == MetaTokenType.НовыйАбзац))
             {
-                var el = extractor.GetElement(error.Value());
-                return AddError($"Ошибка разбора блока с метаинформацией: {el.WordElement.Text} получено значение: \"{error.Value()}\" ожидалось: \")\"");
+                var el = extractor.GetElement(action.Value());
+                return AddError($"Ошибка разбора блока с метаинформацией: {el.WordElement.Text} получено значение: \"{error.Value()}\" ожидалось: \")\", индекс в тексте: {action.Value().StartIndex}");
             }
            return getMeta(action.Value(), structure, isNew, start);
         }
+
         // private void addException(Result<MetaTokenType> token, string waitToken)
         // {
         //     var par = extractor.GetElements(token.Token).FirstOrDefault();

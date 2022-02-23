@@ -11,6 +11,7 @@ public class MetaTokenDefinitions : TokenDefinitionBase<MetaTokenType>
         addToken(MetaTokenType.ТекущийАбзац, "[(]", 2);
         addToken(MetaTokenType.НовыйАбзац, "(?<=\n\\s*)[(]");
         addToken(MetaTokenType.Конец, "[)]");
+        addToken(MetaTokenType.Разделитель, "[;]");
         //AddToken(MetaTokenType.Разделитель, "[;]\\s+");
 
         addToken(MetaTokenType.Редакции, "в\\s*редакции");
