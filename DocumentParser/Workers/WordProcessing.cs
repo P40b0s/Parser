@@ -151,24 +151,6 @@ namespace DocumentParser.Workers
         }
         public ElementStructure GetElementNode(OpenXmlElement el) => ElementsList.FirstOrDefault(f=>f.WordElement.Element == el);
         
-        //public ElementStructure GetNode(OpenXmlElement p) => ElementsList.FirstOrDefault(f => f.WordElement.Element.Equals(p));
-        // public int GetParentElementIndex(OpenXmlElement p)
-        // {
-        //     int index = (int)NodeType.Корневой;
-        //     var currentElement = ElementsList.FirstOrDefault(f => f.WordElement.Element.Equals(p));
-        //     if (currentElement.NodeType == NodeType.Корневой)
-        //         return index;
-        //     for(int i= ElementsList.IndexOf(currentElement) -1; i >=0; i--)
-        //     {
-        //         if ((int)ElementsList[i].NodeType < (int)currentElement.NodeType && ElementsList[i].NodeType != NodeType.Таблица)
-        //         {
-        //             currentElement.ParentElementIndex = ElementsList[i].ElementIndex;
-        //             index = ElementsList[i].ElementIndex;
-        //             return index;
-        //         }  
-        //     }
-        //     return index;
-        // }
         List<CommentRange> runsWithComments = new List<CommentRange>();
         /// <summary>
         /// Установка индексов элемена в бодике
@@ -296,50 +278,13 @@ namespace DocumentParser.Workers
             });
         }
 
-        // private void ProcessComments()
-        // {
-        //     foreach(var element in )
-        //     var com = ElementsList.SelectMany(w=>w.WordElement.RunWrapper.CommentsId).Distinct();
-        //     if(com.Count() > 0)
-        //         UpdateStatus($"Обработка коментариев: {com.Count()} шт.");
-        //     foreach(var c in com)
-        //     {
-        //         var comment = comments.FirstOrDefault(f=>f.id == c);
-
-        //         var items = ElementsList.Where(w=>w.WordElement.RunWrapper.CommentsId.Contains(c) || w.WordElement. == c);
-        //         var startCommentItem = items.FirstOrDefault()?.CurrentIndex;
-        //         var endCommentItem = items.LastOrDefault()?.CurrentIndex;
-        //         if(startCommentItem.HasValue && endCommentItem.HasValue)
-        //         {                                                                     // +1 потому что берем по колчичеству а не по индексам
-        //             var between =  ElementsList.Skip(startCommentItem.Value).Take((endCommentItem.Value - startCommentItem.Value) + 1);
-        //             foreach(var b in between)
-        //             {
-        //                 var comment = comments.FirstOrDefault(f=>f.id == c);
-        //                 b.WordElement.RunWrapper.SetComment(comment.ToComment);
-        //             }
-        //         }
-        //     }
-        // }
-
         public void SetElementNode(ITextIndex txt, NodeType nodeType)
         {
             var e = GetElements(txt);
             e.ForEach(f=>f.NodeType = nodeType);
         }
         public void SetElementNode(ElementStructure el, NodeType nodeType) => el.NodeType = nodeType;
-        // public List<ElementStructure> GetElementsExcept(IEnumerable<ElementStructure> except1, IEnumerable<ElementStructure> except2)
-        // {
-        //     try
-        //     {
-        //         var elements = ElementsList.Except(except1).Except(except2).Except(ElementsList.Where(w=>w.NodeType == NodeType.Таблица || w.NodeType == NodeType.АбзацТаблицы));
-        //         return elements.ToList();
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         logger.Fatal(ex);
-        //         return null;
-        //     }
-        // }
+       
         public List<ElementStructure> GetElements(ITextIndex txt)
         {
             List<ElementStructure> p = new List<ElementStructure>();
@@ -371,15 +316,15 @@ namespace DocumentParser.Workers
             }
         }
 
-        public Result<ElementStructure, ElementQueryException> GetSingleElement(ITextIndex txt)
+        public Result<ElementStructure> GetElement(ITextIndex txt)
         {
             var element = ElementsList.LastOrDefault(w=> w.StartIndex <= txt.StartIndex);
-            if(element != null)
-                return new Result<ElementStructure, ElementQueryException>(element);
-            return new Result<ElementStructure, ElementQueryException>(new ElementQueryException($"Элемент с индексом {txt.StartIndex} не найден!"));    
+            if(element == null)
+                return Result<ElementStructure>.SetError($"Элемент с индексом {txt.StartIndex} не найден!"); 
+            return Result<ElementStructure>.SetSuccess(element);
         }
-        public ElementStructure GetElement(ITextIndex txt) 
-        => ElementsList.LastOrDefault(w=> w.StartIndex <= txt.StartIndex);  
+        // public ElementStructure GetElement(ITextIndex txt) 
+        // => ElementsList.LastOrDefault(w=> w.StartIndex <= txt.StartIndex);  
      
         public IEnumerable<ElementStructure> GetElements(NodeType node) => ElementsList.Where(w=>w.NodeType == node);
         
@@ -388,10 +333,12 @@ namespace DocumentParser.Workers
             var elements = ElementsList.Where(w=> w.ElementIndex >= from && w.ElementIndex <= to);
                 return elements.ToList();
         }
-        public ElementStructure GetElement(int index)
+        public Result<ElementStructure> GetElement(int index)
         {
             var element = ElementsList.FirstOrDefault(f=>f.ElementIndex == index);
-            return element;
+            if(element == null)
+                return Result<ElementStructure>.SetError($"Элемент с порядковым номером абзаца в структуре документа № {index} не найден");
+            return Result<ElementStructure>.SetSuccess(element);
         }
         
         List<int> getRange(int startIndex, int length)
@@ -424,7 +371,7 @@ namespace DocumentParser.Workers
                                 foreach(var ch in t.Text)
                                 {
                                     if(!range.Contains(currentCharCount))
-                                        currentText+=ch;
+                                        currentText += ch;
                                     currentCharCount++;
                                 }
                                 t.Text = currentText;

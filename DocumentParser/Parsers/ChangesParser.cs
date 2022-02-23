@@ -28,8 +28,8 @@ namespace DocumentParser.Parsers
             int percent = 0;
             foreach(var t in tokens)
             {
-                ElementStructure paragraphBefore = null;
-                ElementStructure paragraphAfter = null;
+                var paragraphBefore = Utils.Result<ElementStructure>.SetError("Значение не присвоено!");
+                var paragraphAfter = Utils.Result<ElementStructure>.SetError("Значение не присвоено!");
                 if(t.TokenType == ChangesTokenType.NextIsChange)
                 {
                     paragraphBefore = extractor.GetElement(t);
@@ -54,16 +54,20 @@ namespace DocumentParser.Parsers
                             breakCycle = true;
                         }
                     }
-                    if(paragraphAfter == null && lastAnchor.IsOk)
+                    if(paragraphAfter.IsError && lastAnchor.IsOk)
                     {
                         //теперь подключаем анкоры
                         var par = extractor.GetElement(lastAnchor.Value());
-                        paragraphAfter = extractor.GetElement(par.ElementIndex + 1);
+                        if(par.IsOk)
+                        {
+                            paragraphAfter = extractor.GetElement(par.Value().ElementIndex + 1);
+                        }
+                       
                     }
                 }
-                if(paragraphAfter != null && paragraphBefore != null)
+                if(paragraphAfter.IsOk && paragraphBefore.IsOk)
                 {
-                    var changePars = extractor.GetElements(paragraphBefore.ElementIndex +1, paragraphAfter.ElementIndex - 1);
+                    var changePars = extractor.GetElements(paragraphBefore.Value().ElementIndex +1, paragraphAfter.Value().ElementIndex - 1);
                     Count =+ changePars.Count();
                     extractor.SetChange(changePars);
                     foreach (var item in changePars)

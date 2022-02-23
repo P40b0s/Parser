@@ -337,7 +337,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
             return AddError($"Дата одобрения в Совете Федерации не распознана: {SFDATE.Error().Message}");
         doc.SFDate = SFDATE.Value().Value;
         extractor.SetElementNode(sfDate.Value(), NodeType.stop);
-        var before = extractor.GetSingleElement(sfDate.Value());
+        var before = extractor.GetElement(sfDate.Value());
         if(before.IsOk)
             BeforeBodyElement = before.Value();
         return true;
@@ -353,14 +353,14 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
     {
         if(settings.DefaultRules.RequisiteRule.NameInTypeString)
         {
-            var nameToken = extractor.GetSingleElement(tokensRequisiteModel.typeToken);
+            var nameToken = extractor.GetElement(tokensRequisiteModel.typeToken);
             if(nameToken.IsError)
                 return AddError("Наименование не найдено, внимание включен флаг NameInTypeString=true - наименование находится в абзаце вида документа!");
             doc.Name = extractor.GetUnicodeString(nameToken.Value());
             var part = tokensRequisiteModel.typeToken.FindForward(f=>f.TokenType == RequisiteTokenType.Часть, 1);
             if(part.IsOk)
             {
-                var p = extractor.GetSingleElement(part.Value());
+                var p = extractor.GetElement(part.Value());
                 if(p.IsOk)
                 {
                     doc.Part = extractor.GetUnicodeString(p.Value());
@@ -381,7 +381,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
         //         lastToken = dateField.Value();
         // }
 
-        var beforeNameElement = extractor.GetSingleElement(lastToken);
+        var beforeNameElement = extractor.GetElement(lastToken);
         var mayBeName = beforeNameElement.Value().Next(settings.DefaultRules.RequisiteRule.NamePositionAfterTypeCorrection);
         if(mayBeName.IsError)
             return AddError("Наименование документа не найдено");

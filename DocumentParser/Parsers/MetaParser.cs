@@ -103,9 +103,14 @@ namespace DocumentParser.Parsers
            
             if(isNewParagraph)
             {
-                var par = extractor.GetElements(token).FirstOrDefault();
-                extractor.SetMetaNode(par, nodeType, action, par.WordElement.Text,  true);
-                MetaParagraphs.Add(par);
+                var par = extractor.GetElement(token);
+                if(par.IsOk)
+                {
+                    extractor.SetMetaNode(par.Value(), nodeType, action, par.Value().WordElement.Text,  true);
+                    MetaParagraphs.Add(par.Value());
+                }
+                else AddError($"Не найден параграф для установки метаинформации! (индекс: {token.StartIndex})");
+                
             }  
             else
             {
@@ -146,8 +151,12 @@ namespace DocumentParser.Parsers
             var splitter = action.Value().FindForwardMany(s=>s.TokenType == MetaTokenType.Разделитель);
             if(splitter.Count > 0)
             {
-                setMeta(splitter.Last(), structure, actionEnum, isNew, start);
-                return true;   
+                var end2 = splitter.Last().Next(MetaTokenType.Конец);
+                if(end2.IsOk)
+                {
+                    setMeta(action.Value(), structure, actionEnum, isNew, start);
+                    return true;   
+                }
             }
             //и проверяем на едицу структуры - бывает дополнен пункт.... а бывает пункт дополнен
             //соответсвенно в этом блоке есть какая то единица - пункт статья раздел итд...
@@ -204,7 +213,10 @@ namespace DocumentParser.Parsers
             if(error.IsOk && (error.Value().TokenType == MetaTokenType.ТекущийАбзац || error.Value().TokenType == MetaTokenType.НовыйАбзац))
             {
                 var el = extractor.GetElement(action.Value());
-                return AddError($"Ошибка разбора блока с метаинформацией: {el.WordElement.Text} получено значение: \"{error.Value()}\" ожидалось: \")\", индекс в тексте: {action.Value().StartIndex}");
+                if(el.IsOk)
+                    return AddError($"Ошибка разбора блока с метаинформацией: {el.Value().WordElement.Text} получено значение: \"{error.Value()}\" ожидалось: \")\", индекс в тексте: {action.Value().StartIndex}");
+                else
+                    AddError($"Ошибка разбора блока с метаинформацией (текстовый элемент не обнаружен: {el.Error()}) получено значение: \"{error.Value()}\" ожидалось: \")\", индекс в тексте: {action.Value().StartIndex}");
             }
            return getMeta(action.Value(), structure, isNew, start);
         }

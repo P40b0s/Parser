@@ -23,6 +23,9 @@ public class DefaultError : IError
     public string Message {get;set;}
     public ErrorType ErrorType {get;set;}
     public Exception Exception {get;set;}
+    public override string ToString() =>
+        Message;
+    
 
 }
 
@@ -33,7 +36,7 @@ public abstract class CustomError : IError
     public string Message {get;set;}
     public ErrorType ErrorType {get;set;}
     public Exception Exception {get;set;}
-     public CustomError()
+    public CustomError()
     {
         ErrorType = ErrorType.Fatal;
         Date = DateTime.Now;
@@ -51,6 +54,8 @@ public abstract class CustomError : IError
         Date = DateTime.Now;
         Message = message;
     }
+    public override string ToString() =>
+        Message;
 
 
 }

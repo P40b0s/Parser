@@ -91,6 +91,8 @@ namespace DocumentParser.DocumentElements
         public DateTime? GDDate { get; set; }
         public DateTime? SFDate { get; set; }
         public PublicationInfo PublicationInfo {get;set;}
+        public string CommentId {get;set;}
+        public MetaInformation.MetaInfo Meta {get;set;}
         public int ImagesLength {get;set;}
         public DocumentBody Body {get;set;}
         public List<Image> Images {get;set;}

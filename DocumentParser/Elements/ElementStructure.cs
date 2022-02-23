@@ -101,12 +101,5 @@ public partial class ElementStructure
             return hash;
         }
     }
-
-    public ElementStructure GetElement(ITextIndex index)
-    {
-        return elements.LastOrDefault(f=>f.StartIndex <= index.StartIndex);        
-    }
-
-   
     
 }

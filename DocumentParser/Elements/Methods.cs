@@ -11,12 +11,12 @@ namespace DocumentParser.Elements;
 
 public partial class ElementStructure
 {
-    public Result<ElementStructure, ElementQueryException> Next(int skip = 1)
+    public Result<ElementStructure> Next(int skip = 1)
     {
         var index = currentIndex + skip;
-        if(elements.Count > index)
-            return new Result<ElementStructure, ElementQueryException>(elements[index]);
-        else return new Result<ElementStructure, ElementQueryException>(rangeException(index));
+        if(elements.Count >= index)
+            return Result<ElementStructure>.SetSuccess(elements[index]);
+        else return Result<ElementStructure>.SetError(rangeException(index).Message);
     }
     /// <summary>
     /// Берем все элементы подряд пока не дойдем до нужного
@@ -37,17 +37,17 @@ public partial class ElementStructure
             yield return elements[i];
         }
     }
-    public Result<ElementStructure, ElementQueryException> FindBackward(Predicate<ElementStructure> element)
+    public Result<ElementStructure> FindBackward(Predicate<ElementStructure> element)
     {
         var index = currentIndex - 1;
         if(index <= 0)
-            return new Result<ElementStructure, ElementQueryException>(rangeException(index));
+            return Result<ElementStructure>.SetError(rangeException(index).Message);
         for(int i = index; i >= 0; i--)
         {
             if(element(elements[i]))
-                return new Result<ElementStructure, ElementQueryException>(elements[i]);
+                return Result<ElementStructure>.SetSuccess(elements[i]);
         }
-        return new Result<ElementStructure, ElementQueryException>(notFoundException());
+        return Result<ElementStructure>.SetError(notFoundException().Message);
     }
     /// <summary>
     /// Поиск значения вниз по массиву
@@ -55,12 +55,12 @@ public partial class ElementStructure
     /// <param name="el">Искомый элемент</param>
     /// <param name="skip">Сколько значений можно пропустить, 0 - значит будет искать только 1 итерацию</param>
     /// <returns></returns>
-    public Result<ElementStructure, ElementQueryException> FindForward(Predicate<ElementStructure> el,  int skip = 0)
+    public Result<ElementStructure> FindForward(Predicate<ElementStructure> el,  int skip = 0)
     {
         var index = currentIndex+1;
         var skipCount = 0;
         if(elements.Count <= index)
-            return new Result<ElementStructure, ElementQueryException>(rangeException(index));
+            return Result<ElementStructure>.SetError(rangeException(index).Message);
         for (int i = index; i < elements.Count && skipCount <= skip; i++)
         {
             if(isTableIndent(elements[i]))
@@ -68,10 +68,10 @@ public partial class ElementStructure
             if(isStopOrAnnex(elements[i]))
                 break;
             if(el(elements[i]))
-                new Result<ElementStructure, ElementQueryException>(elements[i]);
+                return Result<ElementStructure>.SetSuccess(elements[i]);
             skipCount++;
         }
-        return new Result<ElementStructure, ElementQueryException>(notFoundException());
+        return Result<ElementStructure>.SetError(notFoundException().Message);
     }
     /// <summary>
     /// Берем все элементы подряд пока не дойдем до нужного
@@ -153,11 +153,11 @@ public partial class ElementStructure
     }
 
 
-    public Result<ElementStructure, ElementQueryException> Before()
+    public Result<ElementStructure> Before()
     {
         if((currentIndex - 1) >= 0)
-            return new Result<ElementStructure, ElementQueryException>(elements[(currentIndex -1)]);
-        else return new Result<ElementStructure, ElementQueryException>(rangeException(currentIndex - 1));
+            return  Result<ElementStructure>.SetSuccess(elements[(currentIndex -1)]);
+        else return Result<ElementStructure>.SetError(rangeException(currentIndex - 1).Message);
     }
     public IEnumerable<ITextIndex> InRange(IEnumerable<ITextIndex> txt)
     {
