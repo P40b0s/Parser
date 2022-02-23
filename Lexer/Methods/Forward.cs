@@ -48,7 +48,7 @@ public partial class Token<T>
     public Result<Token<T>, TokenException> Next(T nextIs, int skip)
     {
         var index = Position + 1 + skip;
-        if(tokens.Count < index)
+        if(tokens.Count <= index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
         if(tokens[index].TokenType.Equals(nextIs))
             return new Result<Token<T>, TokenException>(tokens[index]);
@@ -67,7 +67,7 @@ public partial class Token<T>
     public Result<Token<T>, TokenException> FindForward(Predicate<Token<T>> oneOf, int maxDeep = 0, bool withSelf = false)
     {
         var index = withSelf? Position : Position + 1;
-        if(tokens.Count == index)
+        if(tokens.Count <= index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
         for (int i = index; i <= maxDeep + index; i++)
         {
@@ -87,7 +87,7 @@ public partial class Token<T>
     public Result<Token<T>, TokenException> FindForward(Predicate<Token<T>> ignore)
     {
         var index = Position + 1;
-        if(tokens.Count == index)
+        if(tokens.Count <= index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
         for (int i = index; i < tokens.Count; i++)
         {
@@ -112,7 +112,7 @@ public partial class Token<T>
     public Result<Token<T>, TokenException> FindForward(T searchedToken, int maxDeep = 0)
     {
         var index = Position + 1;
-        if(tokens.Count == index)
+        if(tokens.Count <= index)
             return new Result<Token<T>, TokenException>(outOfRangeException(index));
         for (int i = index; i <= maxDeep + index; i++)
         {

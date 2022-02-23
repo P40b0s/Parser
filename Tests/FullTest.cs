@@ -24,12 +24,19 @@ public class FullTests : BaseTest<Parser>
             Description = "тест большого правительства с 6 приложениями",
             DirPath = Paths.CurrentDir + Paths.AnnexHeadersTestPath,
         },
+         //1
+        new Files<Parser>()
+        {
+            FilePath = "476-тест_комментов.docx",
+            Description = "Опять какие то траблы с метаинформацией...",
+            DirPath = Paths.CurrentDir + Paths.RootTestPath,
+        },
     };
     
     [Test]
     public async ValueTask TestChanges()
     {
-        for(int i = 0; i< files.Count; i++)
+        for(int i = 1; i< files.Count; i++)
         {
             await settings.Load();
             var fi = new System.IO.FileInfo(files[i].GetPath);
