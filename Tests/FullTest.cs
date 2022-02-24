@@ -31,12 +31,20 @@ public class FullTests : BaseTest<Parser>
             Description = "Опять какие то траблы с метаинформацией...",
             DirPath = Paths.CurrentDir + Paths.RootTestPath,
         },
+        //2
+        new Files<Parser>()
+        {
+            FilePath = "ФЗ-476_не_парсится.docx",
+            Description = "Говорит не парсится из-за новых строк",
+            DirPath = Paths.CurrentDir + Paths.RootTestPath,
+        },
+        
     };
     
     [Test]
     public async ValueTask TestChanges()
     {
-        for(int i = 1; i< files.Count; i++)
+        for(int i = 2; i< files.Count; i++)
         {
             await settings.Load();
             var fi = new System.IO.FileInfo(files[i].GetPath);
