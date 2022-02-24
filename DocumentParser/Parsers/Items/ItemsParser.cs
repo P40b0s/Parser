@@ -40,7 +40,7 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
             return null;
         groupItems(currentTokens);
         var hy = getHierarchyItems(currentTokens, items);
-        var cast = hy.items.Cast<Item>().ToList();
+        var cast = hy.items;
         //После этого все что не определено на 95% будет абзацами
         //но мы еще не искали по человечески футноты и примечания, с этим будет самая большая сложность....
         //они то как раз и попадут в эти 5% скорее всего
@@ -127,7 +127,7 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
     /// <param name="currentTokens"></param>
     /// <param name="items"></param>
     /// <returns></returns>
-    private (List<ItemWrapper> items, List<ElementStructure> elements) getHierarchyItems(List<Token<ItemTokenType>> currentTokens, List<ElementStructure> items)
+    private (List<Item> items, List<ElementStructure> elements) getHierarchyItems(List<Token<ItemTokenType>> currentTokens, List<ElementStructure> items)
     {
         List<ItemWrapper> readyItems = new List<ItemWrapper>();
         List<ItemWrapper> outItems = new List<ItemWrapper>();
@@ -145,58 +145,75 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
                 forDelete.AddRange(pars);
             }
         }
+        List<Item> level0 = new List<Item>();
+        List<Item> level1 = new List<Item>();
+        List<Item> level2 = new List<Item>();
+        List<Item> level3 = new List<Item>();
+        List<Item> level4 = new List<Item>();
+        List<Item> level5 = new List<Item>();
+        List<Item> level6 = new List<Item>();
         foreach(var rItem in readyItems)
         {
             if(rItem.nodeType == NodeType.item0)
             {
-                outItems.Add(new ItemWrapper(rItem));
+                level0.Add(new ItemWrapper(rItem));
             }
             if(rItem.nodeType == NodeType.item1)
             {
-                var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                h.AddSubitem(rItem, h);
+                var h = level0.Last(l=>l.nodeType == NodeType.item0);
+                level1.Add(rItem);
+                h.Items = level1;
             }
             if(rItem.nodeType == NodeType.item2)
             {
-                var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1) as ItemWrapper;
-                h1.AddSubitem(rItem, h1);
+                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                var h1 = level1.Last(l=>l.nodeType == NodeType.item1) as ItemWrapper;
+                level2.Add(rItem);
+                h1.Items = level2;
             }
             if(rItem.nodeType == NodeType.item3)
             {
-                var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
-                var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2) as ItemWrapper;
-                h2.AddSubitem(rItem, h2);
+                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                //var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                var h2 = level2.Last(l=>l.nodeType == NodeType.item2) as ItemWrapper;
+                level3.Add(rItem);
+                h2.Items = level3;
+                //h2.AddSubitem(rItem, h2);
             }
             if(rItem.nodeType == NodeType.item4)
             {
-                var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
-                var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
-                var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3) as ItemWrapper;
-                h3.AddSubitem(rItem, h3);
+                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                //var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                //var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
+                var h3 = level3.Last(l=>l.nodeType == NodeType.item3) as ItemWrapper;
+                level4.Add(rItem);
+                h3.Items = level4;
+                //h3.AddSubitem(rItem, h3);
             }
             if(rItem.nodeType == NodeType.item5)
             {
-                var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
-                var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
-                var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3);
-                var h4 = h3.Items.Last(l=>l.nodeType == NodeType.item4) as ItemWrapper;
-                h4.AddSubitem(rItem, h4);
+                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                //var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                //var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
+                //var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3);
+                var h4 = level4.Last(l=>l.nodeType == NodeType.item4) as ItemWrapper;
+                level5.Add(rItem);
+                h4.Items = level5;
+                //h4.AddSubitem(rItem, h4);
             }
             if(rItem.nodeType == NodeType.item6)
             {
-                var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
-                var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
-                var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3);
-                var h4 = h3.Items.Last(l=>l.nodeType == NodeType.item4);
-                var h5 = h4.Items.Last(l=>l.nodeType == NodeType.item5) as ItemWrapper;
-                h5.AddSubitem(rItem, h5);
+                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                //var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                //var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
+                //var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3);
+                //var h4 = h3.Items.Last(l=>l.nodeType == NodeType.item4);
+                var h5 = level5.Last(l=>l.nodeType == NodeType.item5) as ItemWrapper;
+                level6.Add(rItem);
+                h5.Items = level6;
+                //h5.AddSubitem(rItem, h5);
             }
         }
-        return (outItems, forDelete);
+        return (level0, forDelete);
     }
 }

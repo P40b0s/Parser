@@ -23,7 +23,7 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
     /// </summary>
     /// <Value()></Value()>
     public ElementStructure BeforeBodyElement {get;set;}
-    
+    //FIXME была одна ошибка где он был NULL! надо все проверить, доки из перечня проверки реквизитов
     public RequisitesParser(WordProcessing extractor, DocumentElements.Document doc)
     {
         this.extractor = extractor;
