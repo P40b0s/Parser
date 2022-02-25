@@ -7,14 +7,14 @@ namespace Lexer;
 
 public partial class Token<T> : ITextIndex
 {
-    public Result<DateTime?, TokenException> GetDate()
+    public Result<DateTime?> GetDate()
     {
         if(this.CustomGroups.Count != 3)
-            return new Result<DateTime?, TokenException>(customException($"Группа данного токена не совпадает с сигнатурой даты: {this.Value}"));
+            return Result<DateTime?>.Err(customException($"Группа данного токена не совпадает с сигнатурой даты: {this.Value}"));
         var date = getDate(this.CustomGroups[0].Value, this.CustomGroups[1].Value, this.CustomGroups[2].Value);
         if(date == null)
-            return new Result<DateTime?, TokenException>(customException($"Ошибка преобразования даты: {this.Value}"));
-        return new Result<DateTime?, TokenException>(date);
+            return Result<DateTime?>.Err(customException($"Ошибка преобразования даты: {this.Value}"));
+        return Result<DateTime?>.Ok(date);
     }
     /// <summary>
     /// Получение даты из строки

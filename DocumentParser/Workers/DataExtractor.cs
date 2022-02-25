@@ -50,7 +50,7 @@ namespace DocumentParser.Workers
             thumbSizeX = 256;
             thumbSizeY = 256;
         }
-        public Result<DocumentParser.DocumentElements.Image, ParserException> GetImage(Drawing drawing)
+        public Result<DocumentParser.DocumentElements.Image> GetImage(Drawing drawing)
         {
             try
             {
@@ -68,20 +68,20 @@ namespace DocumentParser.Workers
                             {
                                 var error0 = $"Изображение {nopicprops.Name.Value} по адресу {nopicprops.Description.Value} не найдено";
                                 AddError(error0, ErrorType.Warning);
-                                return new Result<Image, ParserException>(new ParserException(error0, ErrorType.Warning));
+                                return Result<Image>.Err(error0, ErrorType.Warning);
                             }
                             else
                             {
                                 var error0 = $"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}";
                                 AddError(error0);
-                                return new Result<Image, ParserException>(new ParserException(error0));
+                                return Result<Image>.Err(error0);
                             }
                         }   
                         else
                         {
                             var error0 = $"Изображение не найдено {imageFirst.BlipFill.Blip.OuterXml}";
                             AddError(error0);
-                            return new Result<Image, ParserException>(new ParserException(error0));
+                            return Result<Image>.Err(error0);
                         }
                     }
                     var extent = drawing.Inline.GetFirstChild<Extent>();
@@ -89,7 +89,7 @@ namespace DocumentParser.Workers
                     {
                         var error1 = $"wp:extent не обнаружен, не могу извлечь изображение";
                         AddError(error1);
-                        return new Result<Image, ParserException>(new ParserException(error1));
+                        return Result<Image>.Err(error1);
                     }
                     long x = DataConverter.EmuToPixels((double)extent.Cx);
                     long y = DataConverter.EmuToPixels((double)extent.Cy);
@@ -107,7 +107,7 @@ namespace DocumentParser.Workers
                         {
                             var error1 = $"wp:extent не обнаружен, не могу извлечь изображение";
                             AddError(error1);
-                            return new Result<Image, ParserException>(new ParserException(error1));
+                            return Result<Image>.Err(error1);
                         }
                         long x = DataConverter.EmuToPixels((double)extent.Cx);
                         long y = DataConverter.EmuToPixels((double)extent.Cy);
@@ -116,16 +116,16 @@ namespace DocumentParser.Workers
                 }
                 var error = $"Возможно изображение не подходит под текущую логику (Drawing.Inline, Drawing.Anchor) извлечения и не может быть извлечено";
                 AddError(error);
-                return new Result<Image, ParserException>(new ParserException(error));
+                return Result<Image>.Err(error);
             }
             catch (Exception ex)
             {
                 AddError(ex);
-                return new Result<Image, ParserException>(new ParserException(ex.Message));
+                return Result<Image>.Err(ex.Message);
             }
         }
 
-        private Result<Image, ParserException> unzipImage(long x, long y, string id)
+        private Result<Image> unzipImage(long x, long y, string id)
         {
             //string folder = System.IO.Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             var img = part.GetPartById(id);
@@ -142,10 +142,10 @@ namespace DocumentParser.Workers
                     ms.Write(buffer, 0, read);
                 }
                 var th = GetReducedImage(thumbSizeX, thumbSizeY, ms);
-                return new Result<Image, ParserException>(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
+                return Result<Image>.Ok(new Image(Guid.Empty, ms.ToArray(), x, y, new Thumb(th, thumbSizeX, thumbSizeY)));
             }
         }
-        public Result<DocumentParser.DocumentElements.Image, ParserException> GetImage(Picture pic)
+        public Result<DocumentParser.DocumentElements.Image> GetImage(Picture pic)
         {
             try
             {
@@ -173,7 +173,7 @@ namespace DocumentParser.Workers
             catch (Exception ex)
             {
                 AddError(ex);
-                return new Result<Image, ParserException>(new ParserException(ex.Message));
+                return Result<Image>.Err(ex.Message);
             }
         }
 

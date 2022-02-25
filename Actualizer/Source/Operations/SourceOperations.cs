@@ -123,7 +123,7 @@ namespace Actualizer.Source.Operations;
         var next = currentParagraph.Next();
         if (next.IsError)
             AddError("Следующий параграф не найден", currentParagraph.WordElement.Text, s.TargetDocumentRequisites);
-        var index = next.Value.ElementIndex;
+        var index = next.Value().ElementIndex;
         var items = RecursiveElementSearch(index, parser.document.Body.Items);
         if(items == null)
         {

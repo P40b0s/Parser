@@ -320,8 +320,8 @@ namespace DocumentParser.Workers
         {
             var element = ElementsList.LastOrDefault(w=> w.StartIndex <= txt.StartIndex);
             if(element == null)
-                return Result<ElementStructure>.SetError($"Элемент с индексом {txt.StartIndex} не найден!"); 
-            return Result<ElementStructure>.SetSuccess(element);
+                return Result<ElementStructure>.Err($"Элемент с индексом {txt.StartIndex} не найден!"); 
+            return Result<ElementStructure>.Ok(element);
         }
         // public ElementStructure GetElement(ITextIndex txt) 
         // => ElementsList.LastOrDefault(w=> w.StartIndex <= txt.StartIndex);  
@@ -337,8 +337,8 @@ namespace DocumentParser.Workers
         {
             var element = ElementsList.FirstOrDefault(f=>f.ElementIndex == index);
             if(element == null)
-                return Result<ElementStructure>.SetError($"Элемент с порядковым номером абзаца в структуре документа № {index} не найден");
-            return Result<ElementStructure>.SetSuccess(element);
+                return Result<ElementStructure>.Err($"Элемент с порядковым номером абзаца в структуре документа № {index} не найден");
+            return Result<ElementStructure>.Ok(element);
         }
         
         List<int> getRange(int startIndex, int length)

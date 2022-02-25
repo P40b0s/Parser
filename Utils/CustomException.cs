@@ -16,13 +16,11 @@ public interface IError
     Exception Exception {get;set;}
 }
 
-public class DefaultError : IError
+public class DefaultError : CustomError
 {
-    public DefaultError(){}
-    public DateTime Date {get;}
-    public string Message {get;set;}
-    public ErrorType ErrorType {get;set;}
-    public Exception Exception {get;set;}
+     public DefaultError() : base(){}
+    public DefaultError(string message) : base(message){}
+    public DefaultError(string message, ErrorType errorType) : base(message, errorType){}
     public override string ToString() =>
         Message;
     

@@ -12,24 +12,23 @@ public partial class Token<T>
         /// <param name="searchedToken">Искомый токен</param>
         /// <param name="maxDeep">Максимальная глубина поиска (максимальное количество пропускаемый токенов, пока не втретиться нужный)</param>
         /// <returns></returns>
-        public Result<Token<T>, TokenException> FindBackward(T searchedToken, int maxDeep = 0)
+        public Result<Token<T>> FindBackward(T searchedToken, int maxDeep = 0)
         {
             var index = Position - 1;
             if(index == 0)
-                return new Result<Token<T>, TokenException>(outOfRangeException(index));
+                return Result<Token<T>>.Err(outOfRangeException(index));
             for (int i = 0; i <= maxDeep; i++)
             {
                 index = index - i;
                 if(index >= 0)
                 {
                     if(tokens[index].TokenType.Equals(searchedToken))
-                        return new Result<Token<T>, TokenException>(tokens[index]);
+                        return Result<Token<T>>.Ok(tokens[index]);
                 }
                 else
-                    return new Result<Token<T>, TokenException>(outOfRangeException(index));     
+                    return Result<Token<T>>.Err(outOfRangeException(index));     
             }
-            return new Result<Token<T>, TokenException>(notFountOnPositionException(index- maxDeep, index, searchedToken));
-                    
+            return Result<Token<T>>.Err(notFountOnPositionException(index- maxDeep, index, searchedToken));  
         }
         /// <summary>
         /// Получаем массив искомых токенов, метод прерывается если встречается токен отличный от искомых 
@@ -81,34 +80,34 @@ public partial class Token<T>
         /// <param name="searchedToken">Предикат</param>
         /// <param name="maxDeep">Максимальная глубина поиска (максимальное количество пропускаемый токенов, пока не втретиться нужный)</param>
         /// <returns></returns>
-        public Result<Token<T>, TokenException> FindBackward(Predicate<Token<T>> oneOf, int maxDeep = 0)
+        public Result<Token<T>> FindBackward(Predicate<Token<T>> oneOf, int maxDeep = 0)
         {
             var index = Position - 1;
             if(index == 0)
-                return new Result<Token<T>, TokenException>(outOfRangeException(index));
+                return Result<Token<T>>.Err(outOfRangeException(index));
                 //5        10    
             for (int i = index; i >= 0 && maxDeep >=0; i--)
             {
                 if(oneOf.Invoke(tokens[index]))
-                    return new Result<Token<T>, TokenException>(tokens[index]);
+                    return Result<Token<T>>.Ok(tokens[index]);
                 maxDeep--;
             }
-            return new Result<Token<T>, TokenException>(notFountOnPositionException(index- maxDeep, index));
+            return Result<Token<T>>.Err(notFountOnPositionException(index- maxDeep, index));
         }
        
-        public Result<Token<T>, TokenException> Before()
+        public Result<Token<T>> Before()
         {
             var index = Position - 1;
             if(index >= 0)
-                return new Result<Token<T>, TokenException>(tokens[index]);
-            return new Result<Token<T>, TokenException>(outOfRangeException(index));
+                return Result<Token<T>>.Ok(tokens[index]);
+            return Result<Token<T>>.Err(outOfRangeException(index));
         }
-        public Result<Token<T>, TokenException> Before(T beforeIs) => Before(beforeIs, 0);
+        public Result<Token<T>> Before(T beforeIs) => Before(beforeIs, 0);
          /// <summary>
         /// Возврат предыдущего токена если мы токенизируем не весь текст а только какую то часть
         /// </summary>
         /// <returns></returns>
-        public Result<Token<T>, TokenException> BeforeLocal()
+        public Result<Token<T>> BeforeLocal()
         {
             ///Такой перебор быстрее чем запрос linq
             for(int i = 0; i < tokens.Count; i++)
@@ -116,11 +115,11 @@ public partial class Token<T>
                 if(tokens[i].StartIndex == StartIndex)
                 {
                     if(i-1 >= 0)
-                        return new Result<Token<T>, TokenException>(tokens[i-1]);
-                    else return new Result<Token<T>, TokenException>(outOfRangeException(i-1));
+                        return Result<Token<T>>.Ok(tokens[i-1]);
+                    else return Result<Token<T>>.Err(outOfRangeException(i-1));
                 }
             }
-            return new Result<Token<T>, TokenException>(neverException());
+            return Result<Token<T>>.Err(neverException());
         }
 
         /// <summary>
@@ -129,19 +128,19 @@ public partial class Token<T>
         /// <param name="nextIs">Искомый токен</param>
         /// <param name="skip">Количество пропускаемых токенов</param>
         /// <returns></returns>
-        public Result<Token<T>, TokenException> Before(T beforeIs, int skip)
+        public Result<Token<T>> Before(T beforeIs, int skip)
         {
             var index = Position - 1 - skip;
             if(index >= 0)
             {
                 if(tokens[index].TokenType.Equals(beforeIs))
-                    return new Result<Token<T>, TokenException>(tokens[index]);
+                    return Result<Token<T>>.Ok(tokens[index]);
                 else
                 {
                     var found = tokens[index].TokenType;
-                    return new Result<Token<T>, TokenException>(wrongFoundException(index, beforeIs, found));
+                    return Result<Token<T>>.Err(wrongFoundException(index, beforeIs, found));
                 }
             }  
-            else return new Result<Token<T>, TokenException>(outOfRangeException(index));
+            else return Result<Token<T>>.Err(outOfRangeException(index));
         }
 }

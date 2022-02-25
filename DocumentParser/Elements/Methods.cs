@@ -15,8 +15,8 @@ public partial class ElementStructure
     {
         var index = currentIndex + skip;
         if(elements.Count >= index)
-            return Result<ElementStructure>.SetSuccess(elements[index]);
-        else return Result<ElementStructure>.SetError(rangeException(index).Message);
+            return Result<ElementStructure>.Ok(elements[index]);
+        else return Result<ElementStructure>.Err(rangeException(index));
     }
     /// <summary>
     /// Берем все элементы подряд пока не дойдем до нужного
@@ -41,13 +41,13 @@ public partial class ElementStructure
     {
         var index = currentIndex - 1;
         if(index <= 0)
-            return Result<ElementStructure>.SetError(rangeException(index).Message);
+            return Result<ElementStructure>.Err(rangeException(index));
         for(int i = index; i >= 0; i--)
         {
             if(element(elements[i]))
-                return Result<ElementStructure>.SetSuccess(elements[i]);
+                return Result<ElementStructure>.Ok(elements[i]);
         }
-        return Result<ElementStructure>.SetError(notFoundException().Message);
+        return Result<ElementStructure>.Err(notFoundException());
     }
     /// <summary>
     /// Поиск значения вниз по массиву
@@ -60,7 +60,7 @@ public partial class ElementStructure
         var index = currentIndex+1;
         var skipCount = 0;
         if(elements.Count <= index)
-            return Result<ElementStructure>.SetError(rangeException(index).Message);
+            return Result<ElementStructure>.Err(rangeException(index));
         for (int i = index; i < elements.Count && skipCount <= skip; i++)
         {
             if(isTableIndent(elements[i]))
@@ -68,10 +68,10 @@ public partial class ElementStructure
             if(isStopOrAnnex(elements[i]))
                 break;
             if(el(elements[i]))
-                return Result<ElementStructure>.SetSuccess(elements[i]);
+                return Result<ElementStructure>.Ok(elements[i]);
             skipCount++;
         }
-        return Result<ElementStructure>.SetError(notFoundException().Message);
+        return Result<ElementStructure>.Err(notFoundException());
     }
     /// <summary>
     /// Берем все элементы подряд пока не дойдем до нужного
@@ -156,8 +156,8 @@ public partial class ElementStructure
     public Result<ElementStructure> Before()
     {
         if((currentIndex - 1) >= 0)
-            return  Result<ElementStructure>.SetSuccess(elements[(currentIndex -1)]);
-        else return Result<ElementStructure>.SetError(rangeException(currentIndex - 1).Message);
+            return  Result<ElementStructure>.Ok(elements[(currentIndex -1)]);
+        else return Result<ElementStructure>.Err(rangeException(currentIndex - 1).Message);
     }
     public IEnumerable<ITextIndex> InRange(IEnumerable<ITextIndex> txt)
     {

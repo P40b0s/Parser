@@ -28,8 +28,8 @@ namespace DocumentParser.Parsers
             int percent = 0;
             foreach(var t in tokens)
             {
-                var paragraphBefore = Utils.Result<ElementStructure>.SetError("Значение не присвоено!");
-                var paragraphAfter = Utils.Result<ElementStructure>.SetError("Значение не присвоено!");
+                var paragraphBefore = Utils.Result<ElementStructure>.Err("Значение не присвоено!");
+                var paragraphAfter = Utils.Result<ElementStructure>.Err("Значение не присвоено!");
                 if(t.TokenType == ChangesTokenType.NextIsChange)
                 {
                     paragraphBefore = extractor.GetElement(t);

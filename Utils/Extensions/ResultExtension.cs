@@ -7,35 +7,35 @@ namespace Utils.Extensions;
 public static class ResultExtension
 {
 
-    /// <summary>
-    ///     Executes the given action if the calling result is a success. Returns the calling result.
-    /// </summary>
-    public static Result<T, E> Next<T, E>(this Result<T, E> result, Action<T> action, string error) where E : class, IError, new()
-    {
-        if (result.IsOk)
-            action(result.Value());
-        else
-            return new Result<T, E>(Activator.CreateInstance(typeof(E), new object[] { error }) as E);
-        return result;
-    }
-
+    // /// <summary>
+    // ///     Executes the given action if the calling result is a success. Returns the calling result.
+    // /// </summary>
+    // public static Result<T, E> Next<T, E>(this Result<T, E> result, Action<T> action, string error) where E : class, IError, new()
+    // {
+    //     if (result.IsOk)
+    //         action(result.Value());
+    //     else
+    //         return new Result<T, E>(Activator.CreateInstance(typeof(E), new object[] { error }) as E);
+    //     return result;
+    // }
+    
     public static Result<T> GetFirst<T>(this List<T> list, Func<T, bool> predicate)
     {
         for(int i = 0; i < list.Count; i++)
         {
             if(predicate(list[i]))
-                return new Result<T>(list[i]);
+                return Result<T>.Ok(list[i]);
         }
-        return new Result<T>(new DefaultError() {Message = "Элемент не найден" });
+        return Result<T>.Err("Элемент не найден");
     }
     public static Result<T> GetLast<T>(this List<T> list, Func<T, bool> predicate)
     {
         for(int i = list.Count - 1; i >= 0; i--)
         {
             if(predicate(list[i]))
-                return new Result<T>(list[i]);
+                return Result<T>.Ok(list[i]);
         }
-        return new Result<T>(new DefaultError() {Message = "Элемент не найден" });
+        return Result<T>.Err("Элемент не найден");
     }
 
     // public static Result<T, Exception> F<T>(this IEnumerable<T> en)

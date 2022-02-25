@@ -267,20 +267,16 @@ namespace DocumentParser.Parsers.Annex
         private Result<Token<AnnexTokenType>> getAnnexParent(Result<Token<AnnexTokenType>> numberToken, Token<AnnexTokenType> token, AnnexParserModel annex)
         {
             var startToken = numberToken.IsOk ? numberToken.Value() : token;
-           
             var parent = startToken.Next(AnnexTokenType.ПриложениеКДокументу);
             if(parent.IsError)
                 parent = startToken.Next(AnnexTokenType.ПриложениеКПриложению);
-            return parent;
-            
-            var parent = token.Next(AnnexTokenType.ПриложениеКДокументу);
-            if(parent.IsError)
-                parent = token.Next(AnnexTokenType.ПриложениеКПриложению);
-            return parent;
-            
+            if(parent.IsOk)
+                return Result<Token<AnnexTokenType>>.Ok(parent.Value());
+            else
+                return Result<Token<AnnexTokenType>>.Err(parent.Error().Message);
         }
 
-        private bool searchName(Result<Token<AnnexTokenType>, TokenException> nameToken, AnnexParserModel annex)
+        private bool searchName(Result<Token<AnnexTokenType>> nameToken, AnnexParserModel annex)
         {
             if(nameToken.IsError)
                 return AddError($"Не удалось определить наименование приложения № {Annexes.Count + 1} ", nameToken.Error());
