@@ -222,7 +222,9 @@ namespace DocumentParser.Parsers.Annex
             var annex = new AnnexParserModel();
             annex.Annex.AnnexPrefix = new AnnexPrefix();
             var numberToken = token.Next(AnnexTokenType.Номер);
-            var annexParentToken = getAnnexParent(token, annex);
+            if(numberToken.IsOk)
+                annex.Annex.AnnexPrefix.Number = extractor.GetUnicodeString(numberToken.Value().CustomGroups[0]);
+            var annexParentToken = getAnnexParent(numberToken, token, annex);
             if(annexParentToken.IsError)
             {
                 var n = numberToken.IsOk ? numberToken.Value().Value : numberToken.Error().Message;
@@ -262,16 +264,20 @@ namespace DocumentParser.Parsers.Annex
             return true;
         }
 
-        private Result<Token<AnnexTokenType>, TokenException> getAnnexParent(Token<AnnexTokenType> token, AnnexParserModel annex)
+        private Result<Token<AnnexTokenType>> getAnnexParent(Result<Token<AnnexTokenType>> numberToken, Token<AnnexTokenType> token, AnnexParserModel annex)
         {
-            var numberToken = token.Next(AnnexTokenType.Номер);
-            if(numberToken.IsOk)
-                annex.Annex.AnnexPrefix.Number = extractor.GetUnicodeString(numberToken.Value().CustomGroups[0]);
-            else
-                numberToken = token.Next(AnnexTokenType.ПриложениеКДокументу);
-            if(numberToken.IsError)
-                numberToken  = token.Next(AnnexTokenType.ПриложениеКПриложению);
-            return numberToken;
+            var startToken = numberToken.IsOk ? numberToken.Value() : token;
+           
+            var parent = startToken.Next(AnnexTokenType.ПриложениеКДокументу);
+            if(parent.IsError)
+                parent = startToken.Next(AnnexTokenType.ПриложениеКПриложению);
+            return parent;
+            
+            var parent = token.Next(AnnexTokenType.ПриложениеКДокументу);
+            if(parent.IsError)
+                parent = token.Next(AnnexTokenType.ПриложениеКПриложению);
+            return parent;
+            
         }
 
         private bool searchName(Result<Token<AnnexTokenType>, TokenException> nameToken, AnnexParserModel annex)

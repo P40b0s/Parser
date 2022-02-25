@@ -117,7 +117,7 @@ namespace DocumentParser.Parsers
                 //FIXME проблема с установкой ноды для абзацев - МетаИнформация это лишее, он же уже распарсился?
                 var metaPar = extractor.GetElements(start).FirstOrDefault();
                 var meta = extractor.GetUnicodeString(metaPar, new TextIndex(start.StartIndex - metaPar.StartIndex, metaPar.Length - (start.StartIndex - metaPar.StartIndex)));
-                extractor.DeleteText(metaPar, new TextIndex(start.StartIndex - metaPar.StartIndex, metaPar.Length - (start.StartIndex - metaPar.StartIndex)));
+                //extractor.DeleteText(metaPar, new TextIndex(start.StartIndex - metaPar.StartIndex, metaPar.Length - (start.StartIndex - metaPar.StartIndex)));
                 extractor.SetMetaNode(metaPar, NodeType.НеОпределено, action, meta, false);
             }
         }

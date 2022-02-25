@@ -106,6 +106,8 @@ namespace DocumentParser.Parsers
         /// <returns>Если ошибка критическая возвращает false в иных случаях true</returns>
         protected bool AddError(string message,  TokenException tokenException, ErrorType errorType = ErrorType.Fatal, [CallerMemberName]string callerMemberName = null) =>
            AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {message}. \n TokenError: {tokenException?.Message}", errorType));
+        protected bool AddError(string message,  IError error, ErrorType errorType = ErrorType.Fatal, [CallerMemberName]string callerMemberName = null) =>
+           AddError(new ParserException($"Метод: \"{callerMemberName}\" \n {message}. \n TokenError: {error?.Message}", errorType));
 
         /// <summary>
         /// Добавляет ошибку в список ошибок

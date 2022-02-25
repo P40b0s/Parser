@@ -91,6 +91,31 @@ public class HeadersTests : BaseTest<HeadersParser>
             //     },
             // }
         },
+        //2
+        new Files<HeadersParser>()
+        {
+            FilePath = "354.docx",
+            Description = "Постановление с приложением требования",
+            DirPath = Paths.CurrentDir + Paths.AnnexHeadersTestPath,
+            // PredicateParserTests = new List<PredicateTest<HeadersParser>>()
+            // {
+            //     new PredicateTest<HeadersParser>()
+            //     {
+            //         Predicate = p  => p.AnnexesCount == 1,
+            //         ResultDescription = "Количество приложений всего - 1"
+            //     },
+            //     new PredicateTest<HeadersParser>()
+            //     {
+            //         Predicate = p => p.Annexes.Count == 1 && p.Annexes[0].Annex.ApprovedPrefix.Number == "1243" && p.Annexes[0].Annex.ApprovedPrefix.Date != null && p.Annexes[0].Annex.ApprovedPrefix.Date == new System.DateTime(2020, 8, 17),
+            //         ResultDescription = "Приложение 1 утверждено указом 1243 от 17.08.2020"
+            //     },
+            //     new PredicateTest<HeadersParser>()
+            //     {
+            //         Predicate = p  => p.Annexes.Count == 1 && p.Annexes[0].Annex.AnnexType.ToLower() == "требования",
+            //         ResultDescription = "Приложение 1 - тип ТРЕБОВАНИЯ"
+            //     },
+            // }
+        },
 
     };
 
@@ -99,7 +124,7 @@ public class HeadersTests : BaseTest<HeadersParser>
     [Test]
     public async ValueTask TestChanges()
     {
-        for(int i = 0; i< files.Count; i++)
+        for(int i = 2; i< files.Count; i++)
         {
             await settings.Load();
             document = new Document();
