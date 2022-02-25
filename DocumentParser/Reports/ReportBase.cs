@@ -5,7 +5,7 @@ namespace DocumentParser.Reports;
 public abstract class ReportBase<P> where P : Parsers.ParserBase
 {
     public List<string> Information {get;} = new List<string>();
-    public List<ParserException> Errors {get;}
+    public List<IError> Errors {get;}
     public int CriticalErrorsCount => Errors?.Count(w=>w.ErrorType == ErrorType.Fatal) ?? 0; 
     public int WarningsCount => Errors?.Count(w=>w.ErrorType == ErrorType.Warning) ?? 0; 
     protected P parser {get;}

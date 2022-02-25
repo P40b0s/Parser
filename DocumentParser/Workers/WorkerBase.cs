@@ -12,7 +12,7 @@ namespace DocumentParser.Workers
         /// </summary>
         /// <value></value>
         public StatusUpdate UpdateCallback { get; set; }
-        List<ParserException> Errors { get; set; } = new List<ParserException>();
+        List<Utils.IError> Errors { get; set; } = new List<Utils.IError>();
         //protected ILoggerService logger {get;} = new LoggerService();
         protected void Status(string status)
         {

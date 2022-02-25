@@ -5,6 +5,6 @@ namespace DocumentParser
 {
     public delegate void StatusUpdate(string status);
     public delegate void StatusesUpdate(List<string> statuses);
-    public delegate void ErrorsUpdate(List<ParserException> pe);
-    public delegate void ErrorUpdate(ParserException pe);
+    public delegate void ErrorsUpdate(List<Utils.IError> pe);
+    public delegate void ErrorUpdate(Utils.IError pe);
 }

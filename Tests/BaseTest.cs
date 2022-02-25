@@ -34,7 +34,7 @@ public struct ResultItem
     public bool HasFatalErrors {get;set;}
     public string Description {get;init;}
     public Document Document {get;set;}
-    public List<ParserException> exceptions {get;set;}
+    public List<Utils.IError> exceptions {get;set;}
     public List<PredicateResult> PredicateResults {get;set;}
 
 }

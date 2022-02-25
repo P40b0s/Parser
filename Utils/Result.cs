@@ -3,13 +3,6 @@ using System.Runtime.CompilerServices;
 
 namespace Utils;
 
-public interface IResult<T, out E> where E : IError
-{
-    T Value([CallerMemberName]string caller = null);
-    E Error([CallerMemberName]string caller = null);
-    bool IsOk {get;}
-    bool IsError {get;}
-}
 public interface IResult<T>
 {
     T Value([CallerMemberName]string caller = null);
