@@ -156,25 +156,41 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
         {
             if(rItem.nodeType == NodeType.item0)
             {
+                level1 = new List<Item>();
+                level2 = new List<Item>();
+                level3 = new List<Item>();
+                level4 = new List<Item>();
+                level5 = new List<Item>();
+                level6 = new List<Item>();
                 level0.Add(new ItemWrapper(rItem));
+               
             }
             if(rItem.nodeType == NodeType.item1)
             {
+                level2 = new List<Item>();
+                level3 = new List<Item>();
+                level4 = new List<Item>();
+                level5 = new List<Item>();
+                level6 = new List<Item>();
                 var h = level0.Last(l=>l.nodeType == NodeType.item0);
                 level1.Add(rItem);
                 h.Items = level1;
             }
             if(rItem.nodeType == NodeType.item2)
             {
-                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
+                level3 = new List<Item>();
+                level4 = new List<Item>();
+                level5 = new List<Item>();
+                level6 = new List<Item>();
                 var h1 = level1.Last(l=>l.nodeType == NodeType.item1) as ItemWrapper;
                 level2.Add(rItem);
                 h1.Items = level2;
             }
             if(rItem.nodeType == NodeType.item3)
             {
-                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                //var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
+                level4 = new List<Item>();
+                level5 = new List<Item>();
+                level6 = new List<Item>();
                 var h2 = level2.Last(l=>l.nodeType == NodeType.item2) as ItemWrapper;
                 level3.Add(rItem);
                 h2.Items = level3;
@@ -182,9 +198,8 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
             }
             if(rItem.nodeType == NodeType.item4)
             {
-                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                //var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
-                //var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
+                level5 = new List<Item>();
+                level6 = new List<Item>();
                 var h3 = level3.Last(l=>l.nodeType == NodeType.item3) as ItemWrapper;
                 level4.Add(rItem);
                 h3.Items = level4;
@@ -192,10 +207,7 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
             }
             if(rItem.nodeType == NodeType.item5)
             {
-                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                //var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
-                //var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
-                //var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3);
+                level6 = new List<Item>();
                 var h4 = level4.Last(l=>l.nodeType == NodeType.item4) as ItemWrapper;
                 level5.Add(rItem);
                 h4.Items = level5;
@@ -203,11 +215,6 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
             }
             if(rItem.nodeType == NodeType.item6)
             {
-                //var h = outItems.Last(l=>l.nodeType == NodeType.item0);
-                //var h1 = h.Items.Last(l=>l.nodeType == NodeType.item1);
-                //var h2 = h1.Items.Last(l=>l.nodeType == NodeType.item2);
-                //var h3 = h2.Items.Last(l=>l.nodeType == NodeType.item3);
-                //var h4 = h3.Items.Last(l=>l.nodeType == NodeType.item4);
                 var h5 = level5.Last(l=>l.nodeType == NodeType.item5) as ItemWrapper;
                 level6.Add(rItem);
                 h5.Items = level6;
