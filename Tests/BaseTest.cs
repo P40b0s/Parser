@@ -10,9 +10,10 @@ namespace Tests;
 
 public struct Files<T>
 {
-    public string FilePath {get;set;}
-    public string DirPath {get;init;}
-    public string Description {get;set;}
+    public Files(){}
+    public string FilePath {get;set;} = "";
+    public string DirPath {get;init;} = "";
+    public string Description {get;set;} = "";
     public string GetPath => DirPath + FilePath;
     public List<PredicateTest<Document>> PredicateDocumentTests {get;set;} = new List<PredicateTest<Document>>();
     public List<PredicateTest<T>> PredicateParserTests {get;set;} = new List<PredicateTest<T>>();
