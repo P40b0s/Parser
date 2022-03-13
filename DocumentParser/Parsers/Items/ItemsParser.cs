@@ -172,7 +172,8 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
                 level4 = new List<Item>();
                 level5 = new List<Item>();
                 level6 = new List<Item>();
-                var h = level0.Last(l=>l.nodeType == NodeType.item0);
+                //var h = level0.Last(l=>l.nodeType == NodeType.item0);
+                var h = level0.Last();
                 level1.Add(rItem);
                 h.Items = level1;
             }
@@ -182,7 +183,7 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
                 level4 = new List<Item>();
                 level5 = new List<Item>();
                 level6 = new List<Item>();
-                var h1 = level1.Last(l=>l.nodeType == NodeType.item1) as ItemWrapper;
+                var h1 = level1.Last();
                 level2.Add(rItem);
                 h1.Items = level2;
             }
@@ -191,7 +192,8 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
                 level4 = new List<Item>();
                 level5 = new List<Item>();
                 level6 = new List<Item>();
-                var h2 = level2.Last(l=>l.nodeType == NodeType.item2) as ItemWrapper;
+                //var h2 = level2.Last(l=>l.nodeType == NodeType.item2) as ItemWrapper;
+                var h2 = level2.Last();
                 level3.Add(rItem);
                 h2.Items = level3;
                 //h2.AddSubitem(rItem, h2);
@@ -200,7 +202,7 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
             {
                 level5 = new List<Item>();
                 level6 = new List<Item>();
-                var h3 = level3.Last(l=>l.nodeType == NodeType.item3) as ItemWrapper;
+                var h3 = level3.Last();
                 level4.Add(rItem);
                 h3.Items = level4;
                 //h3.AddSubitem(rItem, h3);
@@ -208,14 +210,14 @@ public partial class ItemsParser : LexerBase<ItemTokenType>
             if(rItem.nodeType == NodeType.item5)
             {
                 level6 = new List<Item>();
-                var h4 = level4.Last(l=>l.nodeType == NodeType.item4) as ItemWrapper;
+                var h4 = level4.Last();
                 level5.Add(rItem);
                 h4.Items = level5;
                 //h4.AddSubitem(rItem, h4);
             }
             if(rItem.nodeType == NodeType.item6)
             {
-                var h5 = level5.Last(l=>l.nodeType == NodeType.item5) as ItemWrapper;
+                var h5 = level5.Last();
                 level6.Add(rItem);
                 h5.Items = level6;
                 //h5.AddSubitem(rItem, h5);

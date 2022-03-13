@@ -44,7 +44,7 @@ public class FullTests : BaseTest<Parser>
     [Test]
     public async ValueTask TestChanges()
     {
-        for(int i = 0; i< files.Count; i++)
+        for(int i = 2; i< files.Count; i++)
         {
             await settings.Load();
             var fi = new System.IO.FileInfo(files[i].GetPath);
