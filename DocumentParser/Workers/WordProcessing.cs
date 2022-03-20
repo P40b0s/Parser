@@ -125,6 +125,8 @@ namespace DocumentParser.Workers
                                 r.RunProperties.Highlight = new DocumentFormat.OpenXml.Wordprocessing.Highlight { Val = HighlightColorValues.Yellow };
                         }
                     }
+                    if(p.NodeType != NodeType.Таблица)
+                        SetElementNode(p, NodeType.Абзац);
                     p.IsChange = true;
             }
         }

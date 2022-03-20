@@ -4,6 +4,7 @@ using SettingsWorker.Changes;
 using SettingsWorker;
 using Utils.Extensions;
 using DocumentParser.Elements;
+using System.Threading.Tasks;
 
 namespace DocumentParser.Parsers
 {
@@ -14,13 +15,16 @@ namespace DocumentParser.Parsers
             this.extractor = extractor;
             settings = extractor.Settings;
         }
+        /// <summary>
+        /// Количество параграфов которые являются изменениями
+        /// </summary>
+        /// <value></value>
         public int Count {get;set;}
         private WordProcessing extractor {get;}
         public bool Parse()
         {
             UpdateStatus("Поиск изменений...");
             Tokenize(extractor.FullText, new ChangesTokensDefinition(settings.TokensDefinitions.ChangesTokenDefinitions.TokenDefinitionSettings));
-           
             var lastAnchor = tokens.GetLast(l=>l.TokenType == ChangesTokenType.Ancor);
             var count = tokens.Count();
             if(lastAnchor.IsOk)
@@ -33,53 +37,27 @@ namespace DocumentParser.Parsers
                 if(t.TokenType == ChangesTokenType.NextIsChange)
                 {
                     paragraphBefore = extractor.GetElement(t);
-                    bool breakCycle = false;
-                    for (int i = t.Position + 1; i < count && !breakCycle; i++)
+                    if(paragraphBefore.IsError)
+                        return AddError($"Ошибка извлечения начального параграфа изменения, токен: {t.Value} позиция: {t.StartIndex}");
+                    var nextToken = t.FindForward(f=>f.TokenType == ChangesTokenType.Stop || f.TokenType == ChangesTokenType.NextIsChange, 2);
+                    if(nextToken.IsError)
                     {
-                        //var stopToken = tokens[i];
-                        if(tokens[i].TokenType == ChangesTokenType.Stop || tokens[i].TokenType == ChangesTokenType.NextIsChange)
-                        {
-                            //FIXME сделать подсчет статей в изменяющем документе и риентироваться по ним изначально потом по стопам
-                            // обнаружен токен статья, если это предыдущий параграф то на нем и заканчиваем изменение
-                            // if(tokens[i - 1].TokenType == ChangesTokenType.Article)
-                            // {
-                            //     var mbArticle = extractor.GetElements(tokens[i-1]).FirstOrDefault();
-                            //     var par = extractor.GetElements(tokens[i]).FirstOrDefault();
-                            //     if(mbArticle.ElementIndex == par.ElementIndex -1)
-                            //         paragraphAfter = mbArticle;
-                            //     else paragraphAfter = par;
-                            // }
-                            // else
-                            paragraphAfter = extractor.GetElement(tokens[i]);
-                            breakCycle = true;
-                        }
+                        nextToken = t.FindForward(f=>f.TokenType == ChangesTokenType.Ancor);
+                        if(nextToken.IsError)
+                            return AddError($"Не найдены границы окончания изменения {paragraphBefore.Value().WordElement.Text}, изменение начинается с позиции {paragraphBefore.Value().StartIndex}");
                     }
-                    if(paragraphAfter.IsError && lastAnchor.IsOk)
-                    {
-                        //теперь подключаем анкоры
-                        var par = extractor.GetElement(lastAnchor.Value());
-                        if(par.IsOk)
-                        {
-                            paragraphAfter = extractor.GetElement(par.Value().ElementIndex + 1);
-                        }
-                       
-                    }
-                }
-                if(paragraphAfter.IsOk && paragraphBefore.IsOk)
-                {
-                    var changePars = extractor.GetElements(paragraphBefore.Value().ElementIndex +1, paragraphAfter.Value().ElementIndex - 1);
-                    Count =+ changePars.Count();
-                    extractor.SetChange(changePars);
-                    foreach (var item in changePars)
-                    {
-                        if(item.NodeType != NodeType.Таблица)
-                            extractor.SetElementNode(item.WordElement.Element, NodeType.Абзац);
-                    }
+                    paragraphAfter = extractor.GetElement(nextToken.Value());
+                    if(paragraphAfter.IsError)
+                        return AddError($"Ошибка извлечения конечного параграфа изменения, токен: {nextToken.Value()} позиция: {nextToken.Value().StartIndex}");
+                    var changes = paragraphBefore.Value().TakeTo(t=>t.ElementIndex == paragraphAfter.Value().ElementIndex);
+                    Count =+ changes.Count();
+                    extractor.SetChange(changes);
                 }
             percent++;
             UpdateStatus("Поиск изменений...", count, percent);
             }
             return true;
+            
         }
     }
 }
