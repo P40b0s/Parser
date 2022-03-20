@@ -10,6 +10,7 @@ using SettingsWorker;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Collections;
+using Utils;
 
 namespace DocumentParser.Parsers.Requisites;
 
@@ -153,9 +154,9 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
     {
         if(!settings.DefaultRules.RequisiteRule.NoExecutor)
         {
-            var firstPost = tokens.GetFirst(f=>f.TokenType == RequisiteTokenType.Должность);
+            var firstPost = tokens.GetFirst(f=>f.TokenType == RequisiteTokenType.Должность).Select(s=>s.Next(RequisiteTokenType.Подписант));
             if(firstPost.IsError)
-                return AddError("Не удалось определить должность подписанта");
+                return AddError("С текущими настройками парсера не удалось определить должность подписанта");
             var posts = firstPost.Value().FindForwardMany(f=>f.TokenType == RequisiteTokenType.Должность, ig=>ig.TokenType == RequisiteTokenType.Подписант, true);
             //Должностей то  несколько
             foreach(var p in posts)
