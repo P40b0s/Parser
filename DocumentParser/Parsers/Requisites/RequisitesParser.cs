@@ -154,10 +154,16 @@ public class RequisitesParser : LexerBase<SettingsWorker.Requisite.RequisiteToke
     {
         if(!settings.DefaultRules.RequisiteRule.NoExecutor)
         {
-            var firstPost = tokens.GetFirst(f=>f.TokenType == RequisiteTokenType.Должность).Select(s=>s.Next(RequisiteTokenType.Подписант));
-            if(firstPost.IsError)
-                return AddError("С текущими настройками парсера не удалось определить должность подписанта");
-            var posts = firstPost.Value().FindForwardMany(f=>f.TokenType == RequisiteTokenType.Должность, ig=>ig.TokenType == RequisiteTokenType.Подписант, true);
+            //var firstPost = tokens.GetFirst(f=>f.TokenType == RequisiteTokenType.Должность).Select(s=>s.Next(RequisiteTokenType.Подписант));
+            var posts = tokens.GetAll(f=>f.TokenType == RequisiteTokenType.Должность && f.Next(RequisiteTokenType.Подписант).IsOk);
+            //var findCount = 0;
+            //while(firstPost.IsError && findCount < 5)
+            //{
+
+            //}
+            if(posts.Count() == 0)
+                return AddError("С текущими настройками парсера не удалось определить подписанта");
+            //var posts = firstPost.Value().FindForwardMany(f=>f.TokenType == RequisiteTokenType.Должность, ig=>ig.TokenType == RequisiteTokenType.Подписант, true);
             //Должностей то  несколько
             foreach(var p in posts)
             {
