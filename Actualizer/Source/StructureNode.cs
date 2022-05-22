@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Actualizer.Source.Operations;
 using DocumentParser.Elements;
+using Utils;
 
 namespace Actualizer.Source;
 
 public class StructureNode
 {
-    public StructureNode(ElementStructure element, Operation operation)
+    public StructureNode(ElementStructure element, OperationType operation)
     {
         Element = element;
         StructureOperation = operation;
@@ -19,12 +20,12 @@ public class StructureNode
     /// мы должны по ним найти документ в системе внести изменение и создать актуальную версию
     /// </summary>
     /// <value></value>
-    public DocumentRequisites TargetDocumentRequisites {get;set;}
+    public Option<DocumentRequisites> TargetDocumentRequisites {get;set;}
     /// <summary>
     /// Операция проводимая с данной структурой
     /// </summary>
     /// <value></value>
-    public Operation StructureOperation {get;set;}
+    public OperationType StructureOperation {get;set;}
     /// <summary>
     /// Элемент который мы парсим для получения адреса измениня, операции
     /// если это простой элемент в котором изменение находится внутри то сразу его парсим 

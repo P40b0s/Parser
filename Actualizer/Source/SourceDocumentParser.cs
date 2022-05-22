@@ -11,6 +11,9 @@ using DocumentParser.Parsers;
 using SettingsWorker;
 using SettingsWorker.Actualizer;
 using Actualizer.Source.Operations;
+using Utils;
+using Utils.Extensions;
+using Actualizer.Source.Extensions;
 
 namespace Actualizer.Source;
 
@@ -18,15 +21,19 @@ public class SourceDocumentParser
 {
     ISettings settings {get;}
     string filePath {get;}
-    SourceOperations operations {get;}
+    //SourceOperations operations {get;}
+    Operation operations {get;}
+    WordOperations wordOperations {get;}
     
     public SourceDocumentParser(string filePath, ISettings settings)
     {
         this.filePath = filePath;
         this.settings = settings;
-        operations = new SourceOperations(settings);
+        //operations = new SourceOperations(settings);
+        wordOperations = new WordOperations();
+        operations = new Operation(settings);
     }
-    public async ValueTask<SourceDocumentParserResult> Parse()
+    public async ValueTask<Option<SourceDocumentParserResult>> Parse()
     {
         //var filePath = "/home/phobos/Документы/actualizer/02_07_2021.docx";
         List<StructureNode> structures = new List<StructureNode>();
@@ -42,36 +49,51 @@ public class SourceDocumentParser
             var tokenSequence = lexer.Tokenize(text, new ActualizerTokensDefinition(settings.TokensDefinitions.ActualizerTokenDefinitions.TokenDefinitionSettings)).ToList();
             if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.In))
             {
-                var operation = operations.GetNodeOperation(tokenSequence);
-                if(operation == Operation.Represent)
+                var operation = Operation.GetOperationType(tokenSequence);
+                if(operation == OperationType.Represent)
                 {
-                    operations.NewEditionChange(e, tokenSequence, parser, structures, operation);
+                    var node = operations.NewEdition(parser, tokenSequence, e, operation);
+                    if(node.IsNone)
+                        return Option.None<SourceDocumentParserResult>();
+                    structures.Add(node.Value);
+                    //operations.NewEditionChange(e, tokenSequence, parser, structures, operation);
                 }
-                if(operation == Operation.NextChangeSequence)
+                if(operation == OperationType.NextChangeSequence)
                 {
                     operations.NextSequenceChange(e, tokenSequence, parser, structures, operation);
                 }
             }
+            //Если изменение находится в то же параграфе что и реквизиты изменяемого документа
+            //скорее всего изменение в одном абзаце
             if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.ChangedActRequisites))
             {
-                var operation = operations.GetNodeOperation(tokenSequence);
+                var operation = Operation.GetOperationType(tokenSequence);
+                //TODO разобраться для чего тут это условие
                 if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.Add || a.TokenType == ActualizerTokenType.After))
                 {
-                    operations.OneParagraphChange(e, tokenSequence, parser, structures, operation);
+                    var node = operations.TargetDocumentRequisitesParagraph(parser, tokenSequence, e, operation);
+                    if(node.IsNone)
+                        return Option.None<SourceDocumentParserResult>();
+                    //if(!operations.OneParagraphChange(e, tokenSequence, parser, structures, operation))
+                    //    return Option.None<SourceDocumentParserResult>();
+                    structures.Add(node.Value);
                 }
-                if(operation == Operation.Replace)
+                if(operation == OperationType.ReplaceWords)
                 {
-                    var str = operations.GetTokensSequence(tokenSequence);
-                    var newNode = new StructureNode(e, operation);
-                    newNode.ChangePartName = operations.GetPathArray(str, parser, newNode, e);
-                    e.IsParsed = true;
-                    operations.WordOperation(operation, newNode, tokenSequence, e, parser);
-                    structures.Add(newNode);
+                    var node = operations.ReplaceWords(parser, tokenSequence, e, operation);
+                    if(node.IsNone)
+                        return Option.None<SourceDocumentParserResult>();
+                    
+                    //var str = Structure.GetTokensSequence(tokenSequence);
+                    //var newNode = new StructureNode(e, operation);
+                    //newNode.ChangePartName = Structure.GetPathArray(str, parser, newNode, e);
+                    //e.IsParsed = true;
+                    //wordOperations.Recognize(operation, newNode, tokenSequence, e, parser);
+                    structures.Add(node.Value);
                 }
             }
         }
-        var result = new SourceDocumentParserResult(parser, structures, sourceDocumentRequisites);
-        return result;
+        return new SourceDocumentParserResult(parser, structures, sourceDocumentRequisites).OptionFromValueOrDefault();
     }
 
     

@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Lexer\Lexer.csproj" />
     <ProjectReference Include="..\DocumentParser\DocumentParser.csproj" />
     <ProjectReference Include="..\Settings\Settings.csproj" />
+    <ProjectReference Include="..\..\utilites\Utils.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
