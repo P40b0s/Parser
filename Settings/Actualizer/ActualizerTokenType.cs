@@ -38,6 +38,10 @@ public enum ActualizerTokenType
     /// изложить
     /// </summary>
     Represent,
+    /// <summary>
+    /// дополнить
+    /// </summary>
+    [TokenDefinition("дополнить", "дополнить")]
     Add,
     Remove,
     After,
