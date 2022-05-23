@@ -1,4 +1,5 @@
 using Actualizer.Source.Operations;
+using Actualizer.Structure;
 using DocumentParser.Elements;
 using DocumentParser.Parsers;
 using Lexer;
@@ -16,15 +17,15 @@ public static class TargetDocumentRequisitesParagraphEx
     public static Option<StructureNode> TargetDocumentRequisitesParagraph(this Operation op, Parser parser, List<Token<ActualizerTokenType>> tokens, ElementStructure element, OperationType operationType )
     {
         var s = new StructureNode(element, operationType);
-        var req = Structure.GetTargetDocumentRequisites(op.status, tokens, element, parser);
+        var req = SourceOperations.GetTargetDocumentRequisites(op.status, tokens, element, parser);
         if(req.IsNone)
         {
             op.status.AddError("Ошибка парсинга реквизитов изменяющего документа", parser.word.FullText);
             return Option.None<StructureNode>();
         }
         s.TargetDocumentRequisites = req;
-        var struc = Structure.GetTokensSequence(tokens);
-        s.ChangePartName = Structure.GetPathArray(struc, parser, s, element);
+        var struc = SourceOperations.GetTokensSequence(tokens);
+        s.ChangePartName = SourceOperations.GetPathArray(struc, parser, s, element);
         var operation = op.WordsOperations(s.StructureOperation, s, tokens, element, parser);
         if(operation.IsError)
         {

@@ -1,6 +1,6 @@
 using System;
 
-namespace Actualizer.Target;
+namespace Actualizer.Structure;
 
 public struct JsonPathItem
 {

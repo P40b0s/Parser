@@ -1,7 +1,7 @@
 using Lexer;
 using SettingsWorker.Actualizer;
 
-namespace Actualizer.Source;
+namespace Actualizer.Structure;
 
 public struct PathUnit
 {

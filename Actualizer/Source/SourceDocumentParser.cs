@@ -14,6 +14,7 @@ using Actualizer.Source.Operations;
 using Utils;
 using Utils.Extensions;
 using Actualizer.Source.Extensions;
+using Actualizer.Structure;
 
 namespace Actualizer.Source;
 
@@ -22,7 +23,7 @@ public class SourceDocumentParser
     ISettings settings {get;}
     string filePath {get;}
     //SourceOperations operations {get;}
-    Operation operations {get;}
+    public Operation operations {get;}
     
     public SourceDocumentParser(string filePath, ISettings settings)
     {

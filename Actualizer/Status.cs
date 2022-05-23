@@ -1,3 +1,4 @@
+using Actualizer.Structure;
 using Utils;
 
 namespace Actualizer

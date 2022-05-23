@@ -1,4 +1,5 @@
 using Actualizer.Source.Operations;
+using Actualizer.Structure;
 using DocumentParser.Elements;
 using DocumentParser.Parsers;
 using Lexer;
@@ -137,7 +138,7 @@ namespace Actualizer.Source.Extensions
                     status.AddError($"Не могу выполнить операцию дополнения в конец абзаца, дополняемое слово/словосочетание не найдено", $"{parser.word.FullText}", node.TargetDocumentRequisites);
                     return Result<StructureNode, Status>.Err(status);
                 }
-                var target_text = Structure.GetQuotedText(parser, currentElement, awt.Value(), correction);
+                var target_text = SourceOperations.GetQuotedText(parser, currentElement, awt.Value(), correction);
                 if(target_text.IsNone)
                 {
                     status.AddError($"Не могу выполнить операцию дополнения в конец абзаца, не удалось извлечь текст", $"{parser.word.FullText}", node.TargetDocumentRequisites);
@@ -160,7 +161,7 @@ namespace Actualizer.Source.Extensions
                     status.AddError($"Не могу выполнить операцию удаления слова, удаляемое слово/словосочетание не найдено", $"{parser.word.FullText}", node.TargetDocumentRequisites);
                     return Result<StructureNode, Status>.Err(status);
                 }
-                var target_text = Structure.GetQuotedText(parser, currentElement, rwt.Value(), correction);
+                var target_text = SourceOperations.GetQuotedText(parser, currentElement, rwt.Value(), correction);
                 if(target_text.IsNone)
                 {
                     status.AddError($"Не могу выполнить операцию удаления, не удалось извлечь текст", $"{parser.word.FullText}", node.TargetDocumentRequisites);
@@ -208,7 +209,7 @@ namespace Actualizer.Source.Extensions
                 status.AddError($"Не могу выполнить операцию дополнения, ожидался токен {ActualizerTokenType.Quoted} найден токен {sourceWord.Value().TokenType}", $"{parser.word.FullText}", req);
                 return ("", "");
             }
-            var source_text = Structure.GetQuotedText(parser, currentElement, sourceWord.Value(), correction);
+            var source_text = SourceOperations.GetQuotedText(parser, currentElement, sourceWord.Value(), correction);
             if(source_text.IsNone)
             {
                 status.AddError($"Не могу выполнить операцию дополнения, не удалось извлечь текст", $"{parser.word.FullText}", req);
@@ -222,7 +223,7 @@ namespace Actualizer.Source.Extensions
                 status.AddError($"Не могу выполнить операцию дополнения, изменяемое слово/словосочетание не найдено", $"{parser.word.FullText}", req);
                 return ("", "");
             }
-            var target_text = Structure.GetQuotedText(parser, currentElement, targetWord.Value(), correction);
+            var target_text = SourceOperations.GetQuotedText(parser, currentElement, targetWord.Value(), correction);
             if(target_text.IsNone)
             {
                 status.AddError($"Не могу выполнить операцию дополнения, не удалось извлечь текст", $"{parser.word.FullText}", req);
@@ -250,7 +251,7 @@ namespace Actualizer.Source.Extensions
                 status.AddError($"Не могу выполнить операцию замены, ожидался токен {ActualizerTokenType.Quoted} найден токен {sourceWord.Value().TokenType}", $"{parser.word.FullText}", req);
                 return ("", "");
             }
-            var source_text = Structure.GetQuotedText(parser, currentElement, sourceWord.Value(), correction);
+            var source_text = SourceOperations.GetQuotedText(parser, currentElement, sourceWord.Value(), correction);
             if(source_text.IsNone)
             {
                 status.AddError($"Не могу выполнить операцию замены, не удалось извлечь текст", $"{parser.word.FullText}", req);
@@ -263,7 +264,7 @@ namespace Actualizer.Source.Extensions
                 status.AddError($"Не могу выполнить операцию замены, изменяемое слово/словосочетание не найдено", $"{parser.word.FullText}", req);
                 return ("", "");
             }
-            var target_text = Structure.GetQuotedText(parser, currentElement, targetWord.Value(), correction);
+            var target_text = SourceOperations.GetQuotedText(parser, currentElement, targetWord.Value(), correction);
             if(target_text.IsNone)
             {
                 status.AddError($"Не могу выполнить операцию замены, не удалось извлечь текст", $"{parser.word.FullText}", req);

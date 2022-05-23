@@ -1,4 +1,4 @@
-namespace Actualizer.Source;
+namespace Actualizer.Structure;
 
 public enum StructureType
 {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using DocumentParser.Parsers;
 
-namespace Actualizer.Source;
+namespace Actualizer.Structure;
 
 public struct SourceDocumentParserResult
 {

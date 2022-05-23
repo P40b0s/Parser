@@ -6,7 +6,7 @@ using Actualizer.Source.Operations;
 using DocumentParser.Elements;
 using Utils;
 
-namespace Actualizer;
+namespace Actualizer.Structure;
 
 public class StructureNode
 {

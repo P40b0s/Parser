@@ -1,4 +1,5 @@
 using Actualizer.Source.Operations;
+using Actualizer.Structure;
 using DocumentParser.DocumentElements;
 using DocumentParser.Elements;
 using DocumentParser.Parsers;
@@ -18,7 +19,7 @@ public static class ChangesSequenceEx
     public static Option<StructureNode> ChangesSequence(this Operation op, Parser parser, List<Token<ActualizerTokenType>> tokens, ElementStructure element, OperationType operationType )
     {
         var s = new StructureNode(element, operationType);
-        s.TargetDocumentRequisites = Structure.GetTargetDocumentRequisites(op.status, tokens, element, parser);
+        s.TargetDocumentRequisites = SourceOperations.GetTargetDocumentRequisites(op.status, tokens, element, parser);
         PathUnit zeroPath = new PathUnit();
         s.TargetDocumentRequisites.Try(t=>{
             if(t.AnnexType != null)
@@ -100,19 +101,19 @@ public static class ChangesSequenceEx
                     subNode.Path.Add(indentZeroPath);
                 if((currentOperation == OperationType.AddNewElement || currentOperation == OperationType.Represent) && item.Items == null)
                 {
-                    var str = Structure.GetOperationTokensSequence(tokens);
-                    subNode.ChangePartName = Structure.GetPathArray(str, parser, subNode, currentElement.Value(), correction);
-                    Structure.AddChangedNodes(currentElement.Value(), subNode);
+                    var str = SourceOperations.GetOperationTokensSequence(tokens);
+                    subNode.ChangePartName = SourceOperations.GetPathArray(str, parser, subNode, currentElement.Value(), correction);
+                    currentElement.Value().AddChangedNodes(subNode);
                     currentElement.Value().IsParsed = true;
                     node.Nodes.Add(subNode);
                     continue;
                 }
                 //else
-                var struc = Structure.GetTokensSequence(tokens);
+                var struc = SourceOperations.GetTokensSequence(tokens);
                 //TODO проверить конструкцию - наименование изложить в следующей редакции...
                 //Конструкция без найденого пути (наименование изложить в следующей редакции...   или в наименовании слова заменить словами итд... )
                 if(struc != null)
-                    subNode.ChangePartName = Structure.GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex).Value(), correction);
+                    subNode.ChangePartName = SourceOperations.GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex).Value(), correction);
                 else
                     if(!tokens.Any(a=>a.TokenType == ActualizerTokenType.Name))
                     {
@@ -122,7 +123,7 @@ public static class ChangesSequenceEx
                 //Возможна редкая контрукция в пункте 3: и началось перечисление в виде абзацев
                 if(struc != null && struc.Count() == 1 && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition) && item.Indents.Count > 2)
                 {
-                    Structure.GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex).Value(), correction);
+                    SourceOperations.GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex).Value(), correction);
                     indentZeroPath = subNode.Path.LastOrDefault();
                     currentElement.Value().IsParsed = true;
                     continue;

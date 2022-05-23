@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Actualizer.Source;
+using Actualizer.Structure;
 using Lexer;
 using SettingsWorker.Actualizer;
 using Utils;

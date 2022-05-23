@@ -1,4 +1,5 @@
 using Actualizer.Source.Operations;
+using Actualizer.Structure;
 using DocumentParser.Elements;
 using DocumentParser.Parsers;
 using Lexer;
@@ -21,9 +22,9 @@ public static class ReplaceWordsEx
     /// <returns></returns>
     public static Option<StructureNode> ReplaceWords(this Operation op, Parser parser, List<Token<ActualizerTokenType>> tokens, ElementStructure element, OperationType operationType )
     {
-        var str = Structure.GetTokensSequence(tokens);
+        var str = SourceOperations.GetTokensSequence(tokens);
         var newNode = new StructureNode(element, operationType);
-        newNode.ChangePartName = Structure.GetPathArray(str, parser, newNode, element);
+        newNode.ChangePartName = SourceOperations.GetPathArray(str, parser, newNode, element);
         var operation = op.WordsOperations(operationType, newNode, tokens, element, parser);
         if(operation.IsError)
         {

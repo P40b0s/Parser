@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Actualizer.Source;
+using Actualizer.Structure;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
