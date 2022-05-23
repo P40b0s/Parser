@@ -79,7 +79,7 @@ public class TargetParser
         await Parse();
     }
 
-    public async ValueTask Actualize()
+    public async ValueTask<bool> Actualize()
     {
         await Parse();
         //каждый изменяющий документ может вносить изменения сразу во много законов
@@ -89,19 +89,37 @@ public class TargetParser
         {
             if(mainChangeNode.StructureOperation == OperationType.ReplaceWords)
             {
-                operations.ReplaceWord(parser, JDoc, mainChangeNode, source);
+                var res = operations.ReplaceWord(parser, JDoc, mainChangeNode, source);
+                if(!res)
+                {
+                    status.AddErrors(operations.status.statuses);
+                    break;
+                }
             }
             if(mainChangeNode.StructureOperation == OperationType.NextChangeSequence)
             {
-                await operations.ChangeSequence(parser, JDoc, mainChangeNode, source, Reload);
+                var res = await operations.ChangeSequence(parser, JDoc, mainChangeNode, source, Reload);
+                if(!res)
+                {
+                    status.AddErrors(operations.status.statuses);
+                    break;
+                }
             }
             if(mainChangeNode.StructureOperation == OperationType.Represent)
             {
-                await operations.Represent(parser, JDoc, mainChangeNode, source, Reload);
+                var res = await operations.Represent(parser, JDoc, mainChangeNode, source, Reload);
+                if(!res)
+                {
+                    status.AddErrors(operations.status.statuses);
+                    break;
+                }
             }  
         }
-        SaveDocument();
+        if(status.statuses.Count == 0)
+        {
+            SaveDocument();
+            return true;
+        }
+        else return false;  
     }
-
-    
 }
