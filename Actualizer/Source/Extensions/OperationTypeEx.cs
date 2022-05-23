@@ -1,22 +1,11 @@
-using Actualizer.Source.Operations;
 using Lexer;
-using SettingsWorker;
 using SettingsWorker.Actualizer;
 
-namespace Actualizer.Source;
+namespace Actualizer.Source.Extensions;
 
-public class Operation
+public static class OperationTypeEx
 {
-    public ISettings settings {get;}
-    public Status status {get;}
-    public WordOperations wordOperations {get;}
-    public Operation(ISettings settings)
-    {
-        this.settings = settings;
-        this.status = new Status();
-        this.wordOperations = new WordOperations();
-    }
-    public static OperationType GetOperationType(List<Token<ActualizerTokenType>> tokens)
+    public static OperationType GetOperationType(this Operation op, List<Token<ActualizerTokenType>> tokens)
     {
         //Изложить в новой редации
         if(tokens.Any(a=>a.TokenType == ActualizerTokenType.Represent) && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition))

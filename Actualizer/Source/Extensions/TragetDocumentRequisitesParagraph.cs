@@ -25,9 +25,10 @@ public static class TargetDocumentRequisitesParagraphEx
         s.TargetDocumentRequisites = req;
         var struc = Structure.GetTokensSequence(tokens);
         s.ChangePartName = Structure.GetPathArray(struc, parser, s, element);
-        if(!op.wordOperations.Recognize(s.StructureOperation, s, tokens, element, parser))
+        var operation = op.WordsOperations(s.StructureOperation, s, tokens, element, parser);
+        if(operation.IsError)
         {
-            op.status.AddErrors(op.wordOperations.status.statuses);
+            op.status.AddErrors(operation.Error().statuses);
             return Option.None<StructureNode>();
         }
         element.IsParsed = true;

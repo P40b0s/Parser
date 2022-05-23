@@ -2,7 +2,7 @@ using Lexer;
 using SettingsWorker;
 using SettingsWorker.Actualizer;
 
-namespace Actualizer.Source.Operations;
+namespace Actualizer;
 
 public enum OperationType
 {

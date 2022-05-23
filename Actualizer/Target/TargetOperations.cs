@@ -8,6 +8,7 @@ using Actualizer.Source.Operations;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentParser.Elements;
 using DocumentParser.Parsers;
+using Newtonsoft.Json.Linq;
 using SettingsWorker;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace Actualizer.Source;
+namespace Actualizer;
 
 public struct  DocumentRequisites
 {

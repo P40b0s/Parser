@@ -23,14 +23,12 @@ public class SourceDocumentParser
     string filePath {get;}
     //SourceOperations operations {get;}
     Operation operations {get;}
-    WordOperations wordOperations {get;}
     
     public SourceDocumentParser(string filePath, ISettings settings)
     {
         this.filePath = filePath;
         this.settings = settings;
         //operations = new SourceOperations(settings);
-        wordOperations = new WordOperations();
         operations = new Operation(settings);
     }
     public async ValueTask<Option<SourceDocumentParserResult>> Parse()
@@ -49,7 +47,7 @@ public class SourceDocumentParser
             var tokenSequence = lexer.Tokenize(text, new ActualizerTokensDefinition(settings.TokensDefinitions.ActualizerTokenDefinitions.TokenDefinitionSettings)).ToList();
             if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.In))
             {
-                var operation = Operation.GetOperationType(tokenSequence);
+                var operation = operations.GetOperationType(tokenSequence);
                 if(operation == OperationType.Represent)
                 {
                     var node = operations.NewEdition(parser, tokenSequence, e, operation);
@@ -60,14 +58,17 @@ public class SourceDocumentParser
                 }
                 if(operation == OperationType.NextChangeSequence)
                 {
-                    operations.NextSequenceChange(e, tokenSequence, parser, structures, operation);
+                    var node = operations.ChangesSequence(parser, tokenSequence, e, operation);
+                    if(node.IsNone)
+                        return Option.None<SourceDocumentParserResult>();
+                    structures.Add(node.Value);
                 }
             }
             //Если изменение находится в то же параграфе что и реквизиты изменяемого документа
             //скорее всего изменение в одном абзаце
             if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.ChangedActRequisites))
             {
-                var operation = Operation.GetOperationType(tokenSequence);
+                var operation = operations.GetOperationType(tokenSequence);
                 //TODO разобраться для чего тут это условие
                 if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.Add || a.TokenType == ActualizerTokenType.After))
                 {

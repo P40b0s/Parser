@@ -24,9 +24,10 @@ public static class ReplaceWordsEx
         var str = Structure.GetTokensSequence(tokens);
         var newNode = new StructureNode(element, operationType);
         newNode.ChangePartName = Structure.GetPathArray(str, parser, newNode, element);
-        if(!op.wordOperations.Recognize(operationType, newNode, tokens, element, parser))
+        var operation = op.WordsOperations(operationType, newNode, tokens, element, parser);
+        if(operation.IsError)
         {
-            op.status.AddErrors(op.wordOperations.status.statuses);
+            op.status.AddErrors(operation.Error().statuses);
             return Option.None<StructureNode>();
         }
         element.IsParsed = true;

@@ -59,6 +59,8 @@ public class FullTests : BaseTest<Parser>
             var ok = await par.ParseDocument();
 
             AddResult(files[i], par , par.document);
+            var j = Newtonsoft.Json.JsonConvert.SerializeObject(par.document);
+            System.IO.File.WriteAllText("476.json", j);
            
         }
         Assert.True(IsPassed());

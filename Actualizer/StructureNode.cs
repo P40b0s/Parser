@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using Actualizer.Source;
 using Actualizer.Source.Operations;
 using DocumentParser.Elements;
 using Utils;
 
-namespace Actualizer.Source;
+namespace Actualizer;
 
 public class StructureNode
 {

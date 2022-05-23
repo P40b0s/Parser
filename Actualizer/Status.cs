@@ -1,6 +1,6 @@
 using Utils;
 
-namespace Actualizer.Source.Operations
+namespace Actualizer
 {
     public class Status
     {

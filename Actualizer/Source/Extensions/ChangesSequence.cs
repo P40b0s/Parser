@@ -45,7 +45,7 @@ public static class ChangesSequenceEx
         }
         else
         {
-            ItemsWork(parser, items.Value.ToList(), s, zeroPath);
+            ItemsWork(op, parser, items.Value.ToList(), s, zeroPath);
             element.IsParsed = true;
             return Option.Some(s);
         }
@@ -87,41 +87,44 @@ public static class ChangesSequenceEx
                 var currentElement = parser.word.GetElement(item.Indents[i].ElementIndex);
                 if(currentElement.IsError)
                 {
-                    op.status.AddError("Ошибка поиска элкмента", item.Indents[i].Text());
+                    op.status.AddError("Ошибка поиска элeмента", item.Indents[i].Text());
                     return;
                 }
                 if(currentElement.Value().IsParsed)
                     continue;
-                var currentOperation = GetNodeOperation(tokens);
-                var subNode = new StructureNode(currentElement, currentOperation);
+                var currentOperation = op.GetOperationType(tokens);
+                var subNode = new StructureNode(currentElement.Value(), currentOperation);
                 if(zeroPath.Token != null || zeroPath.AnnexType != null)
                     subNode.Path.Add(zeroPath);
                 if(indentZeroPath.Token != null)
                     subNode.Path.Add(indentZeroPath);
-                if((currentOperation == Operation.AddNewElement || currentOperation == Operation.Represent) && item.Items == null)
+                if((currentOperation == OperationType.AddNewElement || currentOperation == OperationType.Represent) && item.Items == null)
                 {
-                    var str = GetOperationTokensSequence(tokens);
-                    subNode.ChangePartName = GetPathArray(str, parser, subNode, currentElement, correction);
-                    Structure.AddChangedNodes(elemn, subNode);
-                    currentElement.IsParsed = true;
+                    var str = Structure.GetOperationTokensSequence(tokens);
+                    subNode.ChangePartName = Structure.GetPathArray(str, parser, subNode, currentElement.Value(), correction);
+                    Structure.AddChangedNodes(currentElement.Value(), subNode);
+                    currentElement.Value().IsParsed = true;
                     node.Nodes.Add(subNode);
                     continue;
                 }
                 //else
-                var struc = GetTokensSequence(tokens);
+                var struc = Structure.GetTokensSequence(tokens);
                 //TODO проверить конструкцию - наименование изложить в следующей редакции...
                 //Конструкция без найденого пути (наименование изложить в следующей редакции...   или в наименовании слова заменить словами итд... )
                 if(struc != null)
-                    subNode.ChangePartName = GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex), correction);
+                    subNode.ChangePartName = Structure.GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex).Value(), correction);
                 else
                     if(!tokens.Any(a=>a.TokenType == ActualizerTokenType.Name))
-                        throw new Exception("Возможно ошибка в конструкции " + text);
+                    {
+                        op.status.AddError("Возможно ошибка в конструкции", text);
+                        return;
+                    }
                 //Возможна редкая контрукция в пункте 3: и началось перечисление в виде абзацев
                 if(struc != null && struc.Count() == 1 && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition) && item.Indents.Count > 2)
                 {
-                    Structure.GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex), correction);
+                    Structure.GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex).Value(), correction);
                     indentZeroPath = subNode.Path.LastOrDefault();
-                    currentElement.IsParsed = true;
+                    currentElement.Value().IsParsed = true;
                     continue;
                 }
                 //TODO + еще надо учесть Definition
@@ -136,10 +139,10 @@ public static class ChangesSequenceEx
                 }
                 else
                 {
-                    op.wordOperations.Recognize(currentOperation, subNode, tokens, currentElement, parser, correction);
+                    op.WordsOperations(currentOperation, subNode, tokens, currentElement.Value(), parser, correction);
                     node.Nodes.Add(subNode);
                 }
-                currentElement.IsParsed = true;
+                currentElement.Value().IsParsed = true;
             }
         }
     }
