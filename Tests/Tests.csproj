@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Settings\Settings.csproj" />
     <ProjectReference Include="..\DocumentParser\DocumentParser.csproj" />
     <ProjectReference Include="..\..\utilites\Utils.csproj" />
+    <ProjectReference Include="..\Actualizer\Actualizer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
