@@ -58,7 +58,7 @@ public class TargetParser
         return Option.None<bool>();
     }
     
-    public void SaveDocument(string path = null)
+    void SaveDocument(string path = null)
     {
         if(path == null)
             parser.word.SaveDocument("/home/phobos/Документы/actualizer/actual.docx");
@@ -79,7 +79,7 @@ public class TargetParser
         await Parse();
     }
 
-    public async ValueTask<bool> Actualize()
+    public async ValueTask<Result<bool, Status>> Actualize()
     {
         await Parse();
         //каждый изменяющий документ может вносить изменения сразу во много законов
@@ -93,7 +93,7 @@ public class TargetParser
                 if(!res)
                 {
                     status.AddErrors(operations.status.statuses);
-                    break;
+                    return Result<bool, Status>.Err(status);
                 }
             }
             if(mainChangeNode.StructureOperation == OperationType.NextChangeSequence)
@@ -102,7 +102,7 @@ public class TargetParser
                 if(!res)
                 {
                     status.AddErrors(operations.status.statuses);
-                    break;
+                    return Result<bool, Status>.Err(status);
                 }
             }
             if(mainChangeNode.StructureOperation == OperationType.Represent)
@@ -111,15 +111,11 @@ public class TargetParser
                 if(!res)
                 {
                     status.AddErrors(operations.status.statuses);
-                    break;
+                    return Result<bool, Status>.Err(status);
                 }
             }  
         }
-        if(status.statuses.Count == 0)
-        {
-            SaveDocument();
-            return true;
-        }
-        else return false;  
+        SaveDocument();
+        return Result<bool, Status>.Ok(true); 
     }
 }

@@ -1,16 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using DocumentParser.DocumentElements;
 using Lexer;
-using Lexer.Tokenizer;
 using DocumentParser.Parsers;
 using SettingsWorker;
 using SettingsWorker.Actualizer;
-using Actualizer.Source.Operations;
 using Utils;
 using Utils.Extensions;
 using Actualizer.Source.Extensions;
@@ -18,21 +9,21 @@ using Actualizer.Structure;
 
 namespace Actualizer.Source;
 
-public class SourceDocumentParser
+public class SourceParser
 {
     ISettings settings {get;}
     string filePath {get;}
     //SourceOperations operations {get;}
     public Operation operations {get;}
     
-    public SourceDocumentParser(string filePath, ISettings settings)
+    public SourceParser(string filePath, ISettings settings)
     {
         this.filePath = filePath;
         this.settings = settings;
         //operations = new SourceOperations(settings);
         operations = new Operation(settings);
     }
-    public async ValueTask<Option<SourceDocumentParserResult>> Parse()
+    public async ValueTask<Result<SourceDocumentParserResult, Status>> Parse()
     {
         //var filePath = "/home/phobos/Документы/actualizer/02_07_2021.docx";
         List<StructureNode> structures = new List<StructureNode>();
@@ -53,7 +44,7 @@ public class SourceDocumentParser
                 {
                     var node = operations.NewEdition(parser, tokenSequence, e, operation);
                     if(node.IsNone)
-                        return Option.None<SourceDocumentParserResult>();
+                        return Result<SourceDocumentParserResult, Status>.Err(operations.status);
                     structures.Add(node.Value);
                     //operations.NewEditionChange(e, tokenSequence, parser, structures, operation);
                 }
@@ -61,7 +52,7 @@ public class SourceDocumentParser
                 {
                     var node = operations.ChangesSequence(parser, tokenSequence, e, operation);
                     if(node.IsNone)
-                        return Option.None<SourceDocumentParserResult>();
+                        return Result<SourceDocumentParserResult, Status>.Err(operations.status);
                     structures.Add(node.Value);
                 }
             }
@@ -75,7 +66,7 @@ public class SourceDocumentParser
                 {
                     var node = operations.TargetDocumentRequisitesParagraph(parser, tokenSequence, e, operation);
                     if(node.IsNone)
-                        return Option.None<SourceDocumentParserResult>();
+                        return Result<SourceDocumentParserResult, Status>.Err(operations.status);
                     //if(!operations.OneParagraphChange(e, tokenSequence, parser, structures, operation))
                     //    return Option.None<SourceDocumentParserResult>();
                     structures.Add(node.Value);
@@ -84,7 +75,7 @@ public class SourceDocumentParser
                 {
                     var node = operations.ReplaceWords(parser, tokenSequence, e, operation);
                     if(node.IsNone)
-                        return Option.None<SourceDocumentParserResult>();
+                        return Result<SourceDocumentParserResult, Status>.Err(operations.status);
                     
                     //var str = Structure.GetTokensSequence(tokenSequence);
                     //var newNode = new StructureNode(e, operation);
@@ -95,7 +86,7 @@ public class SourceDocumentParser
                 }
             }
         }
-        return new SourceDocumentParserResult(parser, structures, sourceDocumentRequisites).OptionFromValueOrDefault();
+        return Result<SourceDocumentParserResult, Status>.Ok(new SourceDocumentParserResult(parser, structures, sourceDocumentRequisites));
     }
 
     
