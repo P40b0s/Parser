@@ -12,12 +12,8 @@ public abstract class TokenDefinitionBase<TEnum> where TEnum : Enum
             TokenDefinitionSettings.Add(new TokenDefinitionSettings<TEnum>(){TokenType = tt, TokenPattern = pattern, TokenQueue = queue, Converter = converter});
     protected void addToken(TEnum tt, Dictionary<string, string> converter = null)
     {
-        var def = System.Attribute.GetCustomAttributes(tt.GetType());
-        foreach( var definition in def)
-        if(definition is TokenDefinitionAttribute)
-        {
-            var d = (TokenDefinitionAttribute)definition;
+        var def = tt.GetAttributesOfType<TokenDefinitionAttribute>();
+        foreach( var d in def)
             TokenDefinitionSettings.Add(new TokenDefinitionSettings<TEnum>(){TokenType = tt, TokenPattern = d.pattern, TokenQueue = d.queue, Converter = converter});
-        }
     }
 }

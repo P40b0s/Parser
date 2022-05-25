@@ -24,7 +24,8 @@ public class ActualizerTokenDefinitions : TokenDefinitionBase<ActualizerTokenTyp
     {
         
         addToken(ActualizerTokenType.NewEdition, "(изложить|изложив\\s*(его)?)\\s*в\\s*следующей\\s*редакции\\s*:\\s*\n", 1);
-        addToken(ActualizerTokenType.In, "Внести", 1);
+        //addToken(ActualizerTokenType.In, "Внести", 1);
+        addToken(ActualizerTokenType.In);
         //addToken(ActualizerTokenType.NextChanges, "следующие\\s*изменения:", 1);
         addToken(ActualizerTokenType.NextChanges);
         addToken(ActualizerTokenType.Definition);

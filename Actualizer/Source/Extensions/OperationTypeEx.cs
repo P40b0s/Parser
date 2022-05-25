@@ -10,6 +10,9 @@ public static class OperationTypeEx
         //Изложить в новой редации
         if(tokens.Any(a=>a.TokenType == ActualizerTokenType.Represent) && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition))
             return OperationType.Represent;
+            //Внести в федеральный закон ..... следующие изменения:
+        if(tokens.Any(a=>a.TokenType == ActualizerTokenType.ChangedActRequisites) && tokens.Any(a=>a.TokenType == ActualizerTokenType.NextChanges))
+            return OperationType.NextChangeSequence;
         //Дополнить (например пунктом) 8 следующего содержания:
         if(tokens.Any(a=>a.TokenType == ActualizerTokenType.Add) && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition))
             return OperationType.AddNewElement;

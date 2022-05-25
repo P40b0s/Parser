@@ -10,8 +10,9 @@ public enum ActualizerTokenType
     [TokenDefinition(pattern: "следующие\\s*изменения:")]
     NextChanges,
     ///<summary>
-    ///знак :
+    ///Внести
     ///</summary>
+    [TokenDefinition(pattern: "внести")]
     In,
     ///<summary>
     ///Реквизиты изменящего документа
