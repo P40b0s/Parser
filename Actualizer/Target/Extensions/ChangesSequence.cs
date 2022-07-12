@@ -10,7 +10,8 @@ public static class ChangesSequence
         
         foreach(var n in node.Nodes)
         {
-            switch(n.StructureOperation)
+            foreach(var change in n.WordsOperations)
+            switch(change.StructureOperation)
             {
                 default:
                 {
@@ -25,7 +26,7 @@ public static class ChangesSequence
                         op.status.AddError("Ошибка", element.Error().Message);
                         return false;
                     }
-                    var start = element.Value().WordElement.Text.IndexOf(n.SourceText);
+                    var start = element.Value().WordElement.Text.IndexOf(change.SourceText);
                     var tt = "";
                     break;
                 }

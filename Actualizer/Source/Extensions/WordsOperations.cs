@@ -40,88 +40,59 @@ namespace Actualizer.Source.Extensions
                     return Result<StructureNode, Status>.Err(status);
                 }
                 //В абзаце найдена одна конструкция добавления слов
-                if(afterWord.Count() == 1)
+                // if(afterWord.Count() == 1)
+                // {
+                //     //после слов/слова
+                //     var extracted = appyAfterWords(afterWord.ElementAt(0), currentElement, parser, node.TargetDocumentRequisites, correction);
+                //     if(extracted == ("", ""))
+                //         return Result<StructureNode, Status>.Err(status);
+                //     node.WordsOperations.Add(new WordAtomarOperations()
+                //     {
+                //         SourceText = extracted.source,
+                //         TargetText = extracted.target,
+                //         StructureOperation = currentOperation
+
+                //     });
+                // }
+
+                foreach(var w in afterWord)
                 {
-                    //после слов/слова
-                    var extracted = appyAfterWords(afterWord.ElementAt(0), currentElement, parser, node.TargetDocumentRequisites, correction);
+                    //var wstr = new StructureNode(currentElement, OperationType.ApplyAfterWords);
+                    var extracted = appyAfterWords(w, currentElement, parser, node.TargetDocumentRequisites, correction);
                     if(extracted == ("", ""))
                         return Result<StructureNode, Status>.Err(status);
-                    node.SourceText = extracted.source;
-                    node.TargetText = extracted.target;
-                //     var wordToken = afterWord.ElementAt(0).NextLocal();
-                //     if(wordToken.IsError)
-                //     {
-                //         status.AddError($"Не могу выполнить операцию дополнения, токен СЛОВ/СЛОВА не найден", $"{parser.word.FullText}", node.TargetDocumentRequisites);
-                //         return;
-                //     }
-                //     //находим изменяющее слово/словосочетание
-                //     var sourceWord = wordToken.Value().NextLocal();
-                //     if(sourceWord.IsError)
-                //     {
-                //         status.AddError($"Не могу выполнить операцию дополнения, изменяющее слово/словосочетание не найдено", $"{parser.word.FullText}", node.TargetDocumentRequisites);
-                //         return;
-                //     }
-                //     if(sourceWord.Value().TokenType != ActualizerTokenType.Quoted)
-                //     {
-                //         status.AddError($"Не могу выполнить операцию дополнения, ожидался токен {ActualizerTokenType.Quoted} найден токен {sourceWord.Value().TokenType}", $"{parser.word.FullText}", node.TargetDocumentRequisites);
-                //         return;
-                //     }
-                //     var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(sourceWord.Value().StartIndex + correction , sourceWord.Value().Length));
-                //     node.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length - 2, 1);
-                //     //пропускаем например: ДОПОЛНИТЬ СЛОВАМИ , т.е. наш токен третий
-                //     var targetWord = sourceWord.Value().FindForward(f=>f.TokenType == ActualizerTokenType.Quoted, 2);
-                //     if(targetWord.IsError || targetWord.Value().TokenType != ActualizerTokenType.Quoted)
-                //     {
-                //         status.AddError($"Не могу выполнить операцию дополнения, изменяемое слово/словосочетание не найдено", $"{parser.word.FullText}", node.TargetDocumentRequisites);
-                //         return;
-                //     }
-                //     var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(targetWord.Value().StartIndex + correction , targetWord.Value().Length));
-                //     node.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length - 2, 1);
-                }
-                if(afterWord.Count() > 1)
-                {
-                    node.StructureOperation = OperationType.MultipleApplyAfterWords;
-                    foreach(var w in afterWord)
+                    node.WordsOperations.Add(new WordAtomarOperations()
                     {
-                        var wstr = new StructureNode(currentElement, OperationType.ApplyAfterWords);
-                        var extracted = appyAfterWords(w, currentElement, parser, node.TargetDocumentRequisites, correction);
-                        if(extracted == ("", ""))
-                            return Result<StructureNode, Status>.Err(status);
-                        wstr.SourceText = extracted.source;
-                        wstr.TargetText = extracted.target;
-                        // var afterWordToken = w.NextLocal().Value.NextLocal();
-                        // if(afterWordToken.IsOk && afterWordToken.Value.TokenType == ActualizerTokenType.Quoted)
-                        // {
-                        //     var quoted0 = parser.word.GetUnicodeString(currentElement, new TextIndex(afterWordToken.Value.StartIndex + correction , afterWordToken.Value.Length));
-                        //     wstr.SourceText = quoted0.Remove(0, 1).Remove(quoted0.Length-2, 1);
-                            
-                        // }
-                        // var addWordToken = afterWordToken.Value.NextLocal().Value.NextLocal().Value.NextLocal();
-                        // if(addWordToken.IsOk && addWordToken.Value.TokenType == ActualizerTokenType.Quoted)
-                        // {
-                        //     var quoted1 = parser.word.GetUnicodeString(currentElement, new TextIndex(addWordToken.Value.StartIndex + correction , addWordToken.Value.Length));
-                        //     wstr.TargetText = quoted1.Remove(0, 1).Remove(quoted1.Length-2, 1);
-                        // }
-                        //Копируем путь в ноду чтоб потом не выбирать его из родителя
-                        wstr.Path = node.Path;
-                        node.Nodes.Add(wstr);
-                    }
+                        SourceText = extracted.source,
+                        TargetText = extracted.target,
+                        StructureOperation = currentOperation
+                    });
+                    //Копируем путь в ноду чтоб потом не выбирать его из родителя
+                    //wstr.Path = node.Path;
+                    //node.Nodes.Add(wstr);
                 }
                 return Result<StructureNode, Status>.Ok(node);
             }
             if(currentOperation == OperationType.ReplaceWords)
             {
-                var replaceToken = tokens.FirstOrDefault(f=>f.TokenType == ActualizerTokenType.Replace);
-                if(replaceToken == null)
+                var replaceToken = tokens.Where(f=>f.TokenType == ActualizerTokenType.Replace);
+                if(replaceToken.Count() == 0)
                 {
                     status.AddError($"Не могу выполнить операцию замены, токен ЗАМЕНИТЬ не найден", $"{parser.word.FullText}", node.TargetDocumentRequisites);
                     return Result<StructureNode, Status>.Err(status);
                 }
-                var extracted = replaceWords(replaceToken, currentElement, parser, node.TargetDocumentRequisites, correction);
-                if(extracted == ("", ""))
-                    return Result<StructureNode, Status>.Err(status);
-                node.SourceText = extracted.source;
-                node.TargetText = extracted.target;
+                foreach(var w in replaceToken)
+                {
+                     var extracted = replaceWords(w, currentElement, parser, node.TargetDocumentRequisites, correction);
+                    if(extracted == ("", ""))
+                        return Result<StructureNode, Status>.Err(status);
+                    node.WordsOperations.Add(new WordAtomarOperations()
+                    {
+                        SourceText = extracted.source,
+                        TargetText = extracted.target,
+                        StructureOperation = currentOperation
+                    });
+                }
                 return Result<StructureNode, Status>.Ok(node);
             }
             if(currentOperation == OperationType.ApplyWordsToEnd)
@@ -132,7 +103,7 @@ namespace Actualizer.Source.Extensions
                     status.AddError($"Не могу выполнить операцию дополнения в конец абзаца, токен ДОПОЛНИТЬ не найден", $"{parser.word.FullText}", node.TargetDocumentRequisites);
                     return Result<StructureNode, Status>.Err(status);
                 }
-                var awt = addWordToken.NextLocal();
+                var awt = addWordToken.Next(ActualizerTokenType.Quoted, 1);
                 if(awt.IsError || awt.Value().TokenType != ActualizerTokenType.Quoted)
                 {
                     status.AddError($"Не могу выполнить операцию дополнения в конец абзаца, дополняемое слово/словосочетание не найдено", $"{parser.word.FullText}", node.TargetDocumentRequisites);
@@ -144,7 +115,12 @@ namespace Actualizer.Source.Extensions
                     status.AddError($"Не могу выполнить операцию дополнения в конец абзаца, не удалось извлечь текст", $"{parser.word.FullText}", node.TargetDocumentRequisites);
                     return Result<StructureNode, Status>.Err(status);
                 }
-                node.TargetText = target_text.Value;
+                node.WordsOperations.Add(new WordAtomarOperations()
+                {
+                    SourceText = "",
+                    TargetText = target_text.Value,
+                    StructureOperation = currentOperation
+                });
                 return Result<StructureNode, Status>.Ok(node);
             }
             if(currentOperation == OperationType.RemoveWord)
@@ -167,7 +143,12 @@ namespace Actualizer.Source.Extensions
                     status.AddError($"Не могу выполнить операцию удаления, не удалось извлечь текст", $"{parser.word.FullText}", node.TargetDocumentRequisites);
                     return Result<StructureNode, Status>.Err(status);
                 }
-                node.TargetText = target_text.Value;
+                node.WordsOperations.Add(new WordAtomarOperations()
+                {
+                    SourceText = "",
+                    TargetText = target_text.Value,
+                    StructureOperation = currentOperation
+                });
                 return Result<StructureNode, Status>.Ok(node);
             }
         status.AddError($"Не найдено ни одной атомарной операции со словами", $"{parser.word.FullText}", node.TargetDocumentRequisites);
@@ -258,7 +239,7 @@ namespace Actualizer.Source.Extensions
                 return ("", "");
             }
             source = source_text.Value;
-            var targetWord = first.NextLocal();
+            var targetWord = first.Next(ActualizerTokenType.Quoted, 1);
             if(targetWord.IsError || targetWord.Value().TokenType != ActualizerTokenType.Quoted)
             {
                 status.AddError($"Не могу выполнить операцию замены, изменяемое слово/словосочетание не найдено", $"{parser.word.FullText}", req);

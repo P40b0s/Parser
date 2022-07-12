@@ -36,6 +36,7 @@ public class StructureNode
     /// </summary>
     /// <value></value>
     [JsonIgnore]
+    [Newtonsoft.Json.JsonIgnoreAttribute]
     public ElementStructure Element {get;set;}
     /// <summary>
     /// Массив элементов с изменениями например статью 1 изложить в новой редакции
@@ -45,6 +46,7 @@ public class StructureNode
     /// <value></value>
     [JsonIgnore]
     public List<ElementStructure> ChangesNodes {get;set;} = new List<ElementStructure>();
+    public List<WordAtomarOperations> WordsOperations {get;set;} = new List<WordAtomarOperations>();
     public int ChangeParagraphsCount => ChangesNodes.Count;
     public string path 
     {
@@ -69,7 +71,16 @@ public class StructureNode
     //1-в пункте 4 заменить слова
     //2-пукт 8 изложить в новой редакции...
     public List<StructureNode> Nodes {get;set;} = new List<StructureNode>();
+    //public string SourceText {get;set;}
+    //public string TargetText {get;set;}
+    //public string Error {get;set;}
+    public string CurrentElementText => Element != null ? Element.WordElement.Text : "";
+}
+
+public struct WordAtomarOperations
+{
+    public OperationType StructureOperation {get;set;}
     public string SourceText {get;set;}
     public string TargetText {get;set;}
-    public string Error {get;set;}
+    //public string Error {get;set;}
 }

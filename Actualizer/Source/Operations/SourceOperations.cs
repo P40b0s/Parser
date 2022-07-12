@@ -62,6 +62,8 @@ public class SourceOperations
     /// <param name="startIndexCorrection">Для коррекции стартового индекса токена (на длинну номера итема)</param>
     public static string GetPathArray(IEnumerable<Token<ActualizerTokenType>> tokenSequence,  Parser parser, StructureNode s, ElementStructure el, int startIndexCorrection = 0)
     {
+        if(tokenSequence == null)
+            return "Ошибка определения пути, входной параметр tokenSequence не определен: " + el.WordElement.Text;
         string lastStructureItemName = null;
         var last = tokenSequence.LastOrDefault();
         if(last != null)
@@ -109,18 +111,10 @@ public class SourceOperations
                 } 
             }
         }
-        s.TargetDocumentRequisites.Try(t=>
+        if(s.TargetDocumentRequisites.HasValue && s.Path.Count > 0 && s.TargetDocumentRequisites.Value.AnnexType != null)
         {
-            if(s.Path.Count > 0 && t.AnnexType != null)
-            {
-                s.Path.Insert(0, new PathUnit(){Number = null, Token = null, AnnexName = t.FullAnnexName, Type = StructureType.Annex});
-            }
+                s.Path.Insert(0, new PathUnit(){Number = null, Token = null, AnnexName = s.TargetDocumentRequisites.Value.FullAnnexName, Type = StructureType.Annex});
         }
-        );
-        //if(s.Path.Count > 0 && s.TargetDocumentRequisites.AnnexType != null)
-        //{
-        //    s.Path.Insert(0, new PathUnit(){Number = null, Token = null, AnnexName = s.TargetDocumentRequisites.FullAnnexName, Type = StructureType.Annex});
-        //}
         return lastStructureItemName;
     }
 

@@ -22,7 +22,7 @@ namespace Lexer.Tokenizer
         public IEnumerable<TokenMatch<T>> FindMatches(string inputString)
         {
             var matches = _regex.Matches(inputString);
-            for(int i=0; i<matches.Count; i++)
+            for(int i=0; i < matches.Count; i++)
             {
                 yield return new TokenMatch<T>()
                 {

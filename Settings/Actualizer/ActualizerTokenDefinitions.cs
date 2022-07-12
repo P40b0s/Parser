@@ -23,7 +23,7 @@ public class ActualizerTokenDefinitions : TokenDefinitionBase<ActualizerTokenTyp
     public ActualizerTokenDefinitions()
     {
         
-        addToken(ActualizerTokenType.NewEdition, "(изложить|изложив\\s*(его)?)\\s*в\\s*следующей\\s*редакции\\s*:\\s*\n", 1);
+        //addToken(ActualizerTokenType.NewEdition, "(изложить|изложив\\s*(его)?)\\s*в\\s*следующей\\s*редакции\\s*:\\s*\n", 1);
         //addToken(ActualizerTokenType.In, "Внести", 1);
         addToken(ActualizerTokenType.In);
         //addToken(ActualizerTokenType.NextChanges, "следующие\\s*изменения:", 1);
@@ -40,6 +40,7 @@ public class ActualizerTokenDefinitions : TokenDefinitionBase<ActualizerTokenTyp
         addToken(ActualizerTokenType.Item1, "пункт[е]*", 2);
         addToken(ActualizerTokenType.Item2, "подпункт[е]*", 2);
         addToken(ActualizerTokenType.Indent, "абзац[е]*", 2);
+        addToken(ActualizerTokenType.Quoted);
         //addToken(ActualizerTokenType.Quoted, "\"(?<word>([^\"])+)\"", 1);
         addToken(ActualizerTokenType.Name, "наименовани[ие]", 1);
         //с чем производить действия

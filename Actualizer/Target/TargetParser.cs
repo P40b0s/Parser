@@ -87,15 +87,20 @@ public class TargetParser
         //и уже в ней все изменения которые вносятся в данный закон
         foreach(var mainChangeNode in source.Structures)
         {
-            if(mainChangeNode.StructureOperation == OperationType.ReplaceWords)
+            if(mainChangeNode.StructureOperation == OperationType.WordsOperations)
             {
-                var res = operations.ReplaceWord(parser, JDoc, mainChangeNode, source);
-                if(!res)
-                {
-                    status.AddErrors(operations.status.statuses);
-                    return Result<bool, Status>.Err(status);
-                }
+
+                    if(change.StructureOperation == OperationType.ReplaceWords)
+                    {
+                        var res = operations.TargetWordsOperations(parser, JDoc, mainChangeNode, source);
+                        if(!res)
+                        {
+                            status.AddErrors(operations.status.statuses);
+                            return Result<bool, Status>.Err(status);
+                        }
+                    }
             }
+           
             if(mainChangeNode.StructureOperation == OperationType.NextChangeSequence)
             {
                 var res = await operations.ChangeSequence(parser, JDoc, mainChangeNode, source, Reload);

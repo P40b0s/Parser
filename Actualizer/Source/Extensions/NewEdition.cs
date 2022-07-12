@@ -13,7 +13,7 @@ public static class NewEditionEx
 {
     /// <summary>
     /// Следующие 1+ параграфов будут в новой редакции
-    /// в первом параграфе вохможны реквизиты изменяемого документа
+    /// в первом параграфе возможны реквизиты изменяемого документа
     /// </summary>
     public static Option<StructureNode> NewEdition(this Operation op, Parser parser, List<Token<ActualizerTokenType>> tokens, ElementStructure element, OperationType operationType )
     {

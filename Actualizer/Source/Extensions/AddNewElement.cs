@@ -9,12 +9,13 @@ using Utils.Extensions;
 
 namespace Actualizer.Source.Extensions;
 
-public static class TargetDocumentRequisitesParagraphEx
+public static class AddNewElementEx
 {
     /// <summary>
-    /// В параграфе с реквизитами изменяемого документа есть и само изменение, обычно оно заключается в замене дополнении или удалени каких то слов
+    /// Следующие 1+ параграфов будут в новой редакции
+    /// в первом параграфе возможны реквизиты изменяемого документа
     /// </summary>
-    public static Option<StructureNode> TargetDocumentRequisitesParagraph(this Operation op, Parser parser, List<Token<ActualizerTokenType>> tokens, ElementStructure element, OperationType operationType )
+    public static Option<StructureNode> AddNewElement(this Operation op, Parser parser, List<Token<ActualizerTokenType>> tokens, ElementStructure element, OperationType operationType )
     {
         var s = new StructureNode(element, operationType);
         var struc = SourceOperations.GetTokensSequence(tokens);
@@ -27,4 +28,6 @@ public static class TargetDocumentRequisitesParagraphEx
         element.IsParsed = true;
         return s.OptionFromValueOrDefault();
     }
+
+    
 }

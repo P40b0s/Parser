@@ -9,9 +9,15 @@ public partial class Token<T> : ITextIndex
 {
     public Result<DateTime?> GetDate()
     {
-        if(this.CustomGroups.Count != 3)
+        if(this.CustomGroups.Count < 3 || this.CustomGroups.Where(a=>a.Name == "date" || a.Name == "month" || a.Name == "year").Count() != 3)
             return Result<DateTime?>.Err(customException($"Группа данного токена не совпадает с сигнатурой даты: {this.Value}"));
         var date = getDate(this.CustomGroups[0].Value, this.CustomGroups[1].Value, this.CustomGroups[2].Value);
+        if(date == null)
+        {
+            date = getDate(this.CustomGroups.FirstOrDefault(f=>f.Name == "date").Value,
+                            this.CustomGroups.FirstOrDefault(f=>f.Name == "month").Value,
+                            this.CustomGroups.FirstOrDefault(f=>f.Name == "year").Value);
+        }
         if(date == null)
             return Result<DateTime?>.Err(customException($"Ошибка преобразования даты: {this.Value}"));
         return Result<DateTime?>.Ok(date);

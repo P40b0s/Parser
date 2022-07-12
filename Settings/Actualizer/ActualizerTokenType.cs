@@ -3,6 +3,7 @@ using SettingsWorker.Regexes;
 public enum ActualizerTokenType
 {
     None,
+    [TokenDefinition(pattern: "(изложить|изложив\\s*(его)?)\\s*в\\s*следующей\\s*редакции\\s*:\\s*\n")]
     NewEdition,
     ///<summary>
     ///Следующие изменения: (далее параграфы с перечислением)

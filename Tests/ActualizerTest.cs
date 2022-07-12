@@ -2,7 +2,6 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 using SettingsWorker;
 using Actualizer.Source;
-
 namespace Tests;
 
 public class ActualizerTest 
@@ -14,6 +13,7 @@ public class ActualizerTest
         settings = new SettingsWorker.Settings();
         settings.Save();
     }
+    
     [Test]
     public async ValueTask TestSourceParser()
     {
@@ -23,7 +23,8 @@ public class ActualizerTest
         var result = await source.Parse();
         if(result.IsOk)
         {
-            var j = Newtonsoft.Json.JsonConvert.SerializeObject(result.Value().Structures, Newtonsoft.Json.Formatting.None,
+            var str = result.Value().Structures;
+            var j = Newtonsoft.Json.JsonConvert.SerializeObject(str, Newtonsoft.Json.Formatting.None,
             new Newtonsoft.Json.JsonSerializerSettings()
             { 
                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
@@ -34,8 +35,5 @@ public class ActualizerTest
             Assert.True(true);
         }
         //Assert.True(false);
-           
     }
-
-    
 }

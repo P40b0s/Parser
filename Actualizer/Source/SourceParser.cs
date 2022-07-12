@@ -33,13 +33,15 @@ public class SourceParser
         foreach(var e in parser.word.GetElementsList)
         {
             var lexer = new Lexer<ActualizerTokenType>();
-            if(e.IsParsed)
+            if(e.IsParsed || e.IsChange)
                 continue;
             var text = e.WordElement.Text;
             var tokenSequence = lexer.Tokenize(text, new ActualizerTokensDefinition(settings.TokensDefinitions.ActualizerTokenDefinitions.TokenDefinitionSettings)).ToList();
+            var operation = operations.GetOperationType(tokenSequence);
+            //Внести
             if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.In))
             {
-                var operation = operations.GetOperationType(tokenSequence);
+               
                 if(operation == OperationType.Represent)
                 {
                     var node = operations.NewEdition(parser, tokenSequence, e, operation);
@@ -58,31 +60,54 @@ public class SourceParser
             }
             //Если изменение находится в то же параграфе что и реквизиты изменяемого документа
             //скорее всего изменение в одном абзаце
-            if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.ChangedActRequisites))
+            // if(operation == OperationType.ChangeAndRequisitesInOneParagraph)
+            // {
+            //     var node = operations.NewEdition(parser, tokenSequence, e, operation);
+            //     if(node.IsNone)
+            //         return Result<SourceDocumentParserResult, Status>.Err(operations.status);
+            //     structures.Add(node.Value);
+            // }
+            else if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.ChangedActRequisites))
             {
-                var operation = operations.GetOperationType(tokenSequence);
-                //TODO разобраться для чего тут это условие
-                if(tokenSequence.Any(a=>a.TokenType == ActualizerTokenType.Add || a.TokenType == ActualizerTokenType.After))
+                var requsiteNode = operations.TargetDocumentRequisitesParagraph(parser, tokenSequence, e, operation);
+                if (requsiteNode.IsNone)
                 {
-                    var node = operations.TargetDocumentRequisitesParagraph(parser, tokenSequence, e, operation);
+                    operations.status.AddError("Был обнаружен параграф с реквизитами изменяемого документа, но возникла ошибка их извленчения", e.WordElement.Text);
+                    return Result<SourceDocumentParserResult, Status>.Err(operations.status);
+                }
+                if(operation == OperationType.Represent)
+                {
+                    var node = operations.NewEdition(parser, tokenSequence, e, operation);
                     if(node.IsNone)
                         return Result<SourceDocumentParserResult, Status>.Err(operations.status);
-                    //if(!operations.OneParagraphChange(e, tokenSequence, parser, structures, operation))
-                    //    return Option.None<SourceDocumentParserResult>();
                     structures.Add(node.Value);
+                    //operations.NewEditionChange(e, tokenSequence, parser, structures, operation);
                 }
+                if(operation == OperationType.AddNewElement)
+                {
+                    var node = operations.AddNewElement(parser, tokenSequence, e, operation);
+                    if(node.IsNone)
+                        return Result<SourceDocumentParserResult, Status>.Err(operations.status);
+                    structures.Add(node.Value);
+                    //operations.NewEditionChange(e, tokenSequence, parser, structures, operation);
+                }
+              
                 if(operation == OperationType.ReplaceWords)
                 {
                     var node = operations.ReplaceWords(parser, tokenSequence, e, operation);
                     if(node.IsNone)
                         return Result<SourceDocumentParserResult, Status>.Err(operations.status);
-                    
+                    node.Value.Path = requsiteNode.Value.Path;
+                    node.Value.TargetDocumentRequisites = requsiteNode.Value.TargetDocumentRequisites;
                     //var str = Structure.GetTokensSequence(tokenSequence);
                     //var newNode = new StructureNode(e, operation);
                     //newNode.ChangePartName = Structure.GetPathArray(str, parser, newNode, e);
                     //e.IsParsed = true;
                     //wordOperations.Recognize(operation, newNode, tokenSequence, e, parser);
+                    //FIXME после атомарных операций со словами делаем общую операцию ноды - ОПЕРАЦИИ СО СЛОВАМИ!
+                    node.Value.StructureOperation = OperationType.WordsOperations;
                     structures.Add(node.Value);
+                    
                 }
             }
         }

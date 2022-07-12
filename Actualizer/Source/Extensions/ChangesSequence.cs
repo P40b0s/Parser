@@ -21,12 +21,15 @@ public static class ChangesSequenceEx
         var s = new StructureNode(element, operationType);
         s.TargetDocumentRequisites = SourceOperations.GetTargetDocumentRequisites(op.status, tokens, element, parser);
         PathUnit zeroPath = new PathUnit();
-        s.TargetDocumentRequisites.Try(t=>{
-            if(t.AnnexType != null)
-            {
-                zeroPath = new PathUnit() {Number = null, Token = null, AnnexName = t.FullAnnexName, AnnexType = t.AnnexType, Type = StructureType.Annex};
-            }
-        });
+        if(s.TargetDocumentRequisites.HasValue && s.TargetDocumentRequisites.Value.AnnexType != null)
+        {
+            zeroPath = new PathUnit() { Number = null,
+                                        Token = null,
+                                        AnnexName =  s.TargetDocumentRequisites.Value.FullAnnexName,
+                                        AnnexType =  s.TargetDocumentRequisites.Value.AnnexType,
+                                        Type = StructureType.Annex
+                                        };
+        }
         var next = element.Next();
         if (next.IsError)
         {
@@ -40,9 +43,14 @@ public static class ChangesSequenceEx
             foreach(var h in parser.document.Body.Headers)
             {
                 items = RecursiveElementSearch(index, h.Items);
-                if(items != null)
+                if(items.HasValue)
                     break;
             }
+        }
+        if(items.IsNone)
+        {
+            op.status.AddError("Последовательность изменений не обнаружена", element.WordElement.Text, s.TargetDocumentRequisites);
+            return Option.None<StructureNode>();
         }
         else
         {
@@ -50,12 +58,8 @@ public static class ChangesSequenceEx
             element.IsParsed = true;
             return Option.Some(s);
         }
-        op.status.AddError("Последовательность изменений не обнаружена", element.WordElement.Text, s.TargetDocumentRequisites);
-        return Option.None<StructureNode>();
     }
    
-
-
     /// <summary>
     /// Обработка списочных элементов
     /// </summary>
@@ -115,11 +119,11 @@ public static class ChangesSequenceEx
                 if(struc != null)
                     subNode.ChangePartName = SourceOperations.GetPathArray(struc, parser, subNode, parser.word.GetElement(item.Indents[i].ElementIndex).Value(), correction);
                 else
-                    if(!tokens.Any(a=>a.TokenType == ActualizerTokenType.Name))
-                    {
-                        op.status.AddError("Возможно ошибка в конструкции", text);
-                        return;
-                    }
+                if(!tokens.Any(a=>a.TokenType == ActualizerTokenType.Name))
+                {
+                    op.status.AddError("Возможно ошибка в конструкции", text);
+                    return;
+                }
                 //Возможна редкая контрукция в пункте 3: и началось перечисление в виде абзацев
                 if(struc != null && struc.Count() == 1 && tokens.Any(a=>a.TokenType == ActualizerTokenType.Definition) && item.Indents.Count > 2)
                 {
