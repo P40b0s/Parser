@@ -97,7 +97,7 @@ public static class ChangesSequenceEx
                 }
                 if(currentElement.Value().IsParsed)
                     continue;
-                var currentOperation = op.GetOperationType(tokens);
+                var currentOperation = op.GetElementOperationType(tokens);
                 var subNode = new StructureNode(currentElement.Value(), currentOperation);
                 if(zeroPath.Token != null || zeroPath.AnnexType != null)
                     subNode.Path.Add(zeroPath);
@@ -144,8 +144,18 @@ public static class ChangesSequenceEx
                 }
                 else
                 {
-                    op.WordsOperations(currentOperation, subNode, tokens, currentElement.Value(), parser, correction);
-                    node.Nodes.Add(subNode);
+                    var wordsNode = op.ProcessingWordsOperations(parser, tokens, currentElement.Value(), correction);
+                    if(wordsNode.HasValue)
+                    {
+                        node.Nodes.Add(wordsNode.Value);
+                    }
+                    else
+                    {
+                        if(op.status.HaveErrors)
+                            return;
+                    }
+                    //op.WordsOperations(currentOperation, subNode, tokens, currentElement.Value(), parser, correction);
+                    //node.Nodes.Add(subNode);
                 }
                 currentElement.Value().IsParsed = true;
             }

@@ -29,7 +29,7 @@ public static class GetItemBeforeInsertExt
             int index = 0;
             if(!int.TryParse(num, out index))
             {
-                return Result<ElementStructure>.Err($"Некорректный номер абзаца: {num}, Текст изменения: {node.SourceText}, Путь: {path.Path}");
+                return Result<ElementStructure>.Err($"Некорректный номер абзаца: {num}, Текст изменения: {node.Element.WordElement.Text}, Путь: {path.Path}");
             }
             var itemBefore = l[index];
             var item = parser.word.GetElement(itemBefore.ElementIndex);
@@ -70,7 +70,7 @@ public static class GetItemBeforeInsertExt
                 return item;
         
         }
-        return Result<ElementStructure>.Err($"Элемент после которого должна идти вставка не найден. Текст изменения: {node.SourceText}, Путь: {path.Path}");
+        return Result<ElementStructure>.Err($"Элемент после которого должна идти вставка не найден. Текст изменения: {node.Element.WordElement.Text}, Путь: {path.Path}");
         // var token = targetDocumentJObject.SelectToken(path.Path);
         
         // //Получаем индекс найденого элемента и берем его из парсера

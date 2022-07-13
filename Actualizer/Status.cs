@@ -23,5 +23,6 @@ namespace Actualizer
             foreach(var o in errors)
             statuses.Add(o);
         }
+        public bool HaveErrors => statuses.Count > 0;
     }
 }

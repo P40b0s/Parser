@@ -11,7 +11,7 @@ using Utils.Extensions;
 
 namespace Actualizer.Target.Extensions;
 
-public static class TargetWordsOperationsEx
+public static class ReplaceWordEx
 {
     /// <summary>
     /// Операция замены слова
@@ -19,7 +19,7 @@ public static class TargetWordsOperationsEx
     /// <param name="node">Нода с изменением</param>
     /// <param name="targetDocumentJObject">Представлние JObject для документа в который будут вноситься изменения</param>
     /// <param name="parser">Парсер документа в который вносятся изменения</param>
-    public static bool TargetWordsOperations(this Operation op, Parser parser, JObject JDoc, StructureNode node, SourceDocumentParserResult source)
+    public static bool ReplaceWord(this Operation op, Parser parser, JObject JDoc, StructureNode node, SourceDocumentParserResult source)
     {
         var element = JDoc.GetTargetElement(node, parser);
         if(element.IsError)

@@ -40,21 +40,6 @@ namespace Actualizer.Source.Extensions
                     return Result<StructureNode, Status>.Err(status);
                 }
                 //В абзаце найдена одна конструкция добавления слов
-                // if(afterWord.Count() == 1)
-                // {
-                //     //после слов/слова
-                //     var extracted = appyAfterWords(afterWord.ElementAt(0), currentElement, parser, node.TargetDocumentRequisites, correction);
-                //     if(extracted == ("", ""))
-                //         return Result<StructureNode, Status>.Err(status);
-                //     node.WordsOperations.Add(new WordAtomarOperations()
-                //     {
-                //         SourceText = extracted.source,
-                //         TargetText = extracted.target,
-                //         StructureOperation = currentOperation
-
-                //     });
-                // }
-
                 foreach(var w in afterWord)
                 {
                     //var wstr = new StructureNode(currentElement, OperationType.ApplyAfterWords);
@@ -67,9 +52,6 @@ namespace Actualizer.Source.Extensions
                         TargetText = extracted.target,
                         StructureOperation = currentOperation
                     });
-                    //Копируем путь в ноду чтоб потом не выбирать его из родителя
-                    //wstr.Path = node.Path;
-                    //node.Nodes.Add(wstr);
                 }
                 return Result<StructureNode, Status>.Ok(node);
             }

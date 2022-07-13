@@ -89,21 +89,17 @@ public class TargetParser
         {
             if(mainChangeNode.StructureOperation == OperationType.WordsOperations)
             {
-
-                    if(change.StructureOperation == OperationType.ReplaceWords)
-                    {
-                        var res = operations.TargetWordsOperations(parser, JDoc, mainChangeNode, source);
-                        if(!res)
-                        {
-                            status.AddErrors(operations.status.statuses);
-                            return Result<bool, Status>.Err(status);
-                        }
-                    }
+                var res = await operations.AtomicWordsOperations(parser, JDoc, mainChangeNode, source);
+                if(!res)
+                {
+                    status.AddErrors(operations.status.statuses);
+                    return Result<bool, Status>.Err(status);
+                }
             }
            
             if(mainChangeNode.StructureOperation == OperationType.NextChangeSequence)
             {
-                var res = await operations.ChangeSequence(parser, JDoc, mainChangeNode, source, Reload);
+                var res = await operations.StructureOperations(parser, JDoc, mainChangeNode, source, Reload);
                 if(!res)
                 {
                     status.AddErrors(operations.status.statuses);
