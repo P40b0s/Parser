@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\utilites\Utils.csproj" />
+    <ProjectReference Include="..\..\Utils\Utils.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

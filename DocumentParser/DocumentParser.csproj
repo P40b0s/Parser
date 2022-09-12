@@ -12,7 +12,7 @@
     <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\utilites\Utils.csproj" />
+    <ProjectReference Include="..\..\Utils\Utils.csproj" />
     <ProjectReference Include="..\Lexer\Lexer.csproj" />
     <ProjectReference Include="..\Settings\Settings.csproj" />
   </ItemGroup>
