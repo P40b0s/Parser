@@ -38,13 +38,20 @@ public class FullTests : BaseTest<Parser>
             Description = "Говорит не парсится из-за новых строк",
             DirPath = Paths.CurrentDir + Paths.RootTestPath,
         },
+        //3
+        new Files<Parser>()
+        {
+            FilePath = "476-тест_комментов_3уровня_итемов.docx",
+            Description = "Сборная солянка из всего чего можно",
+            DirPath = Paths.CurrentDir + Paths.RootTestPath,
+        },
         
     };
     
     [Test]
     public async ValueTask TestChanges()
     {
-        for(int i = 2; i< files.Count; i++)
+        for(int i = 3; i< files.Count; i++)
         {
             await settings.Load();
             var fi = new System.IO.FileInfo(files[i].GetPath);
@@ -60,7 +67,7 @@ public class FullTests : BaseTest<Parser>
 
             AddResult(files[i], par , par.document);
             var j = Newtonsoft.Json.JsonConvert.SerializeObject(par.document);
-            System.IO.File.WriteAllText("476.json", j);
+            System.IO.File.WriteAllText(files[i].FilePath + ".json", j);
            
         }
         Assert.True(IsPassed());

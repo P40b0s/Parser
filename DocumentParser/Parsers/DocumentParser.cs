@@ -117,6 +117,17 @@ namespace DocumentParser.Parsers
                                             headersParser.BodyItems,
                                             annexParser.Annexes.Select(s=>s.Annex).ToList(),
                                             word.Comments.Select(s=>s.ToComment).ToList());
+            foreach(var el in word.GetElementsList)
+            {
+                if(el.Table != null)
+                {
+                    var prev = word.GetElement(el.CurrentIndex -1);
+                    if(prev.IsOk)
+                    {
+                        prev.Value().Table = el.Table;
+                    }
+                }
+            }
             if(word.DocumentImages.Count > 0)
             {
                 document.Images = word.DocumentImages;

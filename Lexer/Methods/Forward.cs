@@ -69,7 +69,7 @@ public partial class Token<T>
         var index = withSelf? Position : Position + 1;
         if(tokens.Count <= index)
             return Result<Token<T>>.Err(outOfRangeException(index));
-        for (int i = index; i <= maxDeep + index; i++)
+        for (int i = index; i < (maxDeep + index) && i < tokens.Count(); i++)
         {
             if(tokens.Count < i)
                 return Result<Token<T>>.Err(outOfRangeException(i));

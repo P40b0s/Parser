@@ -140,6 +140,7 @@ public class AnnexTests : BaseTest<AnnexParser>
             annexParser.SortAnnexByHierarchy();
             AddResult(files[i], annexParser, document);
            
+           
         }
         Assert.True(IsPassed());
     }
