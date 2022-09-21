@@ -8,7 +8,7 @@ public class AnnexTokenDefinitions : TokenDefinitionBase<AnnexTokenType>
     public AnnexTokenDefinitions()
     {
         
-        addToken(AnnexTokenType.Дата, $"(?:от\\s*)?(?<day>\\d{{1,2}})\\s*(?<month>{Templates.Months})\\s*(?<year>\\d{{4}})\\s*(?:г[ода.]+)");
+        addToken(AnnexTokenType.Дата, $"(?:от\\s*)?(?<date>\\d{{1,2}})\\s*(?<month>{Templates.Months})\\s*(?<year>\\d{{4}})\\s*(?:г[ода.]+)");
         addToken(AnnexTokenType.Номер, $"(?:N|№)\\s*(?<number>[^\\s{brChar}]+)");
         addToken(AnnexTokenType.Утверждено, $"(?<=\n\\s*)утвержден[оы]{ws}");
         addToken(AnnexTokenType.Приложение, $"(?<=\n\\s*)приложение{ws}");

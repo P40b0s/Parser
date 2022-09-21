@@ -53,9 +53,9 @@ namespace DocumentParser.DocumentElements
         public TableAlignment Alignment { get; set; } = TableAlignment.left;
         public TablePosition Position { get; set; }
     }
+
     public class TablePosition
     {
-      
         public int LeftFromText { get; set; }
       
         public int RightFromText { get; set; }

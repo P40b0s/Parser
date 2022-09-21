@@ -139,8 +139,10 @@ public class AnnexTests : BaseTest<AnnexParser>
             //Иначе потом во вложенных приложениях хрен что найдешь...
             annexParser.SortAnnexByHierarchy();
             AddResult(files[i], annexParser, document);
-           
-           
+            var j = Newtonsoft.Json.JsonConvert.SerializeObject(annexParser.Annexes);
+            System.IO.File.WriteAllText(files[i].FilePath + ".annexes.json", j);
+
+
         }
         Assert.True(IsPassed());
     }
