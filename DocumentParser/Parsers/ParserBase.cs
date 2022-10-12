@@ -115,7 +115,7 @@ namespace DocumentParser.Parsers
         /// <param name="error">Ошибка парсера</param>
         /// <returns>Всегда возвращает false!</returns>
         protected bool AddError(IError error, [CallerMemberName]string callerMemberName = null) =>
-            AddError(new DefaultError($"Метод: \"{callerMemberName}\" \n {error.Message}"));
+            AddError(new DefaultError($"Метод: \"{callerMemberName}\" \n {error.Message}", error.ErrorType));
 
         /// <summary>
         /// Добавляет ошибку в список ошибок

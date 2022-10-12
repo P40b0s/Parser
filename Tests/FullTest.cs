@@ -45,6 +45,13 @@ public class FullTests : BaseTest<Parser>
             Description = "Сборная солянка из всего чего можно",
             DirPath = Paths.CurrentDir + Paths.RootTestPath,
         },
+        //4
+        new Files<Parser>()
+        {
+            FilePath = "тест_изображений.docx",
+            Description = "только картинка",
+            DirPath = Paths.CurrentDir + Paths.RootTestPath,
+        },
         
     };
     

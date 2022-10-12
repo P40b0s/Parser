@@ -60,10 +60,10 @@ namespace DocumentParser.Parsers
             changesParser.Parse();
             AddError(changesParser);
 
-            var metaParser = new MetaParser(word);
-            metaParser.UpdateCallback+= c => UpdateStatus(c);
-            metaParser.ErrorCallback+= e => AddError(e);
-            metaParser.Parse();
+            //var metaParser = new MetaParser(word);
+            //metaParser.UpdateCallback+= c => UpdateStatus(c);
+            //metaParser.ErrorCallback+= e => AddError(e);
+            //metaParser.Parse();
             //БЕз парсера реквизитов мы не узнаем где еачало  конец тела документа
             //без парсера изменений мы не узнаем является ли заголовок частью изменения 
             //или это заголовок самого документа
@@ -80,7 +80,7 @@ namespace DocumentParser.Parsers
             var annexParser = new AnnexParser(word);
             annexParser.UpdateCallback+= c => UpdateStatus(c);
             annexParser.ErrorCallback+= e => AddError(e);
-            annexParser.WithMeta()
+            annexParser
                 .WithChanges()
                 .WithTables()
                 .Parse();
@@ -89,7 +89,7 @@ namespace DocumentParser.Parsers
             headersParser.UpdateCallback += c => UpdateStatus(c);
             headersParser.ErrorCallback += e => AddError(e);
             //без поиска заголовков мы не сможем их извечь 
-            headersParser.WithMeta()
+            headersParser
                 .WithChanges()
                 .WithTables()
                 .WithAnnexes(annexParser)
